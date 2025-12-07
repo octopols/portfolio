@@ -8,53 +8,44 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
     /* ===================================
-       REPOSITORY DATA (CODE SNIPPETS)
+       REPOSITORY DATA (OPEN SOURCE PROJECTS)
     =================================== */
     const libraryData = [
         { 
-            id: 'smooth-scale', 
-            name: 'Smooth Scale & Slide', 
-            code: `<div class="group relative overflow-hidden rounded-lg aspect-[3/4]"><img src="image.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"><div class="absolute bottom-6 left-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500"><h3 class="text-white">Title</h3></div></div>` 
+            id: 'github-desktop', 
+            name: 'GitHub Desktop', 
+            logo: 'assets/logos/github_desktop.png',
+            url: 'https://github.com/desktop/desktop'
         },
         { 
-            id: 'parallax', 
-            name: 'Parallax Lag', 
-            code: `// HTML: <div class="parallax-bg" data-speed="0.05"><img ...></div>\n// JS: window.addEventListener('scroll', () => { document.querySelectorAll('.parallax-bg').forEach(bg => { const speed = bg.getAttribute('data-speed'); bg.querySelector('img').style.transform = \`translateY(\${window.scrollY * speed}px)\`; }); });` 
+            id: 'vscode', 
+            name: 'VS Code', 
+            logo: 'assets/logos/vscode.svg',
+            url: 'https://github.com/microsoft/vscode'
         },
         { 
-            id: '3d-tilt', 
-            name: '3D Hover Tilt', 
-            code: `// CSS: .tilt-card { transform-style: preserve-3d; }\n// JS: el.addEventListener('mousemove', (e) => { const x = (e.clientX/w - 0.5)*20; const y = (e.clientY/h - 0.5)*-20; el.style.transform = \`rotateX(\${y}deg) rotateY(\${x}deg)\`; });` 
+            id: 'vlc', 
+            name: 'VLC Media Player', 
+            logo: 'assets/logos/vlc.svg',
+            url: 'https://code.videolan.org/videolan/vlc'
         },
         { 
-            id: 'horizontal', 
-            name: 'Horizontal Scroll', 
-            code: `// JS: const move = (track.scrollWidth - window.innerWidth) * (scrollTop - offset) / (height - winH); track.style.transform = \`translateX(-\${move}px)\`;` 
+            id: 'musescore', 
+            name: 'MuseScore', 
+            logo: 'assets/logos/musescore_studio.svg',
+            url: 'https://github.com/musescore/MuseScore'
         },
         { 
-            id: 'magnetic', 
-            name: 'Magnetic Physics', 
-            code: `// JS: const x = (e.clientX - rect.left - rect.width/2) * 0.8; el.style.transform = \`translate(\${x}px, \${y}px)\`;` 
+            id: 'organic-maps', 
+            name: 'Organic Maps', 
+            logo: 'assets/logos/organic_maps.png',
+            url: 'https://github.com/organicmaps/organicmaps'
         },
         { 
-            id: 'trail', 
-            name: 'Image Trail', 
-            code: `// JS: const img = document.createElement('img'); img.style.left = e.clientX + 'px'; img.style.top = e.clientY + 'px'; document.body.appendChild(img); setTimeout(() => img.remove(), 600);` 
-        },
-        { 
-            id: 'expand', 
-            name: 'Video Expand', 
-            code: `// JS: const width = 70 + (1 - distanceToCenter/maxDist) * 30; el.style.width = Math.min(width, 100) + '%';` 
-        },
-        { 
-            id: 'text-mask', 
-            name: 'Text Video Mask', 
-            code: `.text { color: transparent; -webkit-text-stroke: 1px white; } .video-bg { mix-blend-mode: screen; opacity: 0.6; }` 
-        },
-        { 
-            id: 'canvas', 
-            name: 'Canvas Particles', 
-            code: `// Standard HTML5 Canvas Context.arc() loop with mouse distance checks.` 
+            id: 'bitwarden', 
+            name: 'Bitwarden', 
+            logo: 'assets/logos/bitwarden.png',
+            url: 'https://github.com/bitwarden'
         }
     ];
 
@@ -62,21 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const repoGrid = document.getElementById('repo-grid');
     if (repoGrid) {
         libraryData.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'p-6 border border-white/10 bg-white/5 rounded-lg text-left hover:bg-white hover:text-black transition-all group';
-            btn.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="font-mono text-sm">${item.name}</span>
-                    <i data-lucide="copy" class="w-4 h-4 opacity-50 group-hover:opacity-100"></i>
+            const link = document.createElement('a');
+            link.href = item.url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'p-6 border border-white/10 bg-white/5 rounded-lg hover:bg-white/10 transition-all group flex items-center justify-between';
+            link.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <img src="${item.logo}" alt="${item.name}" class="w-8 h-8 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    <span class="font-mono text-sm text-white">${item.name}</span>
                 </div>
+                <i data-lucide="external-link" class="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity"></i>
             `;
-            btn.onclick = () => {
-                navigator.clipboard.writeText(item.code);
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            };
-            repoGrid.appendChild(btn);
+            repoGrid.appendChild(link);
         });
         
         // Re-initialize icons for dynamically added content
