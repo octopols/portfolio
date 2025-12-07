@@ -148,8 +148,198 @@ body {
     width: 80px;
     height: 80px;
     background-color: rgba(255,255,255,0.05);
-    border-color: transparent;
-    backdrop-filter: blur(2px);
+}
+
+/* ===================================
+   EFFECTS: TILT CARD
+=================================== */
+.tilt-card {
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+    cursor: pointer;
+}
+
+.tilt-card > div {
+    transform: translateZ(20px);
+}
+
+/* ===================================
+   SKILL POPUP
+=================================== */
+#skill-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+}
+
+#skill-popup-overlay.left-side {
+    justify-content: flex-start;
+}
+
+.tilt-card.active {
+    position: fixed !important;
+    z-index: 105 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    isolation: isolate !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    will-change: transform;
+}
+
+.tilt-card.active > div {
+    background: rgba(20, 20, 20, 1) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+}
+
+/* Placeholder to maintain grid space */
+.tilt-card-placeholder {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+#skill-popup {
+    position: relative;
+    background: rgba(10, 10, 10, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 450px;
+    width: 90%;
+    transform: translateX(100px) scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    backdrop-filter: blur(60px) saturate(200%);
+    -webkit-backdrop-filter: blur(60px) saturate(200%);
+    z-index: 110;
+    cursor: grab;
+}
+
+#skill-popup-overlay.left-side #skill-popup {
+    transform: translateX(-100px) scale(0.9);
+}
+
+#skill-popup-content {
+    cursor: default;
+}
+
+@media (max-width: 768px) {
+    #skill-popup-overlay {
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 4rem;
+    }
+    
+    #skill-popup {
+        max-width: 90%;
+        transform: translateY(100px) scale(0.9);
+    }
+}
+
+.popup-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.popup-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: rotate(90deg);
+}
+
+.popup-close::before,
+.popup-close::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 1px;
+    background: white;
+}
+
+.popup-close::before {
+    transform: rotate(45deg);
+}
+
+.popup-close::after {
+    transform: rotate(-45deg);
+}
+
+#skill-connector {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 105;
+    display: none;
+}
+
+#skill-connector line {
+    stroke: rgba(255, 255, 255, 0.8);
+    stroke-width: 2;
+    stroke-dasharray: 5, 5;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+#skill-connector line.visible {
+    opacity: 1;
+    animation: dash 20s linear infinite;
+}
+
+#skill-connector circle {
+    fill: rgba(255, 255, 255, 0.9);
+    r: 4;
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+#skill-connector circle.visible {
+    opacity: 1;
+}
+
+@keyframes drawLine {
+    from {
+        stroke-dashoffset: 1000;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -1000;
+    }
 }
 
 /* ===================================
@@ -583,3 +773,137 @@ body {
 .menu-footer a:hover {
     color: #fff;
 }
+
+/* ===================================
+   CONTACT BUTTON SPLIT ANIMATION
+=================================== */
+.contact-button-wrapper {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.contact-main-btn {
+    position: relative;
+    z-index: 2;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.contact-main-btn.splitting {
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+}
+
+.contact-buttons-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    z-index: 1;
+}
+
+.contact-social-btn,
+.contact-email-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: black;
+    border: 2px solid white;
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0deg);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-delay: var(--delay);
+}
+
+.contact-social-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.contact-email-btn {
+    height: 56px;
+    padding: 0 24px;
+    border-radius: 28px;
+    gap: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Active state - buttons fly out to positions */
+.contact-buttons-container.active .contact-social-btn,
+.contact-buttons-container.active .contact-email-btn {
+    opacity: 1;
+    transform: translate(calc(var(--position) * 70px), 0) scale(1) rotate(calc(var(--position) * 5deg));
+}
+
+/* Center button (LinkedIn) stays centered */
+.contact-buttons-container.active .contact-social-btn[data-position="0"],
+.contact-buttons-container.active .contact-email-btn[data-position="0"] {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+}
+
+.contact-social-btn:hover {
+    transform: translate(calc(var(--position) * 70px), -8px) scale(1.15) rotate(0deg) !important;
+    background: black;
+    color: white;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+    z-index: 10;
+}
+
+.contact-email-btn:hover {
+    transform: translate(calc(var(--position) * 70px), -8px) scale(1.1) rotate(0deg) !important;
+    background: black;
+    color: white;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+    z-index: 10;
+}
+
+.contact-social-btn svg,
+.contact-social-btn i {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+}
+
+.contact-email-btn i {
+    width: 20px;
+    height: 20px;
+}
+
+.contact-email-btn:hover {
+    transform: translate(calc(var(--position) * 70px), -8px) scale(1.1) rotate(0deg) !important;
+    background: black;
+    color: white;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+}
+
+
+.contact-email-btn:hover {
+    transform: scale(1.1) translateY(-4px);
+    background: black;
+    color: white;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+}
+
+.contact-email-btn i {
+    width: 20px;
+    height: 20px;
+}
+
+#contact-trigger.hidden {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+

@@ -421,17 +421,506 @@ document.addEventListener('DOMContentLoaded', () => {
     =================================== */
     function startCounter(el) {
         const target = +el.dataset.target;
+        const suffix = el.dataset.suffix || '';
         let count = 0;
         const inc = target / 50;
         
         const timer = setInterval(() => {
             count += inc;
             if(count >= target) {
-                el.innerText = target;
+                el.innerText = target + suffix;
                 clearInterval(timer);
             } else {
-                el.innerText = Math.ceil(count);
+                el.innerText = Math.ceil(count) + suffix;
             }
         }, 30);
+    }
+
+    /* ===================================
+       GITHUB STATS FETCHER
+    =================================== */
+    async function fetchGitHubStats() {
+        const username = 'octopols';
+        
+        try {
+            // Fetch user data
+            const userResponse = await fetch(`https://api.github.com/users/${username}`);
+            const userData = await userResponse.json();
+            
+            // Fetch repos to calculate total stars
+            const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`);
+            const reposData = await reposResponse.json();
+            
+            const totalStars = reposData.reduce((acc, repo) => acc + repo.stargazers_count, 0);
+            
+            // Update the DOM
+            const reposEl = document.getElementById('gh-repos');
+            const starsEl = document.getElementById('gh-stars');
+            const followersEl = document.getElementById('gh-followers');
+            const contributionsEl = document.getElementById('gh-contributions');
+            
+            if (reposEl) {
+                reposEl.dataset.target = userData.public_repos;
+                reposEl.innerText = '0';
+                startCounter(reposEl);
+            }
+            
+            if (starsEl) {
+                starsEl.dataset.target = totalStars;
+                starsEl.innerText = '0';
+                startCounter(starsEl);
+            }
+            
+            if (followersEl) {
+                followersEl.dataset.target = userData.followers;
+                followersEl.innerText = '0';
+                startCounter(followersEl);
+            }
+            
+            // Estimate contributions (GitHub API doesn't provide this easily without GraphQL)
+            // Using a placeholder for now
+            if (contributionsEl) {
+                contributionsEl.dataset.target = 1200; // Placeholder
+                contributionsEl.innerText = '0';
+                startCounter(contributionsEl);
+            }
+            
+        } catch (error) {
+            console.error('Error fetching GitHub stats:', error);
+            // Set fallback values
+            document.getElementById('gh-repos').innerText = '--';
+            document.getElementById('gh-stars').innerText = '--';
+            document.getElementById('gh-followers').innerText = '--';
+            document.getElementById('gh-contributions').innerText = '--';
+        }
+    }
+    
+    // Fetch GitHub stats when repository section is visible
+    const repositorySection = document.querySelector('#repository');
+    if (repositorySection) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    fetchGitHubStats();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        observer.observe(repositorySection);
+    }
+
+    /* ===================================
+       TILT CARD EFFECT
+    =================================== */
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    
+    tiltCards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
+            const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
+            card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
+        });
+    });
+
+    /* ===================================
+       SKILL POPUP SYSTEM
+    =================================== */
+    const skillEvidence = {
+        javascript: {
+            title: 'JavaScript / TypeScript',
+            evidence: [
+                'Architected full-stack RCS messaging integration serving 3B+ users at BIK',
+                'Built interactive billing dashboard with React, Redux state management',
+                'Developed real-time popup widget infrastructure for MuseScore desktop app',
+                'Implemented type-safe APIs with TypeScript for campaign management platform'
+            ]
+        },
+        nodejs: {
+            title: 'Node.js / Express',
+            evidence: [
+                'Built Express REST APIs for RCS messaging platform handling millions of messages',
+                'Developed Shopify sync engine reducing integration time from 2 weeks to 2 days',
+                'Created campaign management backend with Firebase Firestore integration',
+                'Implemented JWT authentication and role-based access control for internal tools'
+            ]
+        },
+        react: {
+            title: 'React / Redux',
+            evidence: [
+                'Built responsive billing dashboard with Redux for state management at BIK',
+                'Developed popup configuration UI with real-time preview and A/B testing',
+                'Created territory management app with drag-and-drop interface',
+                'Implemented reusable component library following atomic design principles'
+            ]
+        },
+        cpp: {
+            title: 'C++ / Qt',
+            evidence: [
+                'Contributed to VLC Media Player: multi-file metadata editing with C++/Qt',
+                'Built popup widget system for MuseScore with Qt framework and QML',
+                'Refactored VLC metadata API improving code maintainability by 40%',
+                'Implemented cross-platform UI components for desktop applications'
+            ]
+        },
+        cloud: {
+            title: 'GCP / Firebase',
+            evidence: [
+                'Deployed microservices on Google Cloud Platform for RCS infrastructure',
+                'Integrated Firebase Cloud Functions for serverless campaign triggers',
+                'Configured Cloud Storage for media assets serving 1M+ daily requests',
+                'Implemented Firebase Authentication with custom claims for role management'
+            ]
+        },
+        database: {
+            title: 'Firestore / PostgreSQL',
+            evidence: [
+                'Designed Firestore schema for real-time campaign tracking and analytics',
+                'Optimized PostgreSQL queries reducing dashboard load time by 60%',
+                'Implemented database migrations for BSP merchant data with zero downtime',
+                'Built indexing strategy for Firestore collections handling 10K+ writes/sec'
+            ]
+        },
+        elasticsearch: {
+            title: 'Elasticsearch',
+            evidence: [
+                'Implemented segment sorting with Elasticsearch for targeted campaigns',
+                'Built full-text search across merchant catalogs with fuzzy matching',
+                'Optimized query performance handling 5M+ documents with sub-second response',
+                'Created aggregation pipelines for real-time analytics dashboards'
+            ]
+        },
+        devops: {
+            title: 'Docker / Kubernetes',
+            evidence: [
+                'Containerized Node.js microservices with Docker multi-stage builds',
+                'Deployed Kubernetes clusters for auto-scaling RCS messaging platform',
+                'Configured CI/CD pipelines with GitHub Actions for automated deployments',
+                'Implemented health checks and monitoring for production workloads'
+            ]
+        }
+    };
+
+    const skillPopupOverlay = document.getElementById('skill-popup-overlay');
+    const skillPopup = document.getElementById('skill-popup');
+    const skillPopupContent = document.getElementById('skill-popup-content');
+    const connectorLine = document.getElementById('connector-line');
+    const connectorDotStart = document.getElementById('connector-dot-start');
+    const connectorDotEnd = document.getElementById('connector-dot-end');
+    const skillConnector = document.getElementById('skill-connector');
+    let currentSkillCard = null;
+    let isRightColumn = false;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let popupStartX = 0;
+    let popupStartY = 0;
+
+    // Open skill popup
+    tiltCards.forEach((card, index) => {
+        if (card.dataset.skill) {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const skillKey = card.dataset.skill;
+                const skillData = skillEvidence[skillKey];
+                
+                if (skillData) {
+                    currentSkillCard = card;
+                    
+                    // Store card position before it becomes fixed
+                    const cardRect = card.getBoundingClientRect();
+                    
+                    // Create placeholder to maintain grid space
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'tilt-card-placeholder';
+                    placeholder.style.width = `${cardRect.width}px`;
+                    placeholder.style.height = `${cardRect.height}px`;
+                    card.parentNode.insertBefore(placeholder, card);
+                    card.placeholder = placeholder;
+                    
+                    // Determine if card is in right columns (index 2,3,6,7 in grid)
+                    const gridColumn = index % 4;
+                    isRightColumn = gridColumn >= 2;
+                    
+                    // Add/remove left-side class for right columns
+                    if (isRightColumn) {
+                        skillPopupOverlay.classList.add('left-side');
+                    } else {
+                        skillPopupOverlay.classList.remove('left-side');
+                    }
+                    
+                    // Move card to body level to escape section stacking context
+                    document.body.appendChild(card);
+                    
+                    // Add active class to keep card sharp (this makes it fixed position)
+                    card.classList.add('active');
+                    
+                    // Reposition the fixed card to its original location
+                    card.style.top = `${cardRect.top}px`;
+                    card.style.left = `${cardRect.left}px`;
+                    card.style.width = `${cardRect.width}px`;
+                    card.style.height = `${cardRect.height}px`;
+                    
+                    // Populate popup content
+                    skillPopupContent.innerHTML = `
+                        <h3 class="text-2xl font-bold mb-6 tracking-tight">${skillData.title}</h3>
+                        <div class="space-y-4">
+                            ${skillData.evidence.map(item => `
+                                <div class="flex gap-3 items-start">
+                                    <div class="w-2 h-2 rounded-full bg-white/60 mt-2 flex-shrink-0"></div>
+                                    <p class="text-white/80 leading-relaxed">${item}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    
+                    // Show overlay and connector
+                    skillPopupOverlay.style.display = 'flex';
+                    skillConnector.style.display = 'block';
+                    
+                    // Hide line and dots initially
+                    connectorLine.classList.remove('visible');
+                    connectorDotStart.classList.remove('visible');
+                    connectorDotEnd.classList.remove('visible');
+                    
+                    // Fade in overlay
+                    requestAnimationFrame(() => {
+                        skillPopupOverlay.style.opacity = '1';
+                        
+                        // Open popup immediately
+                        skillPopup.style.transform = 'scale(1)';
+                    });
+                    
+                    // Wait for popup to fully render, then calculate line
+                    setTimeout(() => {
+                        updateConnectorLine();
+                        
+                        // Show line and dots (animation starts automatically via CSS)
+                        connectorLine.classList.add('visible');
+                        connectorDotStart.classList.add('visible');
+                        connectorDotEnd.classList.add('visible');
+                    }, 350);
+                    
+                    // Prevent body scroll with padding to avoid layout shift
+                    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                    if (scrollbarWidth > 0) {
+                        document.body.style.overflow = 'hidden';
+                        document.body.style.paddingRight = `${scrollbarWidth}px`;
+                        
+                        // Also apply to fixed elements to prevent shift
+                        const fixedElements = document.querySelectorAll('.section-label, .cursor-dot, .cursor-circle, .noise-overlay');
+                        fixedElements.forEach(el => {
+                            el.style.paddingRight = `${scrollbarWidth}px`;
+                        });
+                    } else {
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+            });
+        }
+    });
+
+    // Close popup
+    function closeSkillPopup() {
+        skillPopupOverlay.style.opacity = '0';
+        connectorLine.classList.remove('visible');
+        connectorDotStart.classList.remove('visible');
+        connectorDotEnd.classList.remove('visible');
+        
+        skillPopup.style.transform = 'scale(0.9)';
+        
+        // Remove active class from card and clear inline styles
+        if (currentSkillCard) {
+            currentSkillCard.classList.remove('active');
+            currentSkillCard.style.top = '';
+            currentSkillCard.style.left = '';
+            currentSkillCard.style.width = '';
+            currentSkillCard.style.height = '';
+            
+            // Move card back to its original position in the grid
+            if (currentSkillCard.placeholder) {
+                currentSkillCard.placeholder.parentNode.insertBefore(currentSkillCard, currentSkillCard.placeholder);
+                currentSkillCard.placeholder.remove();
+                currentSkillCard.placeholder = null;
+            }
+        }
+        
+        setTimeout(() => {
+            skillPopupOverlay.style.display = 'none';
+            skillConnector.style.display = 'none';
+            skillPopupOverlay.classList.remove('left-side');
+            
+            // Reset popup position and transform
+            skillPopup.style.left = '';
+            skillPopup.style.top = '';
+            skillPopup.style.transform = '';
+            
+            currentSkillCard = null;
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            // Remove padding from fixed elements
+            const fixedElements = document.querySelectorAll('.section-label, .cursor-dot, .cursor-circle, .noise-overlay');
+            fixedElements.forEach(el => {
+                el.style.paddingRight = '';
+            });
+        }, 300);
+    }
+
+    document.querySelector('.popup-close')?.addEventListener('click', closeSkillPopup);
+    skillPopupOverlay?.addEventListener('click', (e) => {
+        if (e.target === skillPopupOverlay) {
+            closeSkillPopup();
+        }
+    });
+
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && skillPopupOverlay?.style.display === 'flex') {
+            closeSkillPopup();
+        }
+    });
+
+    // Update connector line position
+    function updateConnectorLine() {
+        if (!currentSkillCard || !skillPopup) return;
+        
+        const cardRect = currentSkillCard.getBoundingClientRect();
+        const popupRect = skillPopup.getBoundingClientRect();
+        
+        let startX, startY, endX, endY;
+        
+        if (isRightColumn) {
+            // Right columns: line from left edge of card to right edge of popup
+            startX = cardRect.left;
+            startY = cardRect.top + cardRect.height / 2;
+            endX = popupRect.right;
+            endY = popupRect.top + popupRect.height / 2;
+        } else {
+            // Left columns: line from right edge of card to left edge of popup
+            startX = cardRect.right;
+            startY = cardRect.top + cardRect.height / 2;
+            endX = popupRect.left;
+            endY = popupRect.top + popupRect.height / 2;
+        }
+        
+        // Update line
+        connectorLine.setAttribute('x1', startX);
+        connectorLine.setAttribute('y1', startY);
+        connectorLine.setAttribute('x2', endX);
+        connectorLine.setAttribute('y2', endY);
+        
+        // Update dots
+        connectorDotStart.setAttribute('cx', startX);
+        connectorDotStart.setAttribute('cy', startY);
+        connectorDotEnd.setAttribute('cx', endX);
+        connectorDotEnd.setAttribute('cy', endY);
+    }
+
+    // Update on scroll/resize
+    window.addEventListener('scroll', () => {
+        if (currentSkillCard) updateConnectorLine();
+    });
+    
+    window.addEventListener('resize', () => {
+        if (currentSkillCard) updateConnectorLine();
+    });
+
+    /* ===================================
+       POPUP DRAG FUNCTIONALITY
+    =================================== */
+    if (skillPopup) {
+        skillPopup.addEventListener('mousedown', (e) => {
+            // Don't drag if clicking on close button or content
+            if (e.target.closest('.popup-close') || e.target.closest('#skill-popup-content')) {
+                return;
+            }
+            
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            
+            const rect = skillPopup.getBoundingClientRect();
+            popupStartX = rect.left;
+            popupStartY = rect.top;
+            
+            skillPopup.style.cursor = 'grabbing';
+            skillPopup.style.userSelect = 'none';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            
+            const newX = popupStartX + deltaX;
+            const newY = popupStartY + deltaY;
+            
+            skillPopup.style.position = 'fixed';
+            skillPopup.style.left = `${newX}px`;
+            skillPopup.style.top = `${newY}px`;
+            skillPopup.style.transform = 'scale(1)';
+            
+            // Update connector line during drag
+            updateConnectorLine();
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                skillPopup.style.cursor = '';
+                skillPopup.style.userSelect = '';
+            }
+        });
+    }
+
+    /* ===================================
+       CONTACT BUTTON SPLIT ANIMATION
+    =================================== */
+    const contactTrigger = document.getElementById('contact-trigger');
+    const contactButtons = document.getElementById('contact-buttons');
+    
+    if (contactTrigger && contactButtons) {
+        let isExpanded = false;
+        
+        contactTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (!isExpanded) {
+                // Add splitting class for tear effect
+                contactTrigger.classList.add('splitting');
+                
+                // Show contact buttons with tear animation
+                setTimeout(() => {
+                    contactButtons.classList.add('active');
+                }, 100);
+                
+                isExpanded = true;
+            }
+        });
+        
+        // Click outside to collapse
+        document.addEventListener('click', (e) => {
+            if (isExpanded && 
+                !contactButtons.contains(e.target) && 
+                !contactTrigger.contains(e.target)) {
+                
+                // Hide contact buttons
+                contactButtons.classList.remove('active');
+                
+                // Show trigger button again
+                setTimeout(() => {
+                    contactTrigger.classList.remove('splitting');
+                }, 300);
+                
+                isExpanded = false;
+            }
+        });
     }
 });
