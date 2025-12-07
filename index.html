@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETHER | Animation Library Template</title>
+    <title>Hirnaymay Bhaskar | Software Engineer & Open Source Contributor</title>
+    <meta name="description" content="Software Engineer specializing in full-stack development, open-source contributions to VLC & MuseScore, and building scalable systems.">
     
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,10 +41,10 @@
          NAVIGATION
     =================================== -->
     <nav class="fixed w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference text-white">
-        <div class="font-display font-bold text-xl tracking-tighter hoverable">AETHER</div>
+        <div class="font-display font-bold text-xl tracking-tighter hoverable">OCTOPOLS</div>
         <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
             <a href="#work" class="hoverable opacity-60 hover:opacity-100 transition-opacity">WORK</a>
-            <a href="#repository" class="hoverable opacity-60 hover:opacity-100 transition-opacity">REPOSITORY</a>
+            <a href="#projects" class="hoverable opacity-60 hover:opacity-100 transition-opacity">PROJECTS</a>
         </div>
         <button id="menu-toggle" class="hoverable border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors">
             Menu
@@ -58,16 +59,16 @@
         <div class="menu-content">
             <nav>
                 <div class="menu-item"><a href="#hero" class="menu-link hoverable" data-text="Home">Home</a></div>
-                <div class="menu-item"><a href="#work" class="menu-link hoverable" data-text="Work">Work</a></div>
-                <div class="menu-item"><a href="#repository" class="menu-link hoverable" data-text="Repository">Repository</a></div>
+                <div class="menu-item"><a href="#work" class="menu-link hoverable" data-text="Experience">Experience</a></div>
+                <div class="menu-item"><a href="#projects" class="menu-link hoverable" data-text="Projects">Projects</a></div>
                 <div class="menu-item"><a href="#about" class="menu-link hoverable" data-text="About">About</a></div>
                 <div class="menu-item"><a href="#contact" class="menu-link hoverable" data-text="Contact">Contact</a></div>
             </nav>
             <div class="menu-footer">
-                <a href="#" class="hoverable">LinkedIn</a>
-                <a href="#" class="hoverable">GitHub</a>
-                <a href="#" class="hoverable">Twitter</a>
-                <a href="#" class="hoverable">Instagram</a>
+                <a href="https://linkedin.com/in/hirnaymay" target="_blank" class="hoverable">LinkedIn</a>
+                <a href="https://github.com/octopols" target="_blank" class="hoverable">GitHub</a>
+                <a href="https://octopols.medium.com" target="_blank" class="hoverable">Medium</a>
+                <a href="mailto:hirnaymay@gmail.com" class="hoverable">Email</a>
             </div>
         </div>
     </div>
@@ -81,13 +82,13 @@
              SECTION 00: HERO WITH PARALLAX
         =================================== -->
         <header class="relative h-screen w-full flex items-center justify-center overflow-hidden">
-            <div class="section-label">[ 00. HERO PARALLAX ]</div>
+            <div class="section-label">[ 00. INTRODUCTION ]</div>
             
             <!-- Background Image with Parallax -->
             <div class="absolute inset-0 z-0 parallax-bg" data-speed="0.4">
-                <img src="https://images.unsplash.com/photo-1492571350019-22de08371fd3?q=80&w=2553&auto=format&fit=crop" 
+                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2669&auto=format&fit=crop" 
                      class="w-full h-full object-cover opacity-40 grayscale contrast-125 scale-110" 
-                     alt="Architecture">
+                     alt="Code Background">
                 <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
             </div>
             
@@ -95,243 +96,444 @@
             <div class="relative z-10 text-center px-6">
                 <div class="mb-8 flex justify-center">
                     <div class="reveal-item fade-scale border border-white/10 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] uppercase tracking-[0.2em] text-neutral-400">
-                        System v1.0
+                        Software Engineer
                     </div>
                 </div>
                 
                 <h1 class="font-display text-7xl md:text-9xl font-bold leading-[0.85] tracking-tighter mix-blend-overlay">
-                    <span class="block split-line"><span>DIGITAL</span></span>
-                    <span class="block split-line" style="transition-delay: 0.1s;"><span>ALCHEMY</span></span>
+                    <span class="block split-line"><span>HIRNAYMAY</span></span>
+                    <span class="block split-line" style="transition-delay: 0.1s;"><span>BHASKAR</span></span>
                 </h1>
                 
                 <p class="mt-8 text-lg md:text-xl text-neutral-400 max-w-xl mx-auto reveal-item fade-up" style="transition-delay: 0.3s;">
-                    Engineering the <span class="text-white hoverable border-b border-white/50">intangible</span>.
+                    Building scalable systems and <span class="text-white hoverable border-b border-white/50">contributing to open source</span> for millions of users worldwide.
                 </p>
             </div>
         </header>
 
         <!-- ===================================
-             SECTION 01: BENTO GRID REVEAL
+             SECTION 01: WORK EXPERIENCE TIMELINE
         =================================== -->
         <section id="work" class="py-32 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative">
-            <div class="section-label">[ 01. BENTO REVEAL ]</div>
-            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="section-label">[ 01. EXPERIENCE ]</div>
+            
+            <div class="max-w-5xl mx-auto">
+                <h2 class="text-4xl md:text-6xl font-display font-bold mb-20 text-center">Career Timeline</h2>
                 
-                <!-- Card 1: Fluidity (Cinematic Focus) -->
-                <div class="group cursor-pointer hoverable relative overflow-hidden rounded-lg aspect-[3/4]">
-                    <img src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=2600&auto=format&fit=crop" 
-                         class="absolute inset-0 w-full h-full object-cover img-zoom-bw" 
-                         alt="Fluidity">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div class="absolute bottom-6 left-6 z-30">
-                        <h3 class="text-xl font-medium text-white">Fluidity</h3>
-                        <p class="text-xs text-neutral-400">Cinematic Focus</p>
-                    </div>
-                </div>
-
-                <!-- Card 2: Parallax Lag -->
-                <div class="md:mt-24 group cursor-pointer hoverable parallax-bg" data-speed="0.05">
-                    <div class="reveal-item fade-scale aspect-[3/4] rounded-lg overflow-hidden mb-6 relative">
-                        <img src="https://images.unsplash.com/photo-1506729623306-b5a934d88b53?q=80&w=2670&auto=format&fit=crop" 
-                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70" 
-                             alt="Work 2">
-                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-                    </div>
-                    <h3 class="text-xl font-medium">Depth</h3>
-                    <p class="text-xs text-neutral-500">Lag Effect</p>
-                </div>
-
-                <!-- Card 3: 3D Tilt -->
-                <div class="group cursor-pointer hoverable tilt-card-wrapper">
-                    <div class="tilt-card aspect-[3/4] rounded-lg mb-6 bg-neutral-900 border border-white/5 relative overflow-hidden flex items-center justify-center">
-                        <img src="https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=2487&auto=format&fit=crop" 
-                             class="absolute inset-0 w-full h-full object-cover opacity-50" 
-                             alt="Work 3">
-                        <div class="tilt-inner text-center z-20 mix-blend-difference">
-                            <i data-lucide="box" class="w-12 h-12 mx-auto mb-4 text-white"></i>
-                            <span class="text-sm tracking-widest uppercase text-white">Interactive 3D</span>
+                <!-- Timeline Container -->
+                <div class="relative">
+                    <!-- Vertical Line -->
+                    <div class="absolute left-8 md:left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/20 to-white/0"></div>
+                    
+                    <!-- Timeline Item 1: BIK.AI -->
+                    <div class="relative mb-20 reveal-item fade-up">
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+                            <!-- Left side: Logo placeholder -->
+                            <div class="md:w-1/2 md:text-right md:pr-12 flex md:justify-end">
+                                <div class="w-24 h-24 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg flex items-center justify-center hoverable group p-4">
+                                    <img src="assets/logos/bik.jpg" alt="BIK.AI Logo" class="w-full h-full object-contain rounded">
+                                </div>
+                            </div>
+                            
+                            <!-- Center dot -->
+                            <div class="absolute left-8 md:left-1/2 w-4 h-4 bg-white rounded-full border-4 border-[#050505] -translate-x-1/2 z-10"></div>
+                            
+                            <!-- Right side: Content -->
+                            <div class="md:w-1/2 md:pl-12 ml-16 md:ml-0">
+                                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 hoverable hover:bg-white/10 transition-colors">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h3 class="text-2xl font-display font-bold text-white">BIK.AI</h3>
+                                        <span class="text-xs text-neutral-500 uppercase tracking-wider">Present</span>
+                                    </div>
+                                    <p class="text-sm text-neutral-400 mb-2">Software Engineer</p>
+                                    <p class="text-xs text-neutral-500 mb-4">Dec 2024 – Present | Bengaluru, India</p>
+                                    <ul class="space-y-2 text-sm text-neutral-300 leading-relaxed">
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Built production RCS messaging platform with 99.9% uptime serving 50+ enterprise clients</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Eliminated 85% of sync failures for 250+ stores handling 2M+ daily product updates</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Increased conversion by 35% through A/B testing and segment sorting algorithms</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <h3 class="text-xl font-medium">Perspective</h3>
-                    <p class="text-xs text-neutral-500">Mouse Tracking</p>
+
+                    <!-- Timeline Item 2: VideoLAN -->
+                    <div class="relative mb-20 reveal-item fade-up" style="transition-delay: 0.2s;">
+                        <div class="flex flex-col md:flex-row-reverse items-start md:items-center gap-8">
+                            <!-- Right side: Logo placeholder -->
+                            <div class="md:w-1/2 md:text-left md:pl-12 flex md:justify-start">
+                                <div class="w-24 h-24 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg flex items-center justify-center hoverable group p-4">
+                                    <img src="assets/logos/vlc.svg" alt="VideoLAN Logo" class="w-full h-full object-contain">
+                                </div>
+                            </div>
+                            
+                            <!-- Center dot -->
+                            <div class="absolute left-8 md:left-1/2 w-4 h-4 bg-white rounded-full border-4 border-[#050505] -translate-x-1/2 z-10"></div>
+                            
+                            <!-- Left side: Content -->
+                            <div class="md:w-1/2 md:pr-12 md:text-right ml-16 md:ml-0">
+                                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 hoverable hover:bg-white/10 transition-colors">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h3 class="text-2xl font-display font-bold text-white">VideoLAN (VLC)</h3>
+                                        <span class="text-xs text-neutral-500 uppercase tracking-wider">2024</span>
+                                    </div>
+                                    <p class="text-sm text-neutral-400 mb-2">Google Summer of Code Developer</p>
+                                    <p class="text-xs text-neutral-500 mb-4">May – Oct 2024 | Remote</p>
+                                    <ul class="space-y-2 text-sm text-neutral-300 leading-relaxed md:text-right">
+                                        <li class="flex items-start gap-2 md:flex-row-reverse">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Reduced editing time by 75% for VLC's 3B+ users worldwide</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 md:flex-row-reverse">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Designed multi-file metadata editing subsystem in C++ and Qt</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 md:flex-row-reverse">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Refactored legacy APIs to support batch operations with undo/redo</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3: MuseScore -->
+                    <div class="relative reveal-item fade-up" style="transition-delay: 0.4s;">
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+                            <!-- Left side: Logo placeholder -->
+                            <div class="md:w-1/2 md:text-right md:pr-12 flex md:justify-end">
+                                <div class="w-24 h-24 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg flex items-center justify-center hoverable group p-4">
+                                    <img src="assets/logos/musescore_studio.svg" alt="MuseScore Logo" class="w-full h-full object-contain">
+                                </div>
+                            </div>
+                            
+                            <!-- Center dot -->
+                            <div class="absolute left-8 md:left-1/2 w-4 h-4 bg-white rounded-full border-4 border-[#050505] -translate-x-1/2 z-10"></div>
+                            
+                            <!-- Right side: Content -->
+                            <div class="md:w-1/2 md:pl-12 ml-16 md:ml-0">
+                                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 hoverable hover:bg-white/10 transition-colors">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h3 class="text-2xl font-display font-bold text-white">MuseScore</h3>
+                                        <span class="text-xs text-neutral-500 uppercase tracking-wider">2023</span>
+                                    </div>
+                                    <p class="text-sm text-neutral-400 mb-2">Google Summer of Code Developer</p>
+                                    <p class="text-xs text-neutral-500 mb-4">May – Oct 2023 | Remote</p>
+                                    <ul class="space-y-2 text-sm text-neutral-300 leading-relaxed">
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Built reusable popup and inline text editing framework in C++ using Qt</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Released as flagship feature in MuseScore 4.6 for millions of daily users</span>
+                                        </li>
+                                        <li class="flex items-start gap-2">
+                                            <span class="text-white/40 mt-1">•</span>
+                                            <span>Created base widget classes and event handling system for notation workflow</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 02: HORIZONTAL SCROLL PIPELINE
+             SECTION 02: KEY ACHIEVEMENTS HORIZONTAL SCROLL
         =================================== -->
         <section id="process" class="horizontal-section bg-[#050505]">
-            <div class="section-label">[ 02. HORIZONTAL PIPELINE ]</div>
+            <div class="section-label">[ 02. KEY ACHIEVEMENTS ]</div>
             <div class="sticky top-0 h-screen overflow-hidden flex items-center">
                 <div id="horizontal-track" class="flex gap-24 px-12 md:px-32 will-change-transform items-center">
                     
                     <!-- Item 1: Title -->
                     <div class="w-[80vw] md:w-[600px] flex-shrink-0">
                         <h2 class="text-6xl md:text-8xl font-display font-bold leading-none mb-8 text-transparent bg-clip-text bg-gradient-to-br from-white to-neutral-700">
-                            Design<br>Systems
+                            Impact at<br>Scale
                         </h2>
                     </div>
                     
-                    <!-- Item 2: Image -->
+                    <!-- Item 2: RCS Platform -->
                     <div class="w-[70vw] md:w-[60vw] aspect-video flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 group hoverable">
-                        <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2670&auto=format&fit=crop" 
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2515&auto=format&fit=crop" 
                              class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-                             alt="Process 1">
+                             alt="RCS Platform">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <h3 class="text-3xl font-display font-bold mb-3">RCS Messaging Platform</h3>
+                            <p class="text-neutral-300 text-sm leading-relaxed">Built production RCS platform processing 500K+ monthly messages with 99.9% uptime for 50+ enterprise clients</p>
+                        </div>
                     </div>
                     
-                    <!-- Item 3: SVG Icon -->
+                    <!-- Item 3: Open Source -->
                     <div class="w-[60vw] md:w-[400px] flex-shrink-0 flex flex-col justify-center border-l border-white/10 pl-20">
                         <svg width="120" height="120" viewBox="0 0 100 100" class="mb-8">
                             <circle cx="50" cy="50" r="45" stroke="white" stroke-width="1" fill="none" class="draw-path reveal-item"></circle>
                             <path d="M30 50 L50 70 L70 30" stroke="white" stroke-width="1" fill="none" class="draw-path reveal-item" style="transition-delay: 0.5s"></path>
                         </svg>
-                        <h3 class="text-4xl font-display mb-4">Vector Logic</h3>
+                        <h3 class="text-4xl font-display mb-4">2x Google Summer of Code</h3>
+                        <p class="text-neutral-400 text-sm">Contributing to VLC & MuseScore for millions of users</p>
                     </div>
                     
-                    <!-- Item 4: Image -->
+                    <!-- Item 4: Shopify Sync -->
                     <div class="w-[70vw] md:w-[60vw] aspect-video flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 group hoverable">
-                        <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2694&auto=format&fit=crop" 
+                        <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=2574&auto=format&fit=crop" 
                              class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-                             alt="Process 2">
+                             alt="Shopify Integration">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <h3 class="text-3xl font-display font-bold mb-3">Shopify Sync Redesign</h3>
+                            <p class="text-neutral-300 text-sm leading-relaxed">Eliminated 85% of sync failures and reduced processing time by 60% for 250+ stores handling 2M+ daily updates</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 03: ADAPTIVE STICKY STACK
+             SECTION 03: PROJECTS SHOWCASE
         =================================== -->
-        <section class="py-32 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative">
-            <div class="section-label">[ 03. ADAPTIVE STACK ]</div>
+        <section id="projects" class="py-32 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative">
+            <div class="section-label">[ 03. PROJECTS ]</div>
             <div class="max-w-7xl mx-auto sticky-wrapper gap-20 flex-col md:flex-row">
                 
                 <!-- Sticky Sidebar -->
                 <div class="md:w-1/3 sticky-content pb-20">
                     <h2 class="text-4xl md:text-6xl font-display font-bold leading-[0.9] mb-8">
-                        Adaptive<br>Stack
+                        Side<br>Projects
                     </h2>
                     <p class="text-neutral-400 text-lg leading-relaxed mb-8">
-                        The interface responds to scroll velocity.
+                        Building tools that solve real problems and exploring new technologies.
                     </p>
                 </div>
                 
                 <!-- Scrolling Content -->
                 <div class="md:w-2/3 flex flex-col gap-32 pt-20">
+                    <!-- YouTube Comments Search -->
                     <div class="reveal-item fade-scale aspect-[16/9] bg-neutral-900 rounded-lg overflow-hidden relative group">
-                        <img src="https://images.unsplash.com/photo-1614850523060-8da1d56ae167?q=80&w=2600&auto=format&fit=crop" 
+                        <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2574&auto=format&fit=crop" 
                              class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">Chrome Extension</span>
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">JavaScript</span>
+                            </div>
+                            <h3 class="text-3xl font-display font-bold mb-3">YouTube Comments Search (Quack)</h3>
+                            <p class="text-neutral-300 text-sm leading-relaxed">Browser extension for searching paginated YouTube comments using optimized inverted index with native-like UX</p>
+                        </div>
                     </div>
+
+                    <!-- Google Trends API Toolkit -->
                     <div class="reveal-item fade-scale aspect-[16/9] bg-neutral-900 rounded-lg overflow-hidden relative group">
-                        <img src="https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?q=80&w=2600&auto=format&fit=crop" 
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop" 
                              class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">Python</span>
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">API</span>
+                            </div>
+                            <h3 class="text-3xl font-display font-bold mb-3">Google Trends API Toolkit</h3>
+                            <p class="text-neutral-300 text-sm leading-relaxed">Reverse-engineered Google Trends with Python wrapper, REST API, CLI tools, and web dashboard for programmatic data access</p>
+                        </div>
+                    </div>
+
+                    <!-- Coloc -->
+                    <div class="reveal-item fade-scale aspect-[16/9] bg-neutral-900 rounded-lg overflow-hidden relative group">
+                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2670&auto=format&fit=crop" 
+                             class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+                        <div class="absolute bottom-8 left-8 right-8">
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">Dart</span>
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">Flutter</span>
+                                <span class="text-[10px] px-2 py-1 bg-white/10 rounded-full text-neutral-300">Research</span>
+                            </div>
+                            <h3 class="text-3xl font-display font-bold mb-3">Coloc - Roommate Finder</h3>
+                            <p class="text-neutral-300 text-sm leading-relaxed">Mobile app using Gale-Shapley algorithm and Elo Rating System for optimal roommate matching. Published research paper in IJFMR</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 04: MAGNETIC PHYSICS & TRAIL
+             SECTION 04: SKILLS & TECHNOLOGIES
         =================================== -->
-        <section id="magnetic-section" class="py-32 bg-[#050505] flex flex-col items-center justify-center border-t border-white/5 relative overflow-hidden">
-            <div class="section-label">[ 04. PHYSICS & TRAIL ]</div>
-            <div id="trail-container" class="absolute inset-0 pointer-events-none z-0"></div>
+        <section class="py-32 bg-[#050505] flex flex-col items-center justify-center border-t border-white/5 relative overflow-hidden">
+            <div class="section-label">[ 04. TECH STACK ]</div>
             
-            <div class="relative z-10 text-center mb-16 reveal-item fade-up">
-                <h2 class="text-3xl font-display font-bold">Magnetic & Trail</h2>
+            <div class="relative z-10 text-center mb-16 reveal-item fade-up max-w-4xl px-6">
+                <h2 class="text-5xl md:text-7xl font-display font-bold mb-8">Technical Skills</h2>
+                <p class="text-neutral-400 text-lg">Full-stack development with expertise in scalable backend systems and modern frontend frameworks</p>
             </div>
             
-            <div class="relative z-10 flex flex-wrap justify-center gap-12">
-                <div class="magnetic-wrap hoverable">
-                    <div class="magnetic-content w-40 h-40 md:w-56 md:h-56 rounded-full border border-white/10 flex items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
-                        <span class="text-sm font-bold tracking-widest">DRAG ME</span>
+            <div class="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 px-6 max-w-6xl">
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="code" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">JavaScript</span>
+                        <span class="text-xs font-bold tracking-wider">TypeScript</span>
                     </div>
                 </div>
-                <div class="magnetic-wrap hoverable">
-                    <div class="magnetic-content w-40 h-40 md:w-56 md:h-56 rounded-full border border-white/10 flex items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
-                        <span class="text-sm font-bold tracking-widest">PULL ME</span>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="server" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">Node.js</span>
+                        <span class="text-xs font-bold tracking-wider">Express</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="layout" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">React</span>
+                        <span class="text-xs font-bold tracking-wider">Redux</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="box" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">C++</span>
+                        <span class="text-xs font-bold tracking-wider">Qt</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="cloud" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">GCP</span>
+                        <span class="text-xs font-bold tracking-wider">Firebase</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="database" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">Firestore</span>
+                        <span class="text-xs font-bold tracking-wider">PostgreSQL</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="search" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">Elasticsearch</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-lg border border-white/10 flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm group hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                        <i data-lucide="package" class="w-8 h-8 mb-2"></i>
+                        <span class="text-xs font-bold tracking-wider">Docker</span>
+                        <span class="text-xs font-bold tracking-wider">Kubernetes</span>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 05: VIDEO EXPAND (IMMERSIVE)
+             SECTION 05: ABOUT & HOBBIES
         =================================== -->
-        <section class="py-20 bg-[#050505] overflow-hidden relative">
-            <div class="section-label">[ 05. IMMERSIVE EXPAND ]</div>
+        <section id="about" class="py-20 bg-[#050505] overflow-hidden relative">
+            <div class="section-label">[ 05. ABOUT ME ]</div>
             <div id="video-expand" class="video-expand-wrapper group hoverable">
-                <div class="absolute inset-0 bg-black/40 z-10 group-hover:bg-transparent transition-colors duration-500"></div>
+                <div class="absolute inset-0 bg-black/60 z-10 group-hover:bg-black/40 transition-colors duration-500"></div>
                 <div class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                    <div class="w-20 h-20 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 group-hover:scale-150 group-hover:opacity-0 transition-all duration-500">
-                        <i data-lucide="play" class="fill-white text-white"></i>
+                    <div class="text-center px-6 max-w-3xl">
+                        <h2 class="text-5xl md:text-7xl font-display font-bold mb-8 text-white">Beyond Code</h2>
+                        <div class="flex gap-8 justify-center items-center flex-wrap">
+                            <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-4 rounded-full border border-white/20">
+                                <i data-lucide="camera" class="w-6 h-6"></i>
+                                <span class="font-medium text-lg">Photography</span>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-4 rounded-full border border-white/20">
+                                <i data-lucide="music" class="w-6 h-6"></i>
+                                <span class="font-medium text-lg">Music</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <img src="https://images.unsplash.com/photo-1496564203457-11bb12075d90?q=80&w=2500&auto=format&fit=crop" 
+                <img src="https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2574&auto=format&fit=crop" 
                      class="w-full h-full object-cover" 
-                     alt="Video Thumb">
+                     alt="Photography">
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 06: ANIMATED COUNTERS & TEXT
+             SECTION 06: ACHIEVEMENTS & STATS
         =================================== -->
         <section class="py-32 px-6 bg-[#050505] border-t border-white/5 relative">
-            <div class="section-label">[ 06. COUNTERS & TEXT ]</div>
+            <div class="section-label">[ 06. IMPACT METRICS ]</div>
             
             <!-- Stats Grid -->
             <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center mb-32">
                 <div class="reveal-item fade-up">
-                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">Projects</div>
-                    <div class="text-7xl font-display font-bold counter" data-target="142">0</div>
+                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">Users Reached</div>
+                    <div class="text-7xl font-display font-bold">3B<span class="text-4xl">+</span></div>
+                    <p class="text-neutral-500 text-sm mt-4">VLC Media Player Users</p>
                 </div>
                 <div class="reveal-item fade-up" style="transition-delay: 0.2s;">
-                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">FPS</div>
+                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">Messages Processed</div>
                     <div class="text-7xl font-display font-bold">
-                        <span class="counter" data-target="60">0</span>+
+                        <span class="counter" data-target="500">0</span>K<span class="text-4xl">+</span>
                     </div>
+                    <p class="text-neutral-500 text-sm mt-4">Monthly RCS Messages</p>
                 </div>
                 <div class="reveal-item fade-up" style="transition-delay: 0.4s;">
-                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">Awards</div>
-                    <div class="text-7xl font-display font-bold counter" data-target="28">0</div>
+                    <div class="text-xs text-neutral-500 uppercase tracking-widest mb-4">Sync Failures Reduced</div>
+                    <div class="text-7xl font-display font-bold counter" data-target="85">0</div>
+                    <span class="text-4xl font-display font-bold">%</span>
+                    <p class="text-neutral-500 text-sm mt-4">Shopify Integration</p>
                 </div>
             </div>
             
             <!-- Animated Paragraph -->
             <div class="text-center max-w-4xl mx-auto">
                 <p class="text-2xl md:text-5xl font-light leading-relaxed text-neutral-300 reveal-paragraph">
-                    We craft digital experiences that defy expectations. Smooth. Silent. Significant.
+                    Building systems that scale. Contributing code that matters. Creating impact that lasts.
                 </p>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 07: INFINITE MARQUEE
+             SECTION 07: ACHIEVEMENTS MARQUEE
         =================================== -->
         <section class="py-20 bg-[#050505] border-t border-white/5 border-b relative">
-            <div class="section-label">[ 07. INFINITE SCROLL ]</div>
+            <div class="section-label">[ 07. ACHIEVEMENTS ]</div>
             <div class="marquee-container overflow-hidden hoverable">
                 <div class="marquee-track">
-                    <span class="marquee-item">MOTION LANGUAGE</span>
-                    <span class="marquee-item">GEMINI ENGINE</span>
-                    <span class="marquee-item">KINETIC TYPE</span>
-                    <span class="marquee-item">MOTION LANGUAGE</span>
-                    <span class="marquee-item">GEMINI ENGINE</span>
-                    <span class="marquee-item">KINETIC TYPE</span>
+                    <span class="marquee-item">2X GOOGLE SUMMER OF CODE</span>
+                    <span class="marquee-item">HACKATHON WINNER</span>
+                    <span class="marquee-item">PUBLISHED RESEARCHER</span>
+                    <span class="marquee-item">OPEN SOURCE CONTRIBUTOR</span>
+                    <span class="marquee-item">2X GOOGLE SUMMER OF CODE</span>
+                    <span class="marquee-item">HACKATHON WINNER</span>
+                    <span class="marquee-item">PUBLISHED RESEARCHER</span>
+                    <span class="marquee-item">OPEN SOURCE CONTRIBUTOR</span>
                 </div>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 08: SVG TEXT CLIPPING MASK
+             SECTION 08: PHOTOGRAPHY SHOWCASE
         =================================== -->
         <section class="relative h-[80vh] w-full overflow-hidden bg-black border-t border-white/5">
-            <div class="section-label">[ 08. SVG CLIPPING MASK ]</div>
+            <div class="section-label">[ 08. PHOTOGRAPHY ]</div>
             
-            <!-- Background Video -->
-            <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover">
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-video-of-ink-in-water-2527-large.mp4" type="video/mp4">
-            </video>
+            <!-- Background Image Placeholder -->
+            <img src="https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=2574&auto=format&fit=crop" 
+                 class="absolute inset-0 w-full h-full object-cover opacity-60" 
+                 alt="Photography">
 
             <!-- SVG Mask Overlay -->
             <div class="absolute inset-0 z-10 w-full h-full">
@@ -341,8 +543,8 @@
                             <rect width="100%" height="100%" fill="white"></rect>
                             <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
                                   font-family="Space Grotesk, sans-serif" font-weight="900" 
-                                  font-size="15vw" fill="black">
-                                IMPACT
+                                  font-size="12vw" fill="black">
+                                PHOTOGRAPHY
                             </text>
                         </mask>
                     </defs>
@@ -352,54 +554,54 @@
         </section>
 
         <!-- ===================================
-             SECTION 09: FLEX ACCORDION
+             SECTION 09: TECHNICAL WRITING
         =================================== -->
         <section class="py-32 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative">
-            <div class="section-label">[ 09. FLEX ACCORDION ]</div>
+            <div class="section-label">[ 09. WRITING ]</div>
             
             <div class="mb-12 flex justify-between items-end">
-                <h3 class="text-4xl font-display font-bold">Archives</h3>
-                <p class="text-neutral-500 text-sm">Hover to expand</p>
+                <h3 class="text-4xl font-display font-bold">Technical Writing</h3>
+                <p class="text-neutral-500 text-sm">Published on Medium</p>
             </div>
             
             <div class="accordion-container flex-col md:flex-row">
-                <!-- Accordion Item 1 -->
+                <!-- Blog 1: VLC Docker -->
                 <div class="accordion-item group cursor-none hoverable">
-                    <img src="https://images.unsplash.com/photo-1485627658391-1365e4e0dbfe?q=80&w=2500" 
+                    <img src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=2600&auto=format&fit=crop" 
                          class="accordion-img">
                     <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors"></div>
                     <div class="accordion-text">
-                        <h4 class="text-2xl font-bold">Structure</h4>
+                        <h4 class="text-2xl font-bold">VLC Development with Docker</h4>
                     </div>
                 </div>
                 
-                <!-- Accordion Item 2 -->
+                <!-- Blog 2: GSoC VideoLAN -->
                 <div class="accordion-item group cursor-none hoverable">
-                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2600&auto=format&fit=crop" 
+                    <img src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=2531&auto=format&fit=crop" 
                          class="accordion-img">
                     <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors"></div>
                     <div class="accordion-text">
-                        <h4 class="text-2xl font-bold">Robotics</h4>
+                        <h4 class="text-2xl font-bold">GSoC 2024 with VideoLAN</h4>
                     </div>
                 </div>
                 
-                <!-- Accordion Item 3 -->
+                <!-- Blog 3: MuseScore -->
                 <div class="accordion-item group cursor-none hoverable">
-                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2670&auto=format&fit=crop" 
+                    <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2670&auto=format&fit=crop" 
                          class="accordion-img">
                     <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors"></div>
                     <div class="accordion-text">
-                        <h4 class="text-2xl font-bold">Network</h4>
+                        <h4 class="text-2xl font-bold">Text Style Popup GSoC 2023</h4>
                     </div>
                 </div>
                 
-                <!-- Accordion Item 4 -->
+                <!-- More -->
                 <div class="accordion-item group cursor-none hoverable">
-                    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2672&auto=format&fit=crop" 
+                    <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2670&auto=format&fit=crop" 
                          class="accordion-img">
                     <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors"></div>
                     <div class="accordion-text">
-                        <h4 class="text-2xl font-bold">Orbit</h4>
+                        <h4 class="text-2xl font-bold">More on Medium</h4>
                     </div>
                 </div>
             </div>
@@ -408,24 +610,25 @@
         <!-- ===================================
              SECTION 10: CANVAS PARTICLE SYSTEM
         =================================== -->
-        <section class="h-[80vh] bg-[#050505] relative border-t border-white/5 flex items-center justify-center overflow-hidden">
+        <section class="h-screen bg-[#050505] relative border-t border-white/5 flex items-center justify-center overflow-hidden">
             <div class="section-label">[ 10. PARTICLE SYSTEM ]</div>
             <canvas id="network-canvas"></canvas>
             
             <div class="relative z-10 text-center pointer-events-none mix-blend-difference">
-                <h2 class="text-6xl md:text-8xl font-display font-bold tracking-tighter mb-6">Connect</h2>
-                <button class="pointer-events-auto bg-white text-black px-8 py-4 rounded-full font-bold hover:scale-110 transition-transform duration-300 hoverable">
-                    Start Project
-                </button>
+                <h2 class="text-6xl md:text-8xl font-display font-bold tracking-tighter mb-6">Let's Connect</h2>
+                <a href="mailto:hirnaymay@gmail.com" class="pointer-events-auto inline-block bg-white text-black px-8 py-4 rounded-full font-bold hover:scale-110 transition-transform duration-300 hoverable text-lg">
+                    Get In Touch
+                </a>
             </div>
         </section>
 
         <!-- ===================================
-             SECTION 11: CODE REPOSITORY
+             SECTION 11: OPEN SOURCE CONTRIBUTIONS
         =================================== -->
-        <section id="repository" class="py-32 px-6 bg-[#0a0a0a] border-t border-white/5">
+        <section id="repository" class="py-32 px-6 bg-[#0a0a0a] border-t border-white/5 pb-[40vh]">
             <div class="max-w-7xl mx-auto">
-                <h2 class="text-4xl font-display font-bold mb-12 text-white">The Repository</h2>
+                <h2 class="text-4xl font-display font-bold mb-4 text-white">Open Source Contributions</h2>
+                <p class="text-neutral-400 mb-12">Contributing to projects used by millions worldwide</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div id="repo-grid" class="contents"></div>
                 </div>
@@ -438,26 +641,26 @@
          FOOTER (FIXED REVEAL)
     =================================== -->
     <footer id="contact" class="footer-fixed bg-black text-white">
-        <div class="max-w-7xl w-full px-6 md:px-12">
+        <div class="max-w-7xl w-full px-6 md:px-12 py-12">
             <!-- Large Title -->
-            <div class="text-center mb-20">
-                <h2 class="text-[12vw] md:text-[15vw] font-display font-bold leading-none tracking-tighter text-neutral-800 mb-8">
-                    LET'S TALK
+            <div class="text-center mb-16">
+                <h2 class="text-[10vw] md:text-[12vw] font-display font-bold leading-none tracking-tighter text-neutral-800 mb-6">
+                    OCTOPOLS
                 </h2>
-                <a href="mailto:hello@aether.com" class="text-2xl md:text-4xl font-display hover:text-neutral-400 transition-colors hoverable">
-                    hello@aether.com
+                <a href="mailto:hirnaymay@gmail.com" class="text-xl md:text-3xl font-display hover:text-neutral-400 transition-colors hoverable">
+                    hirnaymay@gmail.com
                 </a>
             </div>
 
             <!-- Footer Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 border-t border-white/10 pt-12 pb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 border-t border-white/10 pt-8 pb-6">
                 <!-- Column 1: Navigation -->
                 <div>
-                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-6">Navigation</h3>
-                    <nav class="space-y-3">
+                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">Navigation</h3>
+                    <nav class="space-y-2">
                         <a href="#hero" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Home</a>
-                        <a href="#work" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Work</a>
-                        <a href="#repository" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Repository</a>
+                        <a href="#work" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Experience</a>
+                        <a href="#projects" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Projects</a>
                         <a href="#about" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">About</a>
                         <a href="#contact" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Contact</a>
                     </nav>
@@ -465,40 +668,41 @@
 
                 <!-- Column 2: Social -->
                 <div>
-                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-6">Connect</h3>
-                    <nav class="space-y-3">
-                        <a href="#" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">LinkedIn</a>
-                        <a href="#" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">GitHub</a>
-                        <a href="#" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Twitter / X</a>
-                        <a href="#" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Instagram</a>
-                        <a href="#" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Dribbble</a>
+                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">Connect</h3>
+                    <nav class="space-y-2">
+                        <a href="https://linkedin.com/in/hirnaymay" target="_blank" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">LinkedIn</a>
+                        <a href="https://github.com/octopols" target="_blank" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">GitHub</a>
+                        <a href="https://octopols.medium.com" target="_blank" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Medium</a>
+                        <a href="mailto:hirnaymay@gmail.com" class="block text-neutral-400 hover:text-white transition-colors text-sm hoverable">Email</a>
                     </nav>
                 </div>
 
                 <!-- Column 3: Info -->
                 <div>
-                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-6">Location</h3>
-                    <p class="text-neutral-400 text-sm leading-relaxed mb-6">
-                        Based in San Francisco, CA<br>
+                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">Location</h3>
+                    <p class="text-neutral-400 text-sm leading-relaxed mb-4">
+                        Based in Bengaluru, India<br>
                         Available for remote work<br>
-                        worldwide
+                        +91-70170-07660
                     </p>
-                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">Local Time</h3>
+                    <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-3">Local Time</h3>
                     <p class="text-neutral-400 text-sm" id="local-time">--:-- --</p>
                 </div>
             </div>
 
             <!-- Bottom Bar -->
-            <div class="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-8 pb-6 text-xs text-neutral-600">
-                <div class="mb-4 md:mb-0">
-                    <span class="font-display font-bold text-white mr-4">AETHER</span>
-                    Â© 2025 All rights reserved.
+            <div class="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 pb-4 text-xs text-neutral-600">
+                <div class="mb-3 md:mb-0">
+                    <span class="font-display font-bold text-white mr-4">HIRNAYMAY BHASKAR</span>
+                    © 2025 All rights reserved.
                 </div>
-                <div class="flex gap-6">
-                    <a href="#" class="hover:text-white transition-colors hoverable">Privacy</a>
-                    <a href="#" class="hover:text-white transition-colors hoverable">Terms</a>
-                    <a href="#" class="hover:text-white transition-colors hoverable">Cookies</a>
+                <div class="flex gap-4 flex-wrap justify-center">
+                    <span class="text-neutral-600">Software Engineer</span>
+                    <span class="text-neutral-600">Open Source Contributor</span>
                 </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- ===================================
          JAVASCRIPT LOGIC SYSTEM

@@ -434,11 +434,19 @@ body {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 80vh;
+    height: auto;
+    min-height: 100vh;
+    max-height: 100vh;
     z-index: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    overflow: hidden;
+}
+
+.footer-fixed > div {
+    width: 100%;
+    padding-bottom: 2rem;
 }
 
 /* ===================================
