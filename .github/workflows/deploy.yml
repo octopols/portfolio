@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -36,6 +36,7 @@ jobs:
           cp -r assets dist/ 2>/dev/null || true
           cp -r css dist/
           cp -r js dist/
+          cp -r docs dist/ 2>/dev/null || true
           cp favicon*.png dist/ 2>/dev/null || true
           cp apple-touch-icon.png dist/ 2>/dev/null || true
           cp android-chrome-*.png dist/ 2>/dev/null || true
@@ -44,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: "./dist"
 
   deploy:
     environment:
