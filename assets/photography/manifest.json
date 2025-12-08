@@ -1,0 +1,166 @@
+{
+  "generated": "2025-12-08T00:37:52.427Z",
+  "count": 20,
+  "photos": [
+    {
+      "path": "assets/photography/DSC00088.jpg",
+      "name": "DSC00088",
+      "filename": "DSC00088.jpg",
+      "size": 7801581,
+      "modified": "2025-12-08T00:02:13.601Z",
+      "index": 0
+    },
+    {
+      "path": "assets/photography/DSC00099 (1).jpg",
+      "name": "DSC00099 (1)",
+      "filename": "DSC00099 (1).jpg",
+      "size": 1104333,
+      "modified": "2025-12-08T00:02:13.626Z",
+      "index": 1
+    },
+    {
+      "path": "assets/photography/DSC00244.jpg",
+      "name": "DSC00244",
+      "filename": "DSC00244.jpg",
+      "size": 2175658,
+      "modified": "2025-12-08T00:02:13.632Z",
+      "index": 2
+    },
+    {
+      "path": "assets/photography/DSC00304.jpg",
+      "name": "DSC00304",
+      "filename": "DSC00304.jpg",
+      "size": 2625171,
+      "modified": "2025-12-08T00:02:13.643Z",
+      "index": 3
+    },
+    {
+      "path": "assets/photography/DSC00374.jpg",
+      "name": "DSC00374",
+      "filename": "DSC00374.jpg",
+      "size": 4176366,
+      "modified": "2025-12-08T00:29:58.885Z",
+      "index": 4
+    },
+    {
+      "path": "assets/photography/DSC00567.jpg",
+      "name": "DSC00567",
+      "filename": "DSC00567.jpg",
+      "size": 392169,
+      "modified": "2025-12-08T00:02:13.646Z",
+      "index": 5
+    },
+    {
+      "path": "assets/photography/DSC00590.jpg",
+      "name": "DSC00590",
+      "filename": "DSC00590.jpg",
+      "size": 6731480,
+      "modified": "2025-12-08T00:02:13.652Z",
+      "index": 6
+    },
+    {
+      "path": "assets/photography/DSC00601.jpg",
+      "name": "DSC00601",
+      "filename": "DSC00601.jpg",
+      "size": 1613665,
+      "modified": "2025-12-08T00:02:13.661Z",
+      "index": 7
+    },
+    {
+      "path": "assets/photography/DSC00632.jpg",
+      "name": "DSC00632",
+      "filename": "DSC00632.jpg",
+      "size": 3891532,
+      "modified": "2025-12-08T00:02:13.666Z",
+      "index": 8
+    },
+    {
+      "path": "assets/photography/DSC00801.jpg",
+      "name": "DSC00801",
+      "filename": "DSC00801.jpg",
+      "size": 2806804,
+      "modified": "2025-12-08T00:02:13.679Z",
+      "index": 9
+    },
+    {
+      "path": "assets/photography/DSC00823.jpg",
+      "name": "DSC00823",
+      "filename": "DSC00823.jpg",
+      "size": 2678216,
+      "modified": "2025-12-08T00:02:13.685Z",
+      "index": 10
+    },
+    {
+      "path": "assets/photography/FMPX9032.JPG",
+      "name": "FMPX9032",
+      "filename": "FMPX9032.JPG",
+      "size": 614080,
+      "modified": "2025-12-08T00:29:58.845Z",
+      "index": 11
+    },
+    {
+      "path": "assets/photography/HEKK8944.JPG",
+      "name": "HEKK8944",
+      "filename": "HEKK8944.JPG",
+      "size": 470335,
+      "modified": "2025-12-08T00:29:58.850Z",
+      "index": 12
+    },
+    {
+      "path": "assets/photography/IMG_4694.JPG",
+      "name": "IMG_4694",
+      "filename": "IMG_4694.JPG",
+      "size": 5894248,
+      "modified": "2025-12-08T00:29:58.858Z",
+      "index": 13
+    },
+    {
+      "path": "assets/photography/IMG_4762.JPG",
+      "name": "IMG_4762",
+      "filename": "IMG_4762.JPG",
+      "size": 4096048,
+      "modified": "2025-12-08T00:29:58.867Z",
+      "index": 14
+    },
+    {
+      "path": "assets/photography/IMG_5088.JPG",
+      "name": "IMG_5088",
+      "filename": "IMG_5088.JPG",
+      "size": 2699358,
+      "modified": "2025-12-08T00:29:58.875Z",
+      "index": 15
+    },
+    {
+      "path": "assets/photography/MUPK5806.JPG",
+      "name": "MUPK5806",
+      "filename": "MUPK5806.JPG",
+      "size": 406889,
+      "modified": "2025-12-08T00:29:58.881Z",
+      "index": 16
+    },
+    {
+      "path": "assets/photography/harshloveschunli-20240101-0002.jpg",
+      "name": "harshloveschunli-20240101-0002",
+      "filename": "harshloveschunli-20240101-0002.jpg",
+      "size": 200661,
+      "modified": "2025-12-08T00:29:58.846Z",
+      "index": 17
+    },
+    {
+      "path": "assets/photography/harshloveschunli-20240101-0004.jpg",
+      "name": "harshloveschunli-20240101-0004",
+      "filename": "harshloveschunli-20240101-0004.jpg",
+      "size": 401778,
+      "modified": "2025-12-08T00:29:58.848Z",
+      "index": 18
+    },
+    {
+      "path": "assets/photography/harshloveschunli-20240101-0007.jpg",
+      "name": "harshloveschunli-20240101-0007",
+      "filename": "harshloveschunli-20240101-0007.jpg",
+      "size": 213095,
+      "modified": "2025-12-08T00:29:58.849Z",
+      "index": 19
+    }
+  ]
+}
