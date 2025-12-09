@@ -8,6 +8,53 @@ document.addEventListener("DOMContentLoaded", () => {
   lucide.createIcons();
 
   /* ===================================
+       DEBUG: CHECK MARQUEE ANIMATION
+    =================================== */
+  console.log("=== MARQUEE DEBUG ===");
+  const marqueeTrack = document.querySelector(".marquee-track");
+  const marqueeContainer = document.querySelector(".marquee-container");
+  const marqueeItems = document.querySelectorAll(".marquee-item");
+  
+  console.log("Marquee track found:", marqueeTrack);
+  console.log("Marquee container found:", marqueeContainer);
+  console.log("Marquee items count:", marqueeItems.length);
+  
+  if (marqueeTrack) {
+    const computedStyle = window.getComputedStyle(marqueeTrack);
+    console.log("\n--- COMPUTED STYLES (what browser actually sees) ---");
+    console.log("Display:", computedStyle.display);
+    console.log("Gap:", computedStyle.gap);
+    console.log("Animation:", computedStyle.animation);
+    console.log("Animation-name:", computedStyle.animationName);
+    console.log("Animation-duration:", computedStyle.animationDuration);
+    console.log("Animation-play-state:", computedStyle.animationPlayState);
+    console.log("Transform:", computedStyle.transform);
+    console.log("Will-change:", computedStyle.willChange);
+    
+    console.log("\n--- TAILWIND OVERRIDE CHECK ---");
+    console.log("Is display being overridden?", computedStyle.display !== 'flex' ? 'YES - PROBLEM!' : 'No');
+    console.log("Is animation missing?", computedStyle.animationName === 'none' ? 'YES - PROBLEM!' : 'No');
+  }
+  
+  if (marqueeContainer) {
+    const containerStyle = window.getComputedStyle(marqueeContainer);
+    console.log("\n--- CONTAINER STYLES ---");
+    console.log("Overflow:", containerStyle.overflow);
+    console.log("Overflow-x:", containerStyle.overflowX);
+    console.log("Width:", containerStyle.width);
+  }
+  
+  console.log("\n--- MARQUEE ITEMS ---");
+  marqueeItems.forEach((item, i) => {
+    const itemStyle = window.getComputedStyle(item);
+    console.log(`Item ${i}: "${item.textContent.trim()}"`);
+    console.log(`  Font-size: ${itemStyle.fontSize}`);
+    console.log(`  Width: ${item.offsetWidth}px`);
+    console.log(`  Color: ${itemStyle.color}`);
+  });
+  console.log("=== END DEBUG ===");
+
+  /* ===================================
        REPOSITORY DATA (OPEN SOURCE PROJECTS)
     =================================== */
   const libraryData = [
@@ -121,60 +168,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 30);
 
   /* ===================================
-       CUSTOM CURSOR & IMAGE TRAIL
+       CUSTOM CURSOR
     =================================== */
-  const cursorDot = document.querySelector(".cursor-dot");
-  const cursorCircle = document.querySelector(".cursor-circle");
-  const trailContainer = document.getElementById("trail-container");
-  const magneticSection = document.getElementById("magnetic-section");
-  let mouseX = 0,
-    mouseY = 0,
-    cursorX = 0,
-    cursorY = 0;
+  const cursorDot = document.querySelector('.cursor-dot');
+  const cursorCircle = document.querySelector('.cursor-circle');
+  let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
 
-  document.addEventListener("mousemove", (e) => {
+  document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
-    cursorDot.style.left = mouseX + "px";
-    cursorDot.style.top = mouseY + "px";
-
-    // Image Trail Effect in Magnetic Section
-    if (magneticSection && trailContainer) {
-      const rect = magneticSection.getBoundingClientRect();
-      if (mouseY >= rect.top && mouseY <= rect.bottom) {
-        if (Math.random() < 0.15) {
-          const img = document.createElement("img");
-          img.src =
-            trailImagesData[Math.floor(Math.random() * trailImagesData.length)];
-          img.className = "trail-img";
-          img.style.left = mouseX + "px";
-          img.style.top = mouseY + "px";
-          img.style.setProperty("--r", Math.random() * 30 - 15 + "deg");
-          document.body.appendChild(img);
-          setTimeout(() => img.remove(), 600);
-        }
-      }
-    }
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top = mouseY + 'px';
   });
 
   // Smooth Cursor Follow Animation
   function animateCursor() {
     cursorX += (mouseX - cursorX) * 0.15;
     cursorY += (mouseY - cursorY) * 0.15;
-    cursorCircle.style.left = cursorX + "px";
-    cursorCircle.style.top = cursorY + "px";
+    cursorCircle.style.left = cursorX + 'px';
+    cursorCircle.style.top = cursorY + 'px';
     requestAnimationFrame(animateCursor);
   }
   animateCursor();
 
   // Cursor Hover Effects
-  document.querySelectorAll(".hoverable").forEach((el) => {
-    el.addEventListener("mouseenter", () =>
-      cursorCircle.classList.add("hovered")
-    );
-    el.addEventListener("mouseleave", () =>
-      cursorCircle.classList.remove("hovered")
-    );
+  document.querySelectorAll('.hoverable').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
+    el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
   });
 
   /* ===================================
@@ -234,25 +254,20 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        SCROLL-TRIGGERED REVEALS
     =================================== */
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("active");
-          if (entry.target.classList.contains("counter")) {
-            startCounter(entry.target);
-          }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        if (entry.target.classList.contains('counter')) {
+          startCounter(entry.target);
         }
-      });
-    },
-    { threshold: 0.1 }
-  );
-
-  document
-    .querySelectorAll(".reveal-item, .split-line, .draw-path, .counter")
-    .forEach((el) => {
-      observer.observe(el);
+      }
     });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal-item, .split-line, .draw-path, .counter').forEach(el => {
+    observer.observe(el);
+  });
 
   // Word-by-Word Reveal for Paragraph
   const p = document.querySelector(".reveal-paragraph");
@@ -284,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const horizontalTrack = document.getElementById("horizontal-track");
   const progressBar = document.getElementById("progress-bar");
   const videoSection = document.getElementById("video-expand");
+  const beyondCodeSection = document.getElementById("beyond-code-expand");
 
   window.addEventListener("scroll", () => {
     const scrollTop = window.scrollY;
@@ -318,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Video Expand Effect
+    // Video Expand Effect - with smooth transition
     if (videoSection) {
       const rect = videoSection.getBoundingClientRect();
       const centerDist = Math.abs(
@@ -327,11 +343,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (centerDist < window.innerHeight * 0.6) {
         const expand = 1 - centerDist / (window.innerHeight * 0.6);
-        videoSection.style.width = Math.min(70 + expand * 30, 100) + "%";
-        videoSection.style.borderRadius = 20 * (1 - expand) + "px";
+        const targetWidth = Math.min(70 + expand * 30, 100);
+        const targetRadius = 20 * (1 - expand);
+        
+        // Use CSS transitions by only updating when values change significantly
+        const currentWidth = parseFloat(videoSection.style.width) || 70;
+        if (Math.abs(currentWidth - targetWidth) > 0.5) {
+          videoSection.style.setProperty('width', targetWidth + '%', 'important');
+          videoSection.style.setProperty('border-radius', targetRadius + 'px', 'important');
+        }
       }
     }
-  });
+
+    // Beyond Code Expand Effect - with smooth transition
+    if (beyondCodeSection) {
+      const rect = beyondCodeSection.getBoundingClientRect();
+      const centerDist = Math.abs(
+        rect.top + rect.height / 2 - window.innerHeight / 2
+      );
+
+      if (centerDist < window.innerHeight * 0.6) {
+        const expand = 1 - centerDist / (window.innerHeight * 0.6);
+        const targetWidth = Math.min(70 + expand * 30, 100);
+        const targetRadius = 20 * (1 - expand);
+        
+        // Use CSS transitions by only updating when values change significantly
+        const currentWidth = parseFloat(beyondCodeSection.style.width) || 70;
+        if (Math.abs(currentWidth - targetWidth) > 0.5) {
+          beyondCodeSection.style.width = targetWidth + "%";
+          beyondCodeSection.style.borderRadius = targetRadius + "px";
+        }
+      }
+    }
+  }, { passive: true });
 
   /* ===================================
        INTERACTIVE ELEMENTS
@@ -339,17 +383,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Magnetic Effect
   document.querySelectorAll(".magnetic-wrap").forEach((wrap) => {
+    let magneticAnimationFrame;
+    
     wrap.addEventListener("mousemove", (e) => {
-      const rect = wrap.getBoundingClientRect();
-      const x = (e.clientX - rect.left - rect.width / 2) * 0.8;
-      const y = (e.clientY - rect.top - rect.height / 2) * 0.8;
-      const content = wrap.querySelector(".magnetic-content");
-      if (content) {
-        content.style.transform = `translate(${x}px, ${y}px) scale(1.1)`;
+      if (magneticAnimationFrame) {
+        cancelAnimationFrame(magneticAnimationFrame);
       }
+      
+      magneticAnimationFrame = requestAnimationFrame(() => {
+        const rect = wrap.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) * 0.8;
+        const y = (e.clientY - rect.top - rect.height / 2) * 0.8;
+        const content = wrap.querySelector(".magnetic-content");
+        if (content) {
+          content.style.transform = `translate(${x}px, ${y}px) scale(1.1)`;
+        }
+      });
     });
 
     wrap.addEventListener("mouseleave", () => {
+      if (magneticAnimationFrame) {
+        cancelAnimationFrame(magneticAnimationFrame);
+      }
       const content = wrap.querySelector(".magnetic-content");
       if (content) {
         content.style.transform = "translate(0,0) scale(1)";
@@ -362,14 +417,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const tiltCard = document.querySelector(".tilt-card");
 
   if (tiltWrap && tiltCard) {
+    let tiltWrapAnimationFrame;
+    
     tiltWrap.addEventListener("mousemove", (e) => {
-      const rect = tiltWrap.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
-      tiltCard.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      if (tiltWrapAnimationFrame) {
+        cancelAnimationFrame(tiltWrapAnimationFrame);
+      }
+      
+      tiltWrapAnimationFrame = requestAnimationFrame(() => {
+        const rect = tiltWrap.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
+        tiltCard.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      });
     });
 
     tiltWrap.addEventListener("mouseleave", () => {
+      if (tiltWrapAnimationFrame) {
+        cancelAnimationFrame(tiltWrapAnimationFrame);
+      }
       tiltCard.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
     });
   }
@@ -384,6 +450,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let width,
       height,
       particles = [];
+    
+    // Track mouse position for particle connections
+    let mouseX = 0, mouseY = 0;
+    
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
 
     function resize() {
       width = canvas.width = canvas.parentElement.offsetWidth;
@@ -555,14 +629,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const tiltCards = document.querySelectorAll(".tilt-card");
 
   tiltCards.forEach((card) => {
+    let tiltAnimationFrame;
+    
     card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
-      card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      if (tiltAnimationFrame) {
+        cancelAnimationFrame(tiltAnimationFrame);
+      }
+      
+      tiltAnimationFrame = requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
+        card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      });
     });
 
     card.addEventListener("mouseleave", () => {
+      if (tiltAnimationFrame) {
+        cancelAnimationFrame(tiltAnimationFrame);
+      }
       card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
     });
   });

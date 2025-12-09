@@ -58,6 +58,12 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  
+  /* Keep essential animations for cursor and basic interactions */
+  .cursor-circle,
+  .cursor-dot {
+    transition-duration: 0.1s !important;
+  }
 }
 
 .font-display {
@@ -112,22 +118,22 @@ body {
    EFFECTS: PRELOADER
 =================================== */
 #preloader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: #000;
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  transition: transform 1s var(--ease-in-out);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  background: #000 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-direction: column !important;
+  transition: transform 1s var(--ease-in-out) !important;
 }
 
 #preloader.loaded {
-  transform: translateY(-100%);
+  transform: translateY(-100%) !important;
 }
 
 .loader-bar {
@@ -150,54 +156,18 @@ body {
 }
 
 /* ===================================
-   EFFECTS: CUSTOM CURSOR
-=================================== */
-.cursor-dot {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  background: white;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  pointer-events: none;
-}
-
-.cursor-circle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9998;
-  pointer-events: none;
-  transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s;
-}
-
-.cursor-circle.hovered {
-  width: 80px;
-  height: 80px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: transparent;
-  backdrop-filter: blur(2px);
-}
-
-/* ===================================
    EFFECTS: TILT CARD
 =================================== */
 .tilt-card {
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out;
   cursor: pointer;
+  will-change: transform;
 }
 
 .tilt-card > div {
   transform: translateZ(20px);
+  will-change: transform;
 }
 
 /* ===================================
@@ -406,71 +376,8 @@ body {
   }
 }
 
-/* ===================================
-   ANIMATION PRIMITIVES
-=================================== */
-.reveal-item {
-  opacity: 0;
-  transition: all 1.2s var(--ease-out);
-}
-
-.reveal-item.fade-up {
-  transform: translateY(60px);
-}
-
-.reveal-item.fade-up.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.reveal-item.fade-scale {
-  transform: scale(0.95);
-  filter: blur(10px);
-}
-
-.reveal-item.fade-scale.active {
-  opacity: 1;
-  transform: scale(1);
-  filter: blur(0);
-}
-
-.split-line {
-  overflow: hidden;
-  display: block;
-}
-
-.split-line span {
-  display: block;
-  transform: translateY(100%);
-  transition: transform 1.2s var(--ease-out);
-}
-
-.split-line.active span {
-  transform: translateY(0);
-}
-
-.draw-path {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  transition: stroke-dashoffset 2s ease-in-out;
-}
-
-.draw-path.active {
-  stroke-dashoffset: 0;
-}
-
-/* ===================================
-   COMPONENT: IMAGE ZOOM (Fluidity)
-=================================== */
-.img-zoom-bw {
-  transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
-  filter: grayscale(100%);
-}
-
-.group:hover .img-zoom-bw {
-  transform: scale(1.1);
-  filter: grayscale(0%);
-}
+/* NOTE: Animation classes moved inline to index.html <style> tag to prevent Tailwind override */
+/* reveal-item, img-zoom-bw, accordion-item, video-expand-wrapper are now inline */
 
 /* ===================================
    COMPONENT: 3D TILT CARD
@@ -527,13 +434,13 @@ body {
    COMPONENT: VIDEO EXPAND
 =================================== */
 .video-expand-wrapper {
-  width: 70%;
-  margin: 0 auto;
-  height: 70vh;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  transition: width 0.1s linear, border-radius 0.1s linear;
+  width: 70% !important;
+  margin: 0 auto !important;
+  height: 70vh !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  transition: width 0.1s linear, border-radius 0.1s linear !important;
 }
 
 /* ===================================
@@ -569,6 +476,18 @@ body {
 }
 
 /* ===================================
+   KEY ACHIEVEMENTS: Scale Animation Override
+=================================== */
+#horizontal-track .group img {
+  opacity: 1 !important;
+  transition: transform 0.7s ease-out !important;
+}
+
+#horizontal-track .group:hover img {
+  transform: scale(1.05) !important;
+}
+
+/* ===================================
    COMPONENT: ACCORDION
 =================================== */
 .accordion-container {
@@ -600,18 +519,18 @@ body {
 }
 
 .accordion-text {
-  position: absolute;
-  bottom: 2rem;
-  left: 2rem;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s 0.2s;
-  white-space: nowrap;
+  position: absolute !important;
+  bottom: 2rem !important;
+  left: 2rem !important;
+  opacity: 0 !important;
+  transform: translateY(20px) !important;
+  transition: all 0.5s 0.2s !important;
+  white-space: nowrap !important;
 }
 
 .accordion-item:hover .accordion-text {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 /* ===================================

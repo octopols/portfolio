@@ -130,10 +130,185 @@
       window.process = { env: { NODE_ENV: "production" } };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {}
+        },
+        corePlugins: {
+          preflight: true,
+        }
+      }
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <style>
+      /* Animation CSS inline with !important to override Tailwind preflight */
+      .reveal-item {
+        opacity: 0 !important;
+        transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      }
+
+      .reveal-item.fade-up {
+        transform: translateY(60px) !important;
+      }
+
+      .reveal-item.fade-up.active {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+
+      .reveal-item.fade-scale {
+        transform: scale(0.95) !important;
+        filter: blur(10px) !important;
+      }
+
+      .reveal-item.fade-scale.active {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+        filter: blur(0) !important;
+      }
+
+      .split-line {
+        overflow: hidden !important;
+        display: block !important;
+      }
+
+      .split-line span {
+        display: block !important;
+        transform: translateY(100%) !important;
+        transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      }
+
+      .split-line.active span {
+        transform: translateY(0) !important;
+      }
+
+      .draw-path {
+        stroke-dasharray: 1000 !important;
+        stroke-dashoffset: 1000 !important;
+        transition: stroke-dashoffset 2s ease-in-out !important;
+      }
+
+      .draw-path.active {
+        stroke-dashoffset: 0 !important;
+      }
+
+      .img-zoom-bw {
+        transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease !important;
+        filter: grayscale(100%) !important;
+      }
+
+      .group:hover .img-zoom-bw {
+        transform: scale(1.1) !important;
+        filter: grayscale(0%) !important;
+      }
+
+      .accordion-item {
+        flex: 1 !important;
+        position: relative !important;
+        overflow: hidden !important;
+        transition: flex 0.8s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        border-radius: 12px !important;
+        filter: grayscale(100%) !important;
+      }
+
+      .accordion-item:hover {
+        flex: 3 !important;
+        filter: grayscale(0%) !important;
+      }
+
+      .video-expand-wrapper {
+        width: 70% !important;
+        margin: 0 auto !important;
+        height: 70vh !important;
+        border-radius: 20px !important;
+        overflow: hidden !important;
+        position: relative !important;
+        transition: width 0.1s linear, border-radius 0.1s linear !important;
+      }
+
+      .marquee-item {
+        font-size: 8rem !important;
+        font-weight: 700 !important;
+        -webkit-text-stroke: 1px rgba(255,255,255,0.2) !important;
+        color: transparent !important;
+        transition: all 0.5s !important;
+        font-family: 'Space Grotesk' !important;
+      }
+
+      .marquee-container:hover .marquee-item {
+        color: white !important;
+        -webkit-text-stroke: 1px transparent !important;
+      }
+
+      .marquee-track {
+        display: flex !important;
+        gap: 4rem !important;
+        animation: marquee 20s linear infinite !important;
+      }
+
+      @keyframes marquee {
+        0% {
+          transform: translateX(0) !important;
+        }
+        100% {
+          transform: translateX(-50%) !important;
+        }
+      }
+
+      body {
+        cursor: none !important;
+      }
+
+      * {
+        cursor: none !important;
+      }
+
+      .cursor-dot {
+        position: fixed !important;
+        width: 6px !important;
+        height: 6px !important;
+        background: white !important;
+        border-radius: 50% !important;
+        z-index: 9999 !important;
+        pointer-events: none !important;
+        transition: none !important;
+        margin-left: -3px !important;
+        margin-top: -3px !important;
+      }
+
+      .cursor-circle {
+        position: fixed !important;
+        width: 40px !important;
+        height: 40px !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 50% !important;
+        z-index: 9998 !important;
+        pointer-events: none !important;
+        transition-property: width, height, background-color, border-color !important;
+        transition-duration: 0.3s !important;
+        transition-timing-function: ease !important;
+        margin-left: -20px !important;
+        margin-top: -20px !important;
+      }
+
+      .cursor-circle.hovered {
+        width: 80px !important;
+        height: 80px !important;
+        margin-left: -40px !important;
+        margin-top: -40px !important;
+        background-color: rgba(255,255,255,0.05) !important;
+        border-color: transparent !important;
+        backdrop-filter: blur(2px) !important;
+        transition-property: width, height, margin-left, margin-top, background-color, border-color !important;
+        transition-duration: 0.3s !important;
+        transition-timing-function: ease !important;
+      }
+    </style>
+
     <!-- External Styles -->
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/styles.css?v=CURSOR-FIXED" />
   </head>
 
   <body class="antialiased selection:bg-white selection:text-black">
@@ -626,7 +801,7 @@
             >
               <img
                 src="assets/images/musescore_gsoc.jpg"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="GSoC 2023 MuseScore"
               />
             </a>
@@ -639,7 +814,7 @@
             >
               <img
                 src="assets/images/vlc_gsoc.jpg"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                 alt="GSoC 2024 VideoLAN"
               />
             </a>
@@ -685,7 +860,7 @@
               >
                 Public Repos
               </div>
-              <div class="text-5xl font-display font-bold">
+              <div class="text-7xl font-display font-bold">
                 <span id="gh-repos" class="counter" data-target="0">--</span>
               </div>
             </div>
@@ -695,7 +870,7 @@
               >
                 Total Stars
               </div>
-              <div class="text-5xl font-display font-bold">
+              <div class="text-7xl font-display font-bold">
                 <span id="gh-stars" class="counter" data-target="0">--</span>
               </div>
             </div>
@@ -705,7 +880,7 @@
               >
                 Followers
               </div>
-              <div class="text-5xl font-display font-bold">
+              <div class="text-7xl font-display font-bold">
                 <span id="gh-followers" class="counter" data-target="0"
                   >--</span
                 >
@@ -717,7 +892,7 @@
               >
                 Contributions
               </div>
-              <div class="text-5xl font-display font-bold">
+              <div class="text-7xl font-display font-bold">
                 <span id="gh-contributions" class="counter" data-target="0"
                   >--</span
                 >
@@ -855,7 +1030,10 @@
             >
               <img
                 src="assets/projects/quack.jpeg"
-                class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700"
+                class="w-full h-full object-cover opacity-80 transition-all duration-700 ease-out will-change-transform"
+                style="transform: scale(1) !important; transition: transform 0.7s ease-out, opacity 0.7s ease-out !important;"
+                onmouseenter="this.style.transform='scale(1.1) !important'; this.style.opacity='1';"
+                onmouseleave="this.style.transform='scale(1) !important'; this.style.opacity='0.8';"
               />
               <div
                 class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"
@@ -890,7 +1068,10 @@
             >
               <img
                 src="/assets/projects/google_trends.webp"
-                class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700"
+                class="w-full h-full object-cover opacity-80 transition-all duration-700 ease-out will-change-transform"
+                style="transform: scale(1) !important; transition: transform 0.7s ease-out, opacity 0.7s ease-out !important;"
+                onmouseenter="this.style.transform='scale(1.1) !important'; this.style.opacity='1';"
+                onmouseleave="this.style.transform='scale(1) !important'; this.style.opacity='0.8';"
               />
               <div
                 class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"
@@ -925,7 +1106,10 @@
             >
               <img
                 src="assets/projects/coloc.png"
-                class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700"
+                class="w-full h-full object-cover opacity-80 transition-all duration-700 ease-out will-change-transform"
+                style="transform: scale(1) !important; transition: transform 0.7s ease-out, opacity 0.7s ease-out !important;"
+                onmouseenter="this.style.transform='scale(1.1) !important'; this.style.opacity='1';"
+                onmouseleave="this.style.transform='scale(1) !important'; this.style.opacity='0.8';"
               />
               <div
                 class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"
@@ -970,7 +1154,7 @@
         <div
           class="relative z-10 text-center mb-16 reveal-item fade-up max-w-4xl px-6"
         >
-          <h2 class="text-5xl md:text-7xl font-display font-bold mb-8">
+          <h2 class="text-6xl md:text-8xl font-display font-bold mb-8">
             Technical Skills
           </h2>
           <p class="text-neutral-400 text-lg">
@@ -1356,10 +1540,9 @@
             <span class="marquee-item">HACKATHON WINNER</span>
             <span class="marquee-item">OPEN SOURCE CONTRIBUTOR</span>
             <span class="marquee-item">2X GSOC</span>
-            <span class="marquee-item">PUBLISHED RESEARCHER</span>
             <span class="marquee-item">HACKATHON WINNER</span>
-            <span class="marquee-item">PUBLISHED RESEARCHER</span>
             <span class="marquee-item">OPEN SOURCE CONTRIBUTOR</span>
+            <span class="marquee-item">2X GSOC</span>
           </div>
         </div>
       </section>
@@ -1627,7 +1810,7 @@
     <!-- ===================================
          JAVASCRIPT LOGIC SYSTEM
     =================================== -->
-    <script defer src="js/main.js"></script>
+    <script src="js/main.js?v=CURSOR-FIXED"></script>
     <script>
       // Music button click handler
       document.addEventListener("DOMContentLoaded", function () {
