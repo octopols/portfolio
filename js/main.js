@@ -174,28 +174,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const cursorCircle = document.querySelector('.cursor-circle');
   let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
 
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top = mouseY + 'px';
-  });
+  // Check if mobile device
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-  // Smooth Cursor Follow Animation
-  function animateCursor() {
-    cursorX += (mouseX - cursorX) * 0.15;
-    cursorY += (mouseY - cursorY) * 0.15;
-    cursorCircle.style.left = cursorX + 'px';
-    cursorCircle.style.top = cursorY + 'px';
-    requestAnimationFrame(animateCursor);
+  if (!isMobile && cursorDot && cursorCircle) {
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+    });
+
+    // Smooth Cursor Follow Animation
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+      cursorCircle.style.left = cursorX + 'px';
+      cursorCircle.style.top = cursorY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Cursor Hover Effects
+    document.querySelectorAll('.hoverable').forEach(el => {
+      el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
+      el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
+    });
   }
-  animateCursor();
-
-  // Cursor Hover Effects
-  document.querySelectorAll('.hoverable').forEach(el => {
-    el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
-    el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
-  });
 
   /* ===================================
        MENU TOGGLE
@@ -322,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Horizontal Scroll Section
-    if (horizontalSection && horizontalTrack) {
+    if (horizontalSection && horizontalTrack && !isMobile) {
       const offset = horizontalSection.offsetTop;
       const height = horizontalSection.offsetHeight;
       const winH = window.innerHeight;
@@ -628,29 +633,32 @@ document.addEventListener("DOMContentLoaded", () => {
     =================================== */
   const tiltCards = document.querySelectorAll(".tilt-card");
 
-  tiltCards.forEach((card) => {
-    let tiltAnimationFrame;
-    
-    card.addEventListener("mousemove", (e) => {
-      if (tiltAnimationFrame) {
-        cancelAnimationFrame(tiltAnimationFrame);
-      }
+  // Disable tilt on mobile
+  if (!isMobile) {
+    tiltCards.forEach((card) => {
+      let tiltAnimationFrame;
       
-      tiltAnimationFrame = requestAnimationFrame(() => {
-        const rect = card.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
-        const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
-        card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+      card.addEventListener("mousemove", (e) => {
+        if (tiltAnimationFrame) {
+          cancelAnimationFrame(tiltAnimationFrame);
+        }
+        
+        tiltAnimationFrame = requestAnimationFrame(() => {
+          const rect = card.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
+          const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
+          card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+        });
+      });
+
+      card.addEventListener("mouseleave", () => {
+        if (tiltAnimationFrame) {
+          cancelAnimationFrame(tiltAnimationFrame);
+        }
+        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
       });
     });
-
-    card.addEventListener("mouseleave", () => {
-      if (tiltAnimationFrame) {
-        cancelAnimationFrame(tiltAnimationFrame);
-      }
-      card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
-    });
-  });
+  }
 
   /* ===================================
        SKILL POPUP SYSTEM
@@ -780,6 +788,11 @@ document.addEventListener("DOMContentLoaded", () => {
   skillCards.forEach((card, index) => {
     if (card.dataset.skill) {
       card.addEventListener("click", (e) => {
+        // Disable popup on mobile
+        if (isMobile) {
+          return;
+        }
+        
         e.stopPropagation();
         const skillKey = card.dataset.skill;
         const skillData = skillEvidence[skillKey];
