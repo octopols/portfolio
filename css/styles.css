@@ -143,6 +143,14 @@ body {
     transform: translateY(-4px) scale(1.05) !important;
   }
   
+  /* Center contact button wrapper on mobile */
+  .contact-button-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
   /* Make horizontal sections vertical on mobile */
   .horizontal-section {
     height: auto !important;
@@ -155,6 +163,14 @@ body {
     gap: 2rem !important;
     padding-left: 1.5rem !important;
     padding-right: 1.5rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Center items in key achievements section */
+  #horizontal-track > * {
+    width: 90% !important;
+    max-width: 100% !important;
   }
   
   /* Fix sticky positioning on mobile */
@@ -200,6 +216,11 @@ body {
   #projects .aspect-\[16\/9\] {
     aspect-ratio: 16/9 !important;
     min-height: 200px !important;
+  }
+  
+  /* Hide timeline dots on mobile (keep the line) */
+  #work .absolute.left-8.md\:left-1\/2.w-4.h-4 {
+    display: none !important;
   }
   
   /* Make accordion vertical on mobile */

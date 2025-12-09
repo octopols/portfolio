@@ -70,6 +70,105 @@
 
     <!-- External Styles -->
     <link rel="stylesheet" href="css/styles.css" />
+    
+    <style>
+      /* Animation CSS inline with !important to override Tailwind preflight */
+      .reveal-item {
+        opacity: 0 !important;
+        transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      }
+
+      .reveal-item.fade-up {
+        transform: translateY(60px) !important;
+      }
+
+      .reveal-item.fade-up.active {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+
+      .reveal-item.fade-scale {
+        transform: scale(0.95) !important;
+        filter: blur(10px) !important;
+      }
+
+      .reveal-item.fade-scale.active {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+        filter: blur(0) !important;
+      }
+
+      /* Fluidity - Cinematic Focus Effect (keep photos in color) */
+      .img-zoom-bw {
+        transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+      }
+
+      .group:hover .img-zoom-bw {
+        transform: scale(1.1) !important;
+      }
+
+      /* Force cursor styles - override Tailwind */
+      body {
+        cursor: none !important;
+      }
+
+      * {
+        cursor: none !important;
+      }
+
+      .cursor-dot {
+        position: fixed !important;
+        width: 6px !important;
+        height: 6px !important;
+        background: white !important;
+        border-radius: 50% !important;
+        z-index: 9999 !important;
+        pointer-events: none !important;
+        transition: none !important;
+        margin-left: -3px !important;
+        margin-top: -3px !important;
+      }
+
+      .cursor-circle {
+        position: fixed !important;
+        width: 40px !important;
+        height: 40px !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 50% !important;
+        z-index: 9998 !important;
+        pointer-events: none !important;
+        transition-property: width, height, background-color, border-color !important;
+        transition-duration: 0.3s !important;
+        transition-timing-function: ease !important;
+        margin-left: -20px !important;
+        margin-top: -20px !important;
+      }
+
+      .cursor-circle.hovered {
+        width: 80px !important;
+        height: 80px !important;
+        margin-left: -40px !important;
+        margin-top: -40px !important;
+        background-color: rgba(255,255,255,0.1) !important;
+        border-color: rgba(255,255,255,0.5) !important;
+      }
+      
+      /* Mobile override */
+      @media (max-width: 768px) {
+        body {
+          cursor: auto !important;
+        }
+        
+        * {
+          cursor: auto !important;
+        }
+        
+        .cursor-dot,
+        .cursor-circle {
+          display: none !important;
+        }
+      }
+    </style>
   </head>
 
   <body class="antialiased selection:bg-white selection:text-black">
@@ -143,8 +242,13 @@
       >
         <!-- Background with parallax effect -->
         <div class="absolute inset-0 z-0 parallax-bg" data-speed="0.4">
+          <img
+            src="assets/photography/DSC00608.jpg"
+            class="w-full h-full object-cover opacity-40 grayscale contrast-125 scale-110"
+            alt="Background"
+          />
           <div
-            class="w-full h-full bg-gradient-to-b from-[#050505] via-[#0a0a0a] to-[#050505]"
+            class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"
           ></div>
         </div>
 
@@ -329,6 +433,39 @@
         // Initialize Lucide Icons
         lucide.createIcons();
 
+        // Custom Cursor (same as index.html)
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorCircle = document.querySelector('.cursor-circle');
+        let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
+
+        // Check if mobile device
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+        if (!isMobile && cursorDot && cursorCircle) {
+          document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+          });
+
+          // Smooth Cursor Follow Animation
+          function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.15;
+            cursorY += (mouseY - cursorY) * 0.15;
+            cursorCircle.style.left = cursorX + 'px';
+            cursorCircle.style.top = cursorY + 'px';
+            requestAnimationFrame(animateCursor);
+          }
+          animateCursor();
+
+          // Cursor Hover Effects
+          document.querySelectorAll('.hoverable').forEach(el => {
+            el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
+          });
+        }
+
         // Photography Grid Auto-Population
         const photoGrid = document.getElementById("photo-grid");
         const emptyState = document.getElementById("empty-state");
@@ -391,14 +528,14 @@
         function createPhotoCard(photo, index) {
           const card = document.createElement("div");
           card.className =
-            "reveal-item fade-scale aspect-[2/3] bg-neutral-900 overflow-hidden relative group hoverable";
+            "group cursor-pointer hoverable relative overflow-hidden aspect-[3/5] reveal-item fade-scale";
           card.style.transitionDelay = `${(index % 3) * 0.1}s`;
 
           card.innerHTML = `
             <img
               src="${photo.path}"
               alt="${photo.name}"
-              class="w-full h-full object-cover img-zoom-bw"
+              class="absolute inset-0 w-full h-full object-cover img-zoom-bw"
             />
           `;
 
