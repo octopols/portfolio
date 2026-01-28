@@ -67,6 +67,7 @@
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 
     <!-- External Styles -->
     <link rel="stylesheet" href="css/styles.css" />
@@ -122,7 +123,7 @@
         height: 6px !important;
         background: white !important;
         border-radius: 50% !important;
-        z-index: 9999 !important;
+        z-index: 10002 !important;
         pointer-events: none !important;
         transition: none !important;
         margin-left: -3px !important;
@@ -135,7 +136,7 @@
         height: 40px !important;
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 50% !important;
-        z-index: 9998 !important;
+        z-index: 10002 !important;
         pointer-events: none !important;
         transition-property: width, height, background-color, border-color !important;
         transition-duration: 0.3s !important;
@@ -149,8 +150,12 @@
         height: 80px !important;
         margin-left: -40px !important;
         margin-top: -40px !important;
-        background-color: rgba(255,255,255,0.1) !important;
-        border-color: rgba(255,255,255,0.5) !important;
+        background-color: rgba(255,255,255,0.05) !important;
+        border-color: transparent !important;
+        backdrop-filter: blur(2px) !important;
+        transition-property: width, height, margin-left, margin-top, background-color, border-color !important;
+        transition-duration: 0.3s !important;
+        transition-timing-function: ease !important;
       }
       
       /* Mobile override */
@@ -308,6 +313,23 @@
         </div>
       </section>
     </main>
+
+    <!-- Photo Modal -->
+    <div id="photo-modal" class="photo-modal">
+      <button class="modal-close hoverable" id="modal-close">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <button class="modal-nav modal-prev hoverable" id="modal-prev">
+        <i data-lucide="chevron-left" class="w-8 h-8"></i>
+      </button>
+      <button class="modal-nav modal-next hoverable" id="modal-next">
+        <i data-lucide="chevron-right" class="w-8 h-8"></i>
+      </button>
+      <div class="modal-image-container">
+        <img id="modal-image" class="modal-image" src="" alt="" />
+      </div>
+      <div class="modal-counter" id="modal-counter"></div>
+    </div>
 
     <!-- ===================================
          FOOTER (FIXED REVEAL)
@@ -470,10 +492,68 @@
         const photoGrid = document.getElementById("photo-grid");
         const emptyState = document.getElementById("empty-state");
 
-        // Automatically scan for photos in assets/photography
+        // Discover photos from assets/photography folder
+        async function discoverPhotos() {
+          // Load manifest file
+          try {
+            const response = await fetch("assets/photography/manifest.json");
+            if (response.ok) {
+              const data = await response.json();
+              return data.photos || [];
+            }
+          } catch (e) {
+            console.log("No manifest found");
+          }
+
+          return [];
+        }
+
+        // Create photo card element
+        function createPhotoCard(photo, index) {
+          const card = document.createElement("div");
+          card.className =
+            "group cursor-pointer hoverable relative overflow-hidden aspect-[3/5] reveal-item fade-scale";
+          card.style.transitionDelay = `${(index % 3) * 0.1}s`;
+          card.dataset.photoIndex = index;
+
+          // Use thumbnail for grid, optimized for modal
+          const gridSrc = photo.thumbnail || photo.path || photo.original;
+          
+          card.innerHTML = `
+            <img
+              src="${gridSrc}"
+              alt="${photo.name}"
+              loading="lazy"
+              class="absolute inset-0 w-full h-full object-cover img-zoom-bw"
+            />
+          `;
+
+          // Add click handler to open modal
+          card.addEventListener('click', () => {
+            openPhotoModal(index);
+          });
+
+          return card;
+        }
+
+        // Initialize
+        loadPhotos();
+
+        // Photo Modal Functionality
+        let allPhotos = [];
+        let currentPhotoIndex = 0;
+        const photoModal = document.getElementById('photo-modal');
+        const modalImage = document.getElementById('modal-image');
+        const modalCounter = document.getElementById('modal-counter');
+        const modalClose = document.getElementById('modal-close');
+        const modalPrev = document.getElementById('modal-prev');
+        const modalNext = document.getElementById('modal-next');
+
+        // Store photos array when loaded
         async function loadPhotos() {
           try {
             const photos = await discoverPhotos();
+            allPhotos = photos;
 
             if (photos.length === 0) {
               emptyState.classList.remove("hidden");
@@ -508,42 +588,139 @@
           }
         }
 
-        // Discover photos from assets/photography folder
-        async function discoverPhotos() {
-          // Load manifest file
-          try {
-            const response = await fetch("assets/photography/manifest.json");
-            if (response.ok) {
-              const data = await response.json();
-              return data.photos || [];
+        function openPhotoModal(index) {
+          currentPhotoIndex = index;
+          
+          // Set initial state
+          photoModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          
+          // Load image first
+          const photo = allPhotos[index];
+          const modalSrc = photo.optimized || photo.path || photo.original;
+          modalImage.src = modalSrc;
+          modalImage.alt = photo.name;
+          modalCounter.textContent = `${currentPhotoIndex + 1} / ${allPhotos.length}`;
+          
+          // Update button states
+          modalPrev.style.opacity = currentPhotoIndex === 0 ? '0.3' : '1';
+          modalNext.style.opacity = currentPhotoIndex === allPhotos.length - 1 ? '0.3' : '1';
+          
+          // GSAP animation for modal open - no transforms, only opacity and scale
+          gsap.set(modalImage, { opacity: 0, scale: 0.85, x: 0, y: 0 });
+          gsap.fromTo(photoModal, 
+            { opacity: 0 },
+            { opacity: 1, duration: 0.4, ease: 'power2.out' }
+          );
+          gsap.to(modalImage, {
+            scale: 1,
+            opacity: 1,
+            duration: 0.6,
+            ease: 'expo.out',
+            delay: 0.1
+          });
+        }
+
+        function closePhotoModal() {
+          // GSAP animation for modal close
+          gsap.to(modalImage, {
+            scale: 0.85,
+            opacity: 0,
+            duration: 0.4,
+            ease: 'expo.in'
+          });
+          gsap.to(photoModal, {
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.in',
+            onComplete: () => {
+              photoModal.classList.remove('active');
+              document.body.style.overflow = '';
             }
-          } catch (e) {
-            console.log("No manifest found");
+          });
+        }
+
+        function updateModalImage(animate = true, direction = 0) {
+          if (allPhotos.length === 0) return;
+          
+          const photo = allPhotos[currentPhotoIndex];
+          const modalSrc = photo.optimized || photo.path || photo.original;
+          
+          if (animate && direction !== 0) {
+            // Kill any existing animations
+            gsap.killTweensOf(modalImage);
+            
+            // Preload next image
+            const img = new Image();
+            img.onload = () => {
+              // Slide animation with direction
+              const slideDistance = 80;
+              gsap.to(modalImage, {
+                x: -slideDistance * direction,
+                opacity: 0,
+                duration: 0.35,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                  modalImage.src = modalSrc;
+                  modalImage.alt = photo.name;
+                  gsap.set(modalImage, { x: slideDistance * direction });
+                  gsap.to(modalImage, {
+                    x: 0,
+                    opacity: 1,
+                    duration: 0.35,
+                    ease: 'power2.out'
+                  });
+                }
+              });
+            };
+            img.src = modalSrc;
+          } else {
+            gsap.set(modalImage, { x: 0, y: 0 });
+            modalImage.src = modalSrc;
+            modalImage.alt = photo.name;
           }
-
-          return [];
+          
+          modalCounter.textContent = `${currentPhotoIndex + 1} / ${allPhotos.length}`;
+          
+          // Update button states
+          modalPrev.style.opacity = currentPhotoIndex === 0 ? '0.3' : '1';
+          modalNext.style.opacity = currentPhotoIndex === allPhotos.length - 1 ? '0.3' : '1';
         }
 
-        // Create photo card element
-        function createPhotoCard(photo, index) {
-          const card = document.createElement("div");
-          card.className =
-            "group cursor-pointer hoverable relative overflow-hidden aspect-[3/5] reveal-item fade-scale";
-          card.style.transitionDelay = `${(index % 3) * 0.1}s`;
-
-          card.innerHTML = `
-            <img
-              src="${photo.path}"
-              alt="${photo.name}"
-              class="absolute inset-0 w-full h-full object-cover img-zoom-bw"
-            />
-          `;
-
-          return card;
+        function showNextPhoto() {
+          if (currentPhotoIndex < allPhotos.length - 1) {
+            currentPhotoIndex++;
+            updateModalImage(true, 1); // Slide left (next)
+          }
         }
 
-        // Initialize
-        loadPhotos();
+        function showPrevPhoto() {
+          if (currentPhotoIndex > 0) {
+            currentPhotoIndex--;
+            updateModalImage(true, -1); // Slide right (prev)
+          }
+        }
+
+        // Event listeners
+        modalClose.addEventListener('click', closePhotoModal);
+        modalPrev.addEventListener('click', showPrevPhoto);
+        modalNext.addEventListener('click', showNextPhoto);
+        
+        // Close on background click
+        photoModal.addEventListener('click', (e) => {
+          if (e.target === photoModal) {
+            closePhotoModal();
+          }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+          if (!photoModal.classList.contains('active')) return;
+          
+          if (e.key === 'Escape') closePhotoModal();
+          if (e.key === 'ArrowLeft') showPrevPhoto();
+          if (e.key === 'ArrowRight') showNextPhoto();
+        });
       });
     </script>
   </body>

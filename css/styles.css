@@ -1011,3 +1011,158 @@ body {
 .tilt-inner {
   transform: translateZ(40px);
 }
+
+/* ===================================
+   PHOTO MODAL / LIGHTBOX
+=================================== */
+.photo-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo-modal * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo-modal.active {
+  display: flex;
+}
+
+.modal-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  will-change: opacity;
+  display: block;
+}
+
+.modal-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.modal-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  will-change: opacity;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.photo-modal.active .modal-image {
+  /* Removed - GSAP handles all animations */
+}
+
+.modal-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+  z-index: 10001;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+  z-index: 10001;
+}
+
+.modal-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.modal-prev {
+  left: 2rem;
+}
+
+.modal-next {
+  right: 2rem;
+}
+
+.modal-counter {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+  -webkit-user-select: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .modal-nav {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .modal-prev {
+    left: 1rem;
+  }
+  
+  .modal-next {
+    right: 1rem;
+  }
+  
+  .modal-close {
+    top: 1rem;
+    right: 1rem;
+  }
+}
