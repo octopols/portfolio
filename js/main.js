@@ -8,6 +8,41 @@ document.addEventListener("DOMContentLoaded", () => {
   lucide.createIcons();
 
   /* ===================================
+       SMOOTH SCROLL FOR WHEEL EVENTS
+    =================================== */
+  let currentScroll = window.scrollY;
+  let targetScroll = window.scrollY;
+  let isScrolling = false;
+
+  // Smooth scroll animation
+  function smoothScrollAnimation() {
+    if (Math.abs(targetScroll - currentScroll) < 0.5) {
+      currentScroll = targetScroll;
+      isScrolling = false;
+      return;
+    }
+
+    currentScroll += (targetScroll - currentScroll) * 0.1;
+    window.scrollTo(0, currentScroll);
+    
+    if (isScrolling) {
+      requestAnimationFrame(smoothScrollAnimation);
+    }
+  }
+
+  // Handle wheel events
+  window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    targetScroll += e.deltaY * 0.8;
+    targetScroll = Math.max(0, Math.min(targetScroll, document.documentElement.scrollHeight - window.innerHeight));
+    
+    if (!isScrolling) {
+      isScrolling = true;
+      requestAnimationFrame(smoothScrollAnimation);
+    }
+  }, { passive: false });
+
+  /* ===================================
        DEBUG: CHECK MARQUEE ANIMATION
     =================================== */
   console.log("=== MARQUEE DEBUG ===");
@@ -211,36 +246,186 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openMenu() {
     menuOverlay.classList.add("active");
-    document.body.style.overflow = "hidden";
+    
+    // Prevent body scroll and compensate for scrollbar
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      
+      // Also apply to fixed elements to prevent shift
+      const fixedElements = document.querySelectorAll(".section-label, .noise-overlay, header");
+      fixedElements.forEach((el) => {
+        el.style.paddingRight = `${scrollbarWidth}px`;
+      });
+    } else {
+      document.body.style.overflow = "hidden";
+    }
+    
+    // Animate menu sliding in from left to right (pushing from left)
+    gsap.fromTo(menuOverlay, 
+      { 
+        x: "100%" 
+      },
+      { 
+        x: "0%",
+        duration: 0.8,
+        ease: "power3.inOut"
+      }
+    );
+    
+    // Stagger animate menu items
+    gsap.fromTo(".menu-item",
+      {
+        opacity: 0,
+        x: 50
+      },
+      {
+        opacity: 1,
+        x: 0,
+        duration: 0.5,
+        stagger: 0.1,
+        delay: 0.3,
+        ease: "power2.out"
+      }
+    );
   }
 
   function closeMenu() {
-    menuOverlay.classList.remove("active");
+    // Remove padding and restore scroll immediately to prevent jank
     document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+    
+    // Remove padding from fixed elements
+    const fixedElements = document.querySelectorAll(".section-label, .noise-overlay, header");
+    fixedElements.forEach((el) => {
+      el.style.paddingRight = "";
+    });
+    
+    // Animate menu sliding out from right to left
+    gsap.to(menuOverlay, {
+      x: "100%",
+      duration: 0.6,
+      ease: "power3.inOut",
+      onComplete: () => {
+        menuOverlay.classList.remove("active");
+      }
+    });
   }
 
   if (menuToggle) menuToggle.addEventListener("click", openMenu);
   if (menuClose) menuClose.addEventListener("click", closeMenu);
 
+  // Animate menu close button on hover
+  if (menuClose) {
+    let beforeRotation = { value: 45 };
+    let afterRotation = { value: -45 };
+    
+    menuClose.addEventListener("mouseenter", () => {
+      // Animate ::before counterclockwise 90 degrees (45deg -> -45deg)
+      gsap.to(beforeRotation, {
+        value: -45,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: function() {
+          menuClose.style.setProperty("--before-rotation", beforeRotation.value);
+        }
+      });
+      
+      // Animate ::after clockwise 90 degrees (-45deg -> 45deg)
+      gsap.to(afterRotation, {
+        value: 45,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: function() {
+          menuClose.style.setProperty("--after-rotation", afterRotation.value);
+        }
+      });
+    });
+    
+    menuClose.addEventListener("mouseleave", () => {
+      // Animate back to original X position
+      gsap.to(beforeRotation, {
+        value: 45,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: function() {
+          menuClose.style.setProperty("--before-rotation", beforeRotation.value);
+        }
+      });
+      
+      gsap.to(afterRotation, {
+        value: -45,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onUpdate: function() {
+          menuClose.style.setProperty("--after-rotation", afterRotation.value);
+        }
+      });
+    });
+  }
+
   // Close menu when clicking menu items
+  // Track currently hovered menu link
+  let currentHoveredLink = null;
+
   document.querySelectorAll("#menu-overlay .menu-item a").forEach((link) => {
     link.addEventListener("click", (e) => {
       closeMenu();
     });
-
-    // Track cursor position for shine effect with smooth animation
-    let animationFrame;
-    link.addEventListener("mousemove", (e) => {
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
+    
+    link.addEventListener("mouseenter", (e) => {
+      // Remove active class and kill animation on previously hovered link
+      if (currentHoveredLink && currentHoveredLink !== link) {
+        gsap.killTweensOf(currentHoveredLink);
+        currentHoveredLink.classList.remove('active-hover');
+        gsap.set(currentHoveredLink, { "--circle-size": "0px" });
       }
-
-      animationFrame = requestAnimationFrame(() => {
-        const rect = link.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        link.style.setProperty("--x", x + "px");
-        link.style.setProperty("--y", y + "px");
+      
+      currentHoveredLink = link;
+      
+      // Set entry point position
+      const rect = link.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      link.style.setProperty("--x", x + "px");
+      link.style.setProperty("--y", y + "px");
+      
+      // Calculate size needed to cover entire text
+      const maxSize = Math.max(rect.width, rect.height) * 2;
+      
+      // Add class and animate circle expansion
+      link.classList.add('active-hover');
+      gsap.fromTo(link,
+        { "--circle-size": "0px" },
+        {
+          "--circle-size": `${maxSize}px`,
+          duration: 0.6,
+          ease: "power2.out"
+        }
+      );
+    });
+    
+    link.addEventListener("mouseleave", (e) => {
+      if (currentHoveredLink === link) {
+        currentHoveredLink = null;
+      }
+      
+      // Get current mouse position for exit animation
+      const rect = link.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      link.style.setProperty("--x", x + "px");
+      link.style.setProperty("--y", y + "px");
+      
+      // Animate circle contraction from exit point
+      gsap.to(link, {
+        "--circle-size": "0px",
+        duration: 0.4,
+        ease: "power2.in",
+        onComplete: () => {
+          link.classList.remove('active-hover');
+        }
       });
     });
   });
@@ -635,28 +820,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Disable tilt on mobile
   if (!isMobile) {
+    let globalMouseX = 0;
+    let globalMouseY = 0;
+    
+    // Track global mouse position
+    document.addEventListener("mousemove", (e) => {
+      globalMouseX = e.clientX;
+      globalMouseY = e.clientY;
+    });
+    
     tiltCards.forEach((card) => {
       let tiltAnimationFrame;
       
-      card.addEventListener("mousemove", (e) => {
-        if (tiltAnimationFrame) {
-          cancelAnimationFrame(tiltAnimationFrame);
-        }
+      const updateTilt = () => {
+        const rect = card.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+        const cardCenterY = rect.top + rect.height / 2;
         
-        tiltAnimationFrame = requestAnimationFrame(() => {
-          const rect = card.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
-          const y = ((e.clientY - rect.top) / rect.height - 0.5) * -30;
-          card.style.transform = `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+        // Calculate distance from mouse to card center
+        const distanceX = globalMouseX - cardCenterX;
+        const distanceY = globalMouseY - cardCenterY;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        
+        // Maximum effective distance (in pixels)
+        const maxDistance = 500;
+        
+        // Calculate influence (1 at card center, 0 at maxDistance)
+        const influence = Math.max(0, 1 - distance / maxDistance);
+        
+        // Calculate tilt angles based on mouse position relative to card
+        const tiltX = (distanceY / rect.height) * 20 * influence;
+        const tiltY = (distanceX / rect.width) * 20 * influence;
+        
+        // Apply transform
+        card.style.transform = `perspective(1000px) rotateX(${-tiltX}deg) rotateY(${tiltY}deg) scale(${1 + influence * 0.02})`;
+      };
+      
+      // Continuously update tilt based on mouse position
+      const animate = () => {
+        updateTilt();
+        tiltAnimationFrame = requestAnimationFrame(animate);
+      };
+      
+      // Start animation when card is in viewport
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animate();
+          } else {
+            if (tiltAnimationFrame) {
+              cancelAnimationFrame(tiltAnimationFrame);
+            }
+            card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+          }
         });
       });
-
-      card.addEventListener("mouseleave", () => {
-        if (tiltAnimationFrame) {
-          cancelAnimationFrame(tiltAnimationFrame);
-        }
-        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0)`;
-      });
+      
+      observer.observe(card);
     });
   }
 
@@ -793,6 +1013,11 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         
+        // Prevent reopening if already open
+        if (skillPopupOverlay.style.display === "flex" && currentSkillCard === card) {
+          return;
+        }
+        
         e.stopPropagation();
         const skillKey = card.dataset.skill;
         const skillData = skillEvidence[skillKey];
@@ -811,26 +1036,20 @@ document.addEventListener("DOMContentLoaded", () => {
           card.parentNode.insertBefore(placeholder, card);
           card.placeholder = placeholder;
 
-          // Determine if card is in right columns (index 2,3,6,7 in grid)
-          const gridColumn = index % 4;
-          // Column 0 should open popup on RIGHT (no left-side class)
-          // Columns 1,2,3 should open popup on LEFT (with left-side class)
-          isRightColumn = gridColumn >= 1;
+          // Determine popup position based on card's position in viewport (industry standard)
+          const cardCenterX = cardRect.left + cardRect.width / 2;
+          const cardCenterY = cardRect.top + cardRect.height / 2;
+          const viewportCenterX = window.innerWidth / 2;
+          
+          // If card is on left half of screen, popup opens on RIGHT
+          // If card is on right half of screen, popup opens on LEFT
+          isRightColumn = cardCenterX > viewportCenterX;
 
-          console.log("Card clicked:", {
-            index,
-            gridColumn,
-            isRightColumn,
-            skillKey,
-          });
-
-          // Add/remove left-side class for right columns
+          // Add/remove left-side class based on position
           if (isRightColumn) {
             skillPopupOverlay.classList.add("left-side");
-            console.log("Added left-side class - popup will be on LEFT");
           } else {
             skillPopupOverlay.classList.remove("left-side");
-            console.log("Removed left-side class - popup will be on RIGHT");
           }
 
           // Move card to body level to escape section stacking context
@@ -868,30 +1087,51 @@ document.addEventListener("DOMContentLoaded", () => {
           skillPopupOverlay.style.display = "flex";
           skillConnector.style.display = "block";
 
-          // Hide line and dots initially
-          connectorLine.classList.remove("visible");
-          connectorDotStart.classList.remove("visible");
-          connectorDotEnd.classList.remove("visible");
-
-          // Fade in overlay
-          requestAnimationFrame(() => {
-            skillPopupOverlay.style.opacity = "1";
-
-            // Open popup immediately
-            skillPopup.style.transform = "scale(1)";
+          // Animate overlay fade in
+          gsap.to(skillPopupOverlay, {
+            opacity: 1,
+            duration: 0.3,
+            ease: "power2.out"
           });
 
-          // Wait for popup to fully render, then calculate line
-          setTimeout(() => {
-            updateConnectorLine();
+          // Get popup position after it's displayed
+          const popupRect = skillPopup.getBoundingClientRect();
+          
+          // Calculate the direction and distance from card to popup
+          const deltaX = cardCenterX - (popupRect.left + popupRect.width / 2);
+          const deltaY = cardCenterY - (popupRect.top + popupRect.height / 2);
 
-            // Show line and dots (animation starts automatically via CSS)
-            connectorLine.classList.add("visible");
-            connectorDotStart.classList.add("visible");
-            connectorDotEnd.classList.add("visible");
-          }, 350);
+          // Initialize line at card center (collapsed)
+          connectorLine.setAttribute("x1", cardCenterX);
+          connectorLine.setAttribute("y1", cardCenterY);
+          connectorLine.setAttribute("x2", cardCenterX);
+          connectorLine.setAttribute("y2", cardCenterY);
+          
+          // Show line and dots immediately
+          connectorLine.classList.add("visible");
+          connectorDotStart.classList.add("visible");
+          connectorDotEnd.classList.add("visible");
 
-          // Prevent body scroll with padding to avoid layout shift
+          // Animate popup expanding from the card position
+          gsap.fromTo(skillPopup, 
+            {
+              x: deltaX,
+              y: deltaY,
+              scale: 0.1,
+              opacity: 0
+            },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              opacity: 1,
+              duration: 0.5,
+              ease: "power2.out",
+              onUpdate: updateConnectorLine
+            }
+          );
+
+          // Prevent body scroll and fix cursor dot
           const scrollbarWidth =
             window.innerWidth - document.documentElement.clientWidth;
           if (scrollbarWidth > 0) {
@@ -900,7 +1140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Also apply to fixed elements to prevent shift
             const fixedElements = document.querySelectorAll(
-              ".section-label, .cursor-dot, .cursor-circle, .noise-overlay"
+              ".section-label, .noise-overlay"
             );
             fixedElements.forEach((el) => {
               el.style.paddingRight = `${scrollbarWidth}px`;
@@ -990,16 +1230,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let startX, startY, endX, endY;
 
+    // Line always connects from center of card
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+
     if (isRightColumn) {
-      // Columns 1,2,3: popup on LEFT, line from left edge of card to right edge of popup
-      startX = cardRect.left;
-      startY = cardRect.top + cardRect.height / 2;
+      // Popup on LEFT: line from card center to right edge of popup
+      startX = cardCenterX;
+      startY = cardCenterY;
       endX = popupRect.right;
       endY = popupRect.top + popupRect.height / 2;
     } else {
-      // Column 0: popup on RIGHT, line from right edge of card to left edge of popup
-      startX = cardRect.right;
-      startY = cardRect.top + cardRect.height / 2;
+      // Popup on RIGHT: line from card center to left edge of popup
+      startX = cardCenterX;
+      startY = cardCenterY;
       endX = popupRect.left;
       endY = popupRect.top + popupRect.height / 2;
     }
@@ -1079,27 +1323,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ===================================
-       CONTACT BUTTON SPLIT ANIMATION
+       CONTACT BUTTON FLUID EXPANSION (GSAP Flip)
     =================================== */
   const contactTrigger = document.getElementById("contact-trigger");
   const contactButtons = document.getElementById("contact-buttons");
+  const socialButtons = document.querySelectorAll(".contact-social-btn");
 
-  if (contactTrigger && contactButtons) {
+  if (contactTrigger && contactButtons && socialButtons.length > 0) {
     let isExpanded = false;
+
+    // Register Flip plugin
+    gsap.registerPlugin(Flip);
+
+    // Initially hide social buttons properly
+    gsap.set(socialButtons, { opacity: 0, scale: 0 });
 
     contactTrigger.addEventListener("click", (e) => {
       e.preventDefault();
 
       if (!isExpanded) {
-        // Add splitting class for tear effect
-        contactTrigger.classList.add("splitting");
-
-        // Show contact buttons with tear animation
-        setTimeout(() => {
-          contactButtons.classList.add("active");
-        }, 100);
-
         isExpanded = true;
+
+        // Animate main button shrinking
+        gsap.to(contactTrigger, {
+          scale: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.in",
+          onComplete: () => {
+            contactTrigger.style.display = "none";
+          }
+        });
+
+        // Animate social buttons appearing with stagger
+        gsap.to(socialButtons, {
+          scale: 1,
+          opacity: 1,
+          duration: 0.6,
+          delay: 0.2,
+          ease: "back.out(1.7)"
+        });
       }
     });
 
@@ -1110,15 +1373,27 @@ document.addEventListener("DOMContentLoaded", () => {
         !contactButtons.contains(e.target) &&
         !contactTrigger.contains(e.target)
       ) {
-        // Hide contact buttons
-        contactButtons.classList.remove("active");
-
-        // Show trigger button again
-        setTimeout(() => {
-          contactTrigger.classList.remove("splitting");
-        }, 300);
-
         isExpanded = false;
+
+        // Animate social buttons disappearing
+        gsap.to(socialButtons, {
+          scale: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.in"
+        });
+
+        // Animate main button appearing
+        gsap.to(contactTrigger, {
+          scale: 1,
+          opacity: 1,
+          duration: 0.4,
+          delay: 0.3,
+          ease: "back.out(1.4)",
+          onStart: () => {
+            contactTrigger.style.display = "inline-block";
+          }
+        });
       }
     });
   }

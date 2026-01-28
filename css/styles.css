@@ -17,12 +17,19 @@
 /* ===================================
    BASE SETTINGS
 =================================== */
+html {
+  scroll-behavior: smooth !important;
+  scroll-padding-top: 80px;
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: "Geist", sans-serif;
   overflow-x: hidden;
   cursor: none;
+  /* Enhanced smooth scrolling via CSS */
+  overscroll-behavior: smooth;
 }
 
 /* Accessibility: Skip Link */
@@ -388,11 +395,25 @@ body {
 
 .tilt-card.active > div {
   background: rgba(20, 20, 20, 1) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   transform: translate3d(0, 0, 0) !important;
   -webkit-transform: translate3d(0, 0, 0) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15), 
+              0 0 40px rgba(255, 255, 255, 0.08) !important;
+  animation: cardGlow 3s ease-in-out infinite !important;
+}
+
+@keyframes cardGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.12), 
+                0 0 30px rgba(255, 255, 255, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.18), 
+                0 0 50px rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* Placeholder to maintain grid space */
@@ -493,14 +514,14 @@ body {
 #skill-connector line {
   stroke: rgba(255, 255, 255, 0.8);
   stroke-width: 2;
-  stroke-dasharray: 5, 5;
+  stroke-dasharray: 8, 8;
   opacity: 0;
   transition: opacity 0.1s ease;
 }
 
 #skill-connector line.visible {
   opacity: 1;
-  animation: dash 20s linear infinite;
+  animation: dashToPopup 1.5s linear infinite !important;
 }
 
 #skill-connector circle {
@@ -523,9 +544,12 @@ body {
   }
 }
 
-@keyframes dash {
+@keyframes dashToPopup {
+  from {
+    stroke-dashoffset: 0;
+  }
   to {
-    stroke-dashoffset: -1000;
+    stroke-dashoffset: -16;
   }
 }
 
@@ -785,7 +809,7 @@ body {
 #menu-overlay {
   position: fixed;
   top: 0;
-  right: -100%;
+  right: 0;
   width: 100%;
   height: 100vh;
   background: rgba(5, 5, 5, 0.98);
@@ -794,11 +818,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: right 0.8s var(--ease-in-out);
+  transform: translateX(100%);
+  visibility: hidden;
 }
 
 #menu-overlay.active {
-  right: 0;
+  visibility: visible;
 }
 
 .menu-content {
@@ -829,33 +854,24 @@ body {
   position: absolute;
   left: 0;
   top: 0;
+  width: 100%;
   background: radial-gradient(
-    circle 150px at var(--x, 50%) var(--y, 50%),
+    circle var(--circle-size, 0px) at var(--x, 50%) var(--y, 50%),
     rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.9) 20%,
-    rgba(255, 255, 255, 0.3) 60%,
-    transparent 100%
+    rgba(255, 255, 255, 1) 30%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.5) 70%,
+    rgba(255, 255, 255, 0) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-.menu-item a:hover::before {
+.menu-item a.active-hover::before {
   opacity: 1;
-  animation: menuTextToWhite 1s ease-in-out 0.1s forwards;
-}
-
-@keyframes menuTextToWhite {
-  to {
-    background: #ffffff;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }
 
 .menu-close {
@@ -877,23 +893,14 @@ body {
   width: 30px;
   height: 2px;
   background: white;
-  transition: transform 0.3s ease;
 }
 
 .menu-close::before {
-  transform: translate(-50%, -50%) rotate(45deg);
+  transform: translate(-50%, -50%) rotate(calc(var(--before-rotation, 45) * 1deg));
 }
 
 .menu-close::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.menu-close:hover::before {
-  transform: translate(-50%, -50%) rotate(225deg);
-}
-
-.menu-close:hover::after {
-  transform: translate(-50%, -50%) rotate(135deg);
+  transform: translate(-50%, -50%) rotate(calc(var(--after-rotation, -45) * 1deg));
 }
 
 .menu-footer {
@@ -927,25 +934,21 @@ body {
 }
 
 /* ===================================
-   CONTACT BUTTON SPLIT ANIMATION
+   CONTACT BUTTON STYLES
 =================================== */
 .contact-button-wrapper {
   position: relative;
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  min-width: 200px;
+  min-height: 60px;
 }
 
 .contact-main-btn {
   position: relative;
   z-index: 2;
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.contact-main-btn.splitting {
-  opacity: 0;
-  transform: scale(0.8);
-  pointer-events: none;
+  margin: 0 auto;
 }
 
 .contact-buttons-container {
@@ -956,68 +959,28 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 3rem;
   z-index: 1;
 }
 
-.contact-social-btn,
-.contact-email-btn {
-  position: relative;
+.contact-social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   background: white;
   color: black;
   border: 2px solid white;
-  opacity: 0;
-  transform: translate(0, 0) scale(0.3) rotate(0deg);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition-delay: var(--delay);
-}
-
-.contact-social-btn {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.contact-email-btn {
-  height: 56px;
-  padding: 0 24px;
-  border-radius: 28px;
-  gap: 8px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* Active state - buttons fly out to positions */
-.contact-buttons-container.active .contact-social-btn,
-.contact-buttons-container.active .contact-email-btn {
-  opacity: 1;
-  transform: translate(calc(var(--position) * 70px), 0) scale(1)
-    rotate(calc(var(--position) * 5deg));
-}
-
-/* Center button (LinkedIn) stays centered */
-.contact-buttons-container.active .contact-social-btn[data-position="0"],
-.contact-buttons-container.active .contact-email-btn[data-position="0"] {
-  transform: translate(0, 0) scale(1) rotate(0deg);
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.2s, opacity 0.2s;
+  transform-origin: center center;
 }
 
 .contact-social-btn:hover {
-  transform: translate(calc(var(--position) * 70px), -8px) scale(1.15)
-    rotate(0deg) !important;
-  background: black;
-  color: white;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-  z-index: 10;
-}
-
-.contact-email-btn:hover {
-  transform: translate(calc(var(--position) * 70px), -8px) scale(1.1)
-    rotate(0deg) !important;
+  transform: scale(1.15) !important;
   background: black;
   color: white;
   box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
@@ -1029,31 +992,6 @@ body {
   width: 24px;
   height: 24px;
   min-width: 24px;
-}
-
-.contact-email-btn i {
-  width: 20px;
-  height: 20px;
-}
-
-.contact-email-btn:hover {
-  transform: translate(calc(var(--position) * 70px), -8px) scale(1.1)
-    rotate(0deg) !important;
-  background: black;
-  color: white;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-}
-
-.contact-email-btn:hover {
-  transform: scale(1.1) translateY(-4px);
-  background: black;
-  color: white;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-}
-
-.contact-email-btn i {
-  width: 20px;
-  height: 20px;
 }
 
 #contact-trigger.hidden {
