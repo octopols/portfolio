@@ -13,8 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentScroll = window.scrollY;
   let targetScroll = window.scrollY;
   let isScrolling = false;
+  let wheelEventCount = 0;
+  let lastWheelTime = 0;
+  let isTrackpad = null; // null = unknown, true = trackpad, false = mouse wheel
 
-  // Smooth scroll animation
+  // Smooth scroll animation (only for mouse wheel)
   function smoothScrollAnimation() {
     if (Math.abs(targetScroll - currentScroll) < 0.5) {
       currentScroll = targetScroll;
@@ -24,23 +27,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentScroll += (targetScroll - currentScroll) * 0.1;
     window.scrollTo(0, currentScroll);
-    
+
     if (isScrolling) {
       requestAnimationFrame(smoothScrollAnimation);
     }
   }
 
-  // Handle wheel events
-  window.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    targetScroll += e.deltaY * 0.8;
-    targetScroll = Math.max(0, Math.min(targetScroll, document.documentElement.scrollHeight - window.innerHeight));
-    
-    if (!isScrolling) {
-      isScrolling = true;
-      requestAnimationFrame(smoothScrollAnimation);
-    }
-  }, { passive: false });
+  // Detect trackpad vs mouse wheel more reliably
+  window.addEventListener(
+    "wheel",
+    (e) => {
+      const now = Date.now();
+      const timeDelta = now - lastWheelTime;
+      lastWheelTime = now;
+
+      // Enhanced trackpad detection
+      // Trackpads: frequent events, smaller deltaY, often have decimal values
+      // Mouse wheels: infrequent events, larger deltaY, usually integer values
+      if (isTrackpad === null) {
+        // Initial detection based on multiple signals
+        const hasDecimals = e.deltaY % 1 !== 0;
+        const isSmallDelta = Math.abs(e.deltaY) < 50;
+        const isFrequent = timeDelta < 50;
+
+        if ((hasDecimals || isSmallDelta) && isFrequent) {
+          isTrackpad = true;
+          console.log("Detected: Trackpad - using native scrolling");
+        } else if (Math.abs(e.deltaY) > 100) {
+          isTrackpad = false;
+          console.log("Detected: Mouse wheel - using smooth scrolling");
+        }
+      }
+
+      // For trackpad: allow native scrolling (don't preventDefault)
+      if (isTrackpad === true) {
+        // Let the browser handle trackpad scrolling naturally
+        return;
+      }
+
+      // For mouse wheel: use custom smooth scrolling
+      if (isTrackpad === false) {
+        e.preventDefault();
+        targetScroll += e.deltaY * 0.8;
+        targetScroll = Math.max(
+          0,
+          Math.min(
+            targetScroll,
+            document.documentElement.scrollHeight - window.innerHeight,
+          ),
+        );
+
+        if (!isScrolling) {
+          isScrolling = true;
+          requestAnimationFrame(smoothScrollAnimation);
+        }
+      }
+    },
+    { passive: false },
+  );
 
   /* ===================================
        DEBUG: CHECK MARQUEE ANIMATION
@@ -49,11 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const marqueeTrack = document.querySelector(".marquee-track");
   const marqueeContainer = document.querySelector(".marquee-container");
   const marqueeItems = document.querySelectorAll(".marquee-item");
-  
+
   console.log("Marquee track found:", marqueeTrack);
   console.log("Marquee container found:", marqueeContainer);
   console.log("Marquee items count:", marqueeItems.length);
-  
+
   if (marqueeTrack) {
     const computedStyle = window.getComputedStyle(marqueeTrack);
     console.log("\n--- COMPUTED STYLES (what browser actually sees) ---");
@@ -65,12 +109,18 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Animation-play-state:", computedStyle.animationPlayState);
     console.log("Transform:", computedStyle.transform);
     console.log("Will-change:", computedStyle.willChange);
-    
+
     console.log("\n--- TAILWIND OVERRIDE CHECK ---");
-    console.log("Is display being overridden?", computedStyle.display !== 'flex' ? 'YES - PROBLEM!' : 'No');
-    console.log("Is animation missing?", computedStyle.animationName === 'none' ? 'YES - PROBLEM!' : 'No');
+    console.log(
+      "Is display being overridden?",
+      computedStyle.display !== "flex" ? "YES - PROBLEM!" : "No",
+    );
+    console.log(
+      "Is animation missing?",
+      computedStyle.animationName === "none" ? "YES - PROBLEM!" : "No",
+    );
   }
-  
+
   if (marqueeContainer) {
     const containerStyle = window.getComputedStyle(marqueeContainer);
     console.log("\n--- CONTAINER STYLES ---");
@@ -78,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Overflow-x:", containerStyle.overflowX);
     console.log("Width:", containerStyle.width);
   }
-  
+
   console.log("\n--- MARQUEE ITEMS ---");
   marqueeItems.forEach((item, i) => {
     const itemStyle = window.getComputedStyle(item);
@@ -205,35 +255,42 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        CUSTOM CURSOR
     =================================== */
-  const cursorDot = document.querySelector('.cursor-dot');
-  const cursorCircle = document.querySelector('.cursor-circle');
-  let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
+  const cursorDot = document.querySelector(".cursor-dot");
+  const cursorCircle = document.querySelector(".cursor-circle");
+  let mouseX = 0,
+    mouseY = 0,
+    cursorX = 0,
+    cursorY = 0;
 
   // Check if mobile device
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
   if (!isMobile && cursorDot && cursorCircle) {
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      cursorDot.style.left = mouseX + 'px';
-      cursorDot.style.top = mouseY + 'px';
+      cursorDot.style.left = mouseX + "px";
+      cursorDot.style.top = mouseY + "px";
     });
 
     // Smooth Cursor Follow Animation
     function animateCursor() {
       cursorX += (mouseX - cursorX) * 0.15;
       cursorY += (mouseY - cursorY) * 0.15;
-      cursorCircle.style.left = cursorX + 'px';
-      cursorCircle.style.top = cursorY + 'px';
+      cursorCircle.style.left = cursorX + "px";
+      cursorCircle.style.top = cursorY + "px";
       requestAnimationFrame(animateCursor);
     }
     animateCursor();
 
     // Cursor Hover Effects
-    document.querySelectorAll('.hoverable').forEach(el => {
-      el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
-      el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
+    document.querySelectorAll(".hoverable").forEach((el) => {
+      el.addEventListener("mouseenter", () =>
+        cursorCircle.classList.add("hovered"),
+      );
+      el.addEventListener("mouseleave", () =>
+        cursorCircle.classList.remove("hovered"),
+      );
     });
   }
 
@@ -246,39 +303,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openMenu() {
     menuOverlay.classList.add("active");
-    
+
     // Prevent body scroll and compensate for scrollbar
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
     if (scrollbarWidth > 0) {
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
-      
+
       // Also apply to fixed elements to prevent shift
-      const fixedElements = document.querySelectorAll(".section-label, .noise-overlay, header");
+      const fixedElements = document.querySelectorAll(
+        ".section-label, .noise-overlay, header",
+      );
       fixedElements.forEach((el) => {
         el.style.paddingRight = `${scrollbarWidth}px`;
       });
     } else {
       document.body.style.overflow = "hidden";
     }
-    
+
     // Animate menu sliding in from left to right (pushing from left)
-    gsap.fromTo(menuOverlay, 
-      { 
-        x: "100%" 
+    gsap.fromTo(
+      menuOverlay,
+      {
+        x: "100%",
       },
-      { 
+      {
         x: "0%",
         duration: 0.8,
-        ease: "power3.inOut"
-      }
+        ease: "power3.inOut",
+      },
     );
-    
+
     // Stagger animate menu items
-    gsap.fromTo(".menu-item",
+    gsap.fromTo(
+      ".menu-item",
       {
         opacity: 0,
-        x: 50
+        x: 50,
       },
       {
         opacity: 1,
@@ -286,8 +348,8 @@ document.addEventListener("DOMContentLoaded", () => {
         duration: 0.5,
         stagger: 0.1,
         delay: 0.3,
-        ease: "power2.out"
-      }
+        ease: "power2.out",
+      },
     );
   }
 
@@ -295,13 +357,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Remove padding and restore scroll immediately to prevent jank
     document.body.style.overflow = "";
     document.body.style.paddingRight = "";
-    
+
     // Remove padding from fixed elements
-    const fixedElements = document.querySelectorAll(".section-label, .noise-overlay, header");
+    const fixedElements = document.querySelectorAll(
+      ".section-label, .noise-overlay, header",
+    );
     fixedElements.forEach((el) => {
       el.style.paddingRight = "";
     });
-    
+
     // Animate menu sliding out from right to left
     gsap.to(menuOverlay, {
       x: "100%",
@@ -309,7 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ease: "power3.inOut",
       onComplete: () => {
         menuOverlay.classList.remove("active");
-      }
+      },
     });
   }
 
@@ -320,47 +384,53 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuClose) {
     let beforeRotation = { value: 45 };
     let afterRotation = { value: -45 };
-    
+
     menuClose.addEventListener("mouseenter", () => {
       // Animate ::before counterclockwise 90 degrees (45deg -> -45deg)
       gsap.to(beforeRotation, {
         value: -45,
         duration: 0.5,
         ease: "power2.inOut",
-        onUpdate: function() {
-          menuClose.style.setProperty("--before-rotation", beforeRotation.value);
-        }
+        onUpdate: function () {
+          menuClose.style.setProperty(
+            "--before-rotation",
+            beforeRotation.value,
+          );
+        },
       });
-      
+
       // Animate ::after clockwise 90 degrees (-45deg -> 45deg)
       gsap.to(afterRotation, {
         value: 45,
         duration: 0.5,
         ease: "power2.inOut",
-        onUpdate: function() {
+        onUpdate: function () {
           menuClose.style.setProperty("--after-rotation", afterRotation.value);
-        }
+        },
       });
     });
-    
+
     menuClose.addEventListener("mouseleave", () => {
       // Animate back to original X position
       gsap.to(beforeRotation, {
         value: 45,
         duration: 0.5,
         ease: "power2.inOut",
-        onUpdate: function() {
-          menuClose.style.setProperty("--before-rotation", beforeRotation.value);
-        }
+        onUpdate: function () {
+          menuClose.style.setProperty(
+            "--before-rotation",
+            beforeRotation.value,
+          );
+        },
       });
-      
+
       gsap.to(afterRotation, {
         value: -45,
         duration: 0.5,
         ease: "power2.inOut",
-        onUpdate: function() {
+        onUpdate: function () {
           menuClose.style.setProperty("--after-rotation", afterRotation.value);
-        }
+        },
       });
     });
   }
@@ -373,59 +443,60 @@ document.addEventListener("DOMContentLoaded", () => {
     link.addEventListener("click", (e) => {
       closeMenu();
     });
-    
+
     link.addEventListener("mouseenter", (e) => {
       // Remove active class and kill animation on previously hovered link
       if (currentHoveredLink && currentHoveredLink !== link) {
         gsap.killTweensOf(currentHoveredLink);
-        currentHoveredLink.classList.remove('active-hover');
+        currentHoveredLink.classList.remove("active-hover");
         gsap.set(currentHoveredLink, { "--circle-size": "0px" });
       }
-      
+
       currentHoveredLink = link;
-      
+
       // Set entry point position
       const rect = link.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       link.style.setProperty("--x", x + "px");
       link.style.setProperty("--y", y + "px");
-      
+
       // Calculate size needed to cover entire text
       const maxSize = Math.max(rect.width, rect.height) * 2;
-      
+
       // Add class and animate circle expansion
-      link.classList.add('active-hover');
-      gsap.fromTo(link,
+      link.classList.add("active-hover");
+      gsap.fromTo(
+        link,
         { "--circle-size": "0px" },
         {
           "--circle-size": `${maxSize}px`,
           duration: 0.6,
-          ease: "power2.out"
-        }
+          ease: "power2.out",
+        },
       );
     });
-    
+
     link.addEventListener("mouseleave", (e) => {
       if (currentHoveredLink === link) {
         currentHoveredLink = null;
       }
-      
+
       // Get current mouse position for exit animation
       const rect = link.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       link.style.setProperty("--x", x + "px");
       link.style.setProperty("--y", y + "px");
-      
+
       // Animate circle contraction from exit point
       gsap.to(link, {
         "--circle-size": "0px",
         duration: 0.4,
         ease: "power2.in",
         onComplete: () => {
-          link.classList.remove('active-hover');
-        }
+          link.classList.remove("active-hover");
+        },
       });
     });
   });
@@ -444,20 +515,25 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        SCROLL-TRIGGERED REVEALS
     =================================== */
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-        if (entry.target.classList.contains('counter')) {
-          startCounter(entry.target);
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("active");
+          if (entry.target.classList.contains("counter")) {
+            startCounter(entry.target);
+          }
         }
-      }
-    });
-  }, { threshold: 0.1 });
+      });
+    },
+    { threshold: 0.1 },
+  );
 
-  document.querySelectorAll('.reveal-item, .split-line, .draw-path, .counter').forEach(el => {
-    observer.observe(el);
-  });
+  document
+    .querySelectorAll(".reveal-item, .split-line, .draw-path, .counter")
+    .forEach((el) => {
+      observer.observe(el);
+    });
 
   // Word-by-Word Reveal for Paragraph
   const p = document.querySelector(".reveal-paragraph");
@@ -468,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (word, i) =>
           `<span style="display:inline-block; opacity:0; transform:translateY(20px); transition:all 0.5s ease-out ${
             i * 0.05
-          }s">${word}</span> `
+          }s">${word}</span> `,
       )
       .join("");
 
@@ -491,81 +567,93 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoSection = document.getElementById("video-expand");
   const beyondCodeSection = document.getElementById("beyond-code-expand");
 
-  window.addEventListener("scroll", () => {
-    const scrollTop = window.scrollY;
-    const docHeight =
-      document.documentElement.scrollHeight - window.innerHeight;
+  window.addEventListener(
+    "scroll",
+    () => {
+      const scrollTop = window.scrollY;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
 
-    // Progress Bar
-    if (progressBar) {
-      progressBar.style.width = (scrollTop / docHeight) * 100 + "%";
-    }
-
-    // Parallax Background
-    document.querySelectorAll(".parallax-bg").forEach((bg) => {
-      const speed = bg.getAttribute("data-speed");
-      if (bg.querySelector("img")) {
-        bg.querySelector("img").style.transform = `translateY(${
-          scrollTop * speed
-        }px) scale(1.1)`;
+      // Progress Bar
+      if (progressBar) {
+        progressBar.style.width = (scrollTop / docHeight) * 100 + "%";
       }
-    });
 
-    // Horizontal Scroll Section
-    if (horizontalSection && horizontalTrack && !isMobile) {
-      const offset = horizontalSection.offsetTop;
-      const height = horizontalSection.offsetHeight;
-      const winH = window.innerHeight;
+      // Parallax Background
+      document.querySelectorAll(".parallax-bg").forEach((bg) => {
+        const speed = bg.getAttribute("data-speed");
+        if (bg.querySelector("img")) {
+          bg.querySelector("img").style.transform = `translateY(${
+            scrollTop * speed
+          }px) scale(1.1)`;
+        }
+      });
 
-      if (scrollTop >= offset && scrollTop <= offset + height - winH) {
-        const pct = (scrollTop - offset) / (height - winH);
-        const move = (horizontalTrack.scrollWidth - window.innerWidth) * pct;
-        horizontalTrack.style.transform = `translateX(-${move}px)`;
-      }
-    }
+      // Horizontal Scroll Section
+      if (horizontalSection && horizontalTrack && !isMobile) {
+        const offset = horizontalSection.offsetTop;
+        const height = horizontalSection.offsetHeight;
+        const winH = window.innerHeight;
 
-    // Video Expand Effect - with smooth transition
-    if (videoSection) {
-      const rect = videoSection.getBoundingClientRect();
-      const centerDist = Math.abs(
-        rect.top + rect.height / 2 - window.innerHeight / 2
-      );
-
-      if (centerDist < window.innerHeight * 0.6) {
-        const expand = 1 - centerDist / (window.innerHeight * 0.6);
-        const targetWidth = Math.min(70 + expand * 30, 100);
-        const targetRadius = 20 * (1 - expand);
-        
-        // Use CSS transitions by only updating when values change significantly
-        const currentWidth = parseFloat(videoSection.style.width) || 70;
-        if (Math.abs(currentWidth - targetWidth) > 0.5) {
-          videoSection.style.setProperty('width', targetWidth + '%', 'important');
-          videoSection.style.setProperty('border-radius', targetRadius + 'px', 'important');
+        if (scrollTop >= offset && scrollTop <= offset + height - winH) {
+          const pct = (scrollTop - offset) / (height - winH);
+          const move = (horizontalTrack.scrollWidth - window.innerWidth) * pct;
+          horizontalTrack.style.transform = `translateX(-${move}px)`;
         }
       }
-    }
 
-    // Beyond Code Expand Effect - with smooth transition
-    if (beyondCodeSection) {
-      const rect = beyondCodeSection.getBoundingClientRect();
-      const centerDist = Math.abs(
-        rect.top + rect.height / 2 - window.innerHeight / 2
-      );
+      // Video Expand Effect - with smooth transition
+      if (videoSection) {
+        const rect = videoSection.getBoundingClientRect();
+        const centerDist = Math.abs(
+          rect.top + rect.height / 2 - window.innerHeight / 2,
+        );
 
-      if (centerDist < window.innerHeight * 0.6) {
-        const expand = 1 - centerDist / (window.innerHeight * 0.6);
-        const targetWidth = Math.min(70 + expand * 30, 100);
-        const targetRadius = 20 * (1 - expand);
-        
-        // Use CSS transitions by only updating when values change significantly
-        const currentWidth = parseFloat(beyondCodeSection.style.width) || 70;
-        if (Math.abs(currentWidth - targetWidth) > 0.5) {
-          beyondCodeSection.style.width = targetWidth + "%";
-          beyondCodeSection.style.borderRadius = targetRadius + "px";
+        if (centerDist < window.innerHeight * 0.6) {
+          const expand = 1 - centerDist / (window.innerHeight * 0.6);
+          const targetWidth = Math.min(70 + expand * 30, 100);
+          const targetRadius = 20 * (1 - expand);
+
+          // Use CSS transitions by only updating when values change significantly
+          const currentWidth = parseFloat(videoSection.style.width) || 70;
+          if (Math.abs(currentWidth - targetWidth) > 0.5) {
+            videoSection.style.setProperty(
+              "width",
+              targetWidth + "%",
+              "important",
+            );
+            videoSection.style.setProperty(
+              "border-radius",
+              targetRadius + "px",
+              "important",
+            );
+          }
         }
       }
-    }
-  }, { passive: true });
+
+      // Beyond Code Expand Effect - with smooth transition
+      if (beyondCodeSection) {
+        const rect = beyondCodeSection.getBoundingClientRect();
+        const centerDist = Math.abs(
+          rect.top + rect.height / 2 - window.innerHeight / 2,
+        );
+
+        if (centerDist < window.innerHeight * 0.6) {
+          const expand = 1 - centerDist / (window.innerHeight * 0.6);
+          const targetWidth = Math.min(70 + expand * 30, 100);
+          const targetRadius = 20 * (1 - expand);
+
+          // Use CSS transitions by only updating when values change significantly
+          const currentWidth = parseFloat(beyondCodeSection.style.width) || 70;
+          if (Math.abs(currentWidth - targetWidth) > 0.5) {
+            beyondCodeSection.style.width = targetWidth + "%";
+            beyondCodeSection.style.borderRadius = targetRadius + "px";
+          }
+        }
+      }
+    },
+    { passive: true },
+  );
 
   /* ===================================
        INTERACTIVE ELEMENTS
@@ -574,12 +662,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Magnetic Effect
   document.querySelectorAll(".magnetic-wrap").forEach((wrap) => {
     let magneticAnimationFrame;
-    
+
     wrap.addEventListener("mousemove", (e) => {
       if (magneticAnimationFrame) {
         cancelAnimationFrame(magneticAnimationFrame);
       }
-      
+
       magneticAnimationFrame = requestAnimationFrame(() => {
         const rect = wrap.getBoundingClientRect();
         const x = (e.clientX - rect.left - rect.width / 2) * 0.8;
@@ -608,12 +696,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (tiltWrap && tiltCard) {
     let tiltWrapAnimationFrame;
-    
+
     tiltWrap.addEventListener("mousemove", (e) => {
       if (tiltWrapAnimationFrame) {
         cancelAnimationFrame(tiltWrapAnimationFrame);
       }
-      
+
       tiltWrapAnimationFrame = requestAnimationFrame(() => {
         const rect = tiltWrap.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width - 0.5) * 30;
@@ -640,10 +728,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let width,
       height,
       particles = [];
-    
+
     // Track mouse position for particle connections
-    let mouseX = 0, mouseY = 0;
-    
+    let mouseX = 0,
+      mouseY = 0;
+
     document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -739,19 +828,19 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Fetch user data
       const userResponse = await fetch(
-        `https://api.github.com/users/${username}`
+        `https://api.github.com/users/${username}`,
       );
       const userData = await userResponse.json();
 
       // Fetch repos to calculate total stars
       const reposResponse = await fetch(
-        `https://api.github.com/users/${username}/repos?per_page=100`
+        `https://api.github.com/users/${username}/repos?per_page=100`,
       );
       const reposData = await reposResponse.json();
 
       const totalStars = reposData.reduce(
         (acc, repo) => acc + repo.stargazers_count,
-        0
+        0,
       );
 
       // Update the DOM
@@ -807,7 +896,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     observer.observe(repositorySection);
@@ -822,49 +911,51 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!isMobile) {
     let globalMouseX = 0;
     let globalMouseY = 0;
-    
+
     // Track global mouse position
     document.addEventListener("mousemove", (e) => {
       globalMouseX = e.clientX;
       globalMouseY = e.clientY;
     });
-    
+
     tiltCards.forEach((card) => {
       let tiltAnimationFrame;
-      
+
       const updateTilt = () => {
         const rect = card.getBoundingClientRect();
         const cardCenterX = rect.left + rect.width / 2;
         const cardCenterY = rect.top + rect.height / 2;
-        
+
         // Calculate distance from mouse to card center
         const distanceX = globalMouseX - cardCenterX;
         const distanceY = globalMouseY - cardCenterY;
-        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        
+        const distance = Math.sqrt(
+          distanceX * distanceX + distanceY * distanceY,
+        );
+
         // Maximum effective distance (in pixels)
         const maxDistance = 500;
-        
+
         // Calculate influence (1 at card center, 0 at maxDistance)
         const influence = Math.max(0, 1 - distance / maxDistance);
-        
+
         // Calculate tilt angles based on mouse position relative to card
         const tiltX = (distanceY / rect.height) * 20 * influence;
         const tiltY = (distanceX / rect.width) * 20 * influence;
-        
+
         // Apply transform
         card.style.transform = `perspective(1000px) rotateX(${-tiltX}deg) rotateY(${tiltY}deg) scale(${1 + influence * 0.02})`;
       };
-      
+
       // Continuously update tilt based on mouse position
       const animate = () => {
         updateTilt();
         tiltAnimationFrame = requestAnimationFrame(animate);
       };
-      
+
       // Start animation when card is in viewport
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
             animate();
           } else {
@@ -875,7 +966,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       });
-      
+
       observer.observe(card);
     });
   }
@@ -1012,12 +1103,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isMobile) {
           return;
         }
-        
+
         // Prevent reopening if already open
-        if (skillPopupOverlay.style.display === "flex" && currentSkillCard === card) {
+        if (
+          skillPopupOverlay.style.display === "flex" &&
+          currentSkillCard === card
+        ) {
           return;
         }
-        
+
         e.stopPropagation();
         const skillKey = card.dataset.skill;
         const skillData = skillEvidence[skillKey];
@@ -1040,7 +1134,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const cardCenterX = cardRect.left + cardRect.width / 2;
           const cardCenterY = cardRect.top + cardRect.height / 2;
           const viewportCenterX = window.innerWidth / 2;
-          
+
           // If card is on left half of screen, popup opens on RIGHT
           // If card is on right half of screen, popup opens on LEFT
           isRightColumn = cardCenterX > viewportCenterX;
@@ -1077,7 +1171,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <div class="w-2 h-2 rounded-full bg-white/60 mt-2 flex-shrink-0"></div>
                                     <p class="text-white/80 leading-relaxed">${item}</p>
                                 </div>
-                            `
+                            `,
                               )
                               .join("")}
                         </div>
@@ -1091,12 +1185,12 @@ document.addEventListener("DOMContentLoaded", () => {
           gsap.to(skillPopupOverlay, {
             opacity: 1,
             duration: 0.3,
-            ease: "power2.out"
+            ease: "power2.out",
           });
 
           // Get popup position after it's displayed
           const popupRect = skillPopup.getBoundingClientRect();
-          
+
           // Calculate the direction and distance from card to popup
           const deltaX = cardCenterX - (popupRect.left + popupRect.width / 2);
           const deltaY = cardCenterY - (popupRect.top + popupRect.height / 2);
@@ -1106,19 +1200,20 @@ document.addEventListener("DOMContentLoaded", () => {
           connectorLine.setAttribute("y1", cardCenterY);
           connectorLine.setAttribute("x2", cardCenterX);
           connectorLine.setAttribute("y2", cardCenterY);
-          
+
           // Show line and dots immediately
           connectorLine.classList.add("visible");
           connectorDotStart.classList.add("visible");
           connectorDotEnd.classList.add("visible");
 
           // Animate popup expanding from the card position
-          gsap.fromTo(skillPopup, 
+          gsap.fromTo(
+            skillPopup,
             {
               x: deltaX,
               y: deltaY,
               scale: 0.1,
-              opacity: 0
+              opacity: 0,
             },
             {
               x: 0,
@@ -1127,8 +1222,8 @@ document.addEventListener("DOMContentLoaded", () => {
               opacity: 1,
               duration: 0.5,
               ease: "power2.out",
-              onUpdate: updateConnectorLine
-            }
+              onUpdate: updateConnectorLine,
+            },
           );
 
           // Prevent body scroll and fix cursor dot
@@ -1140,7 +1235,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Also apply to fixed elements to prevent shift
             const fixedElements = document.querySelectorAll(
-              ".section-label, .noise-overlay"
+              ".section-label, .noise-overlay",
             );
             fixedElements.forEach((el) => {
               el.style.paddingRight = `${scrollbarWidth}px`;
@@ -1174,7 +1269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentSkillCard.placeholder) {
         currentSkillCard.placeholder.parentNode.insertBefore(
           currentSkillCard,
-          currentSkillCard.placeholder
+          currentSkillCard.placeholder,
         );
         currentSkillCard.placeholder.remove();
         currentSkillCard.placeholder = null;
@@ -1197,7 +1292,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Remove padding from fixed elements
       const fixedElements = document.querySelectorAll(
-        ".section-label, .cursor-dot, .cursor-circle, .noise-overlay"
+        ".section-label, .cursor-dot, .cursor-circle, .noise-overlay",
       );
       fixedElements.forEach((el) => {
         el.style.paddingRight = "";
@@ -1352,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ease: "power2.in",
           onComplete: () => {
             contactTrigger.style.display = "none";
-          }
+          },
         });
 
         // Animate social buttons appearing with stagger
@@ -1361,7 +1456,7 @@ document.addEventListener("DOMContentLoaded", () => {
           opacity: 1,
           duration: 0.6,
           delay: 0.2,
-          ease: "back.out(1.7)"
+          ease: "back.out(1.7)",
         });
       }
     });
@@ -1380,7 +1475,7 @@ document.addEventListener("DOMContentLoaded", () => {
           scale: 0,
           opacity: 0,
           duration: 0.3,
-          ease: "power2.in"
+          ease: "power2.in",
         });
 
         // Animate main button appearing
@@ -1392,7 +1487,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ease: "back.out(1.4)",
           onStart: () => {
             contactTrigger.style.display = "inline-block";
-          }
+          },
         });
       }
     });
