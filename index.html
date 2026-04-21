@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
@@ -562,27 +562,50 @@
                         Dec 2024 – Present | Bengaluru, India
                       </p>
                       <ul
-                        class="space-y-2 text-sm text-neutral-300 leading-relaxed"
+                        class="space-y-4 text-sm text-neutral-300 leading-relaxed"
                       >
                         <li class="flex items-start gap-2">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Built production RCS messaging platform with 99.9%
-                            uptime serving 50+ enterprise clients</span
+                            >Redesigned campaign analytics infrastructure with
+                            a two-tier PostgreSQL cache + Elasticsearch data
+                            stream pipeline, reducing page load latency by ~80%
+                            across millions of campaign events</span
                           >
                         </li>
                         <li class="flex items-start gap-2">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Eliminated 85% of sync failures for 250+ stores
-                            handling 2M+ daily product updates</span
+                            >Rearchitected Shopify segment sync system using a
+                            two-machine state machine (orchestrator + sync
+                            executor) with Shopify API rate limiting, enabling
+                            reliable sync of thousands of segments with customer
+                            lists exceeding 2M records—replacing the codebase’s
+                            #1 acknowledged technical debt</span
                           >
                         </li>
                         <li class="flex items-start gap-2">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Increased conversion by 35% through A/B testing and
-                            segment sorting algorithms</span
+                            >Built BIK’s RCS broadcast platform from
+                            scratch—designed a generic channel abstraction for
+                            provider-agnostic campaign execution, then
+                            implemented Node.js microservices with Redis-backed
+                            segment delivery and a webhook-driven status update
+                            pipeline, processing 500K+ messages monthly for 50+
+                            enterprise clients</span
+                          >
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span class="text-white/40 mt-1">•</span>
+                          <span
+                            >Audited and rebuilt the end-to-end billing system
+                            after identifying a 3-hour daily event tracking gap
+                            causing ~12.5% systematic revenue loss; implemented
+                            per-client rate card management, per-model AI usage
+                            billing (GPT-4, Claude, Gemini), and a full audit
+                            trail, eliminating all revenue leakage and client
+                            disputes</span
                           >
                         </li>
                       </ul>
@@ -645,27 +668,25 @@
                         May – Oct 2024 | Remote
                       </p>
                       <ul
-                        class="space-y-2 text-sm text-neutral-300 leading-relaxed md:text-right"
+                        class="space-y-4 text-sm text-neutral-300 leading-relaxed md:text-right"
                       >
                         <li class="flex items-start gap-2 md:flex-row-reverse">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Reduced editing time by 75% for VLC's 3B+ users
-                            worldwide</span
-                          >
-                        </li>
-                        <li class="flex items-start gap-2 md:flex-row-reverse">
-                          <span class="text-white/40 mt-1">•</span>
-                          <span
                             >Designed multi-file metadata editing subsystem in
-                            C++ and Qt</span
+                            C++ and Qt—refactored legacy batch APIs,
+                            implemented undo/redo via command pattern, and built
+                            extensible metadata provider interface; reduced
+                            editing time by 75% for VLC’s 3B+ users</span
                           >
                         </li>
                         <li class="flex items-start gap-2 md:flex-row-reverse">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Refactored legacy APIs to support batch operations
-                            with undo/redo</span
+                            >Mentored directly by VLC founder Jean-Baptiste
+                            Kempf; collaborated on architectural decisions that
+                            influenced VLC’s long-term metadata infrastructure
+                            roadmap</span
                           >
                         </li>
                       </ul>
@@ -728,27 +749,23 @@
                         May – Oct 2023 | Remote
                       </p>
                       <ul
-                        class="space-y-2 text-sm text-neutral-300 leading-relaxed"
+                        class="space-y-4 text-sm text-neutral-300 leading-relaxed"
                       >
                         <li class="flex items-start gap-2">
                           <span class="text-white/40 mt-1">•</span>
                           <span
                             >Built reusable popup and inline text editing
-                            framework in C++ using Qt</span
+                            framework in C++ using Qt’s model-view architecture;
+                            shipped as flagship feature in MuseScore 4.6, used
+                            by 10M+ users globally</span
                           >
                         </li>
                         <li class="flex items-start gap-2">
                           <span class="text-white/40 mt-1">•</span>
                           <span
-                            >Released as flagship feature in MuseScore 4.6 for
-                            millions of daily users</span
-                          >
-                        </li>
-                        <li class="flex items-start gap-2">
-                          <span class="text-white/40 mt-1">•</span>
-                          <span
-                            >Created base widget classes and event handling
-                            system for notation workflow</span
+                            >Established extensible widget infrastructure
+                            patterns adopted by subsequent GSoC contributors
+                            across the codebase</span
                           >
                         </li>
                       </ul>
