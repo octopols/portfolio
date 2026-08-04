@@ -208,19 +208,36 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        LOCAL TIME DISPLAY
     =================================== */
+  // This is labelled as *my* local time under a Bengaluru address, so it has to
+  // be pinned to IST — reading the visitor's clock showed a recruiter in
+  // San Francisco their own time and called it Bengaluru.
   function updateLocalTime() {
     const timeEl = document.getElementById("local-time");
-    if (timeEl) {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const displayHours = hours % 12 || 12;
-      timeEl.textContent = `${displayHours}:${minutes} ${ampm}`;
+    if (!timeEl) return;
+    try {
+      timeEl.textContent = new Date().toLocaleTimeString("en-US", {
+        timeZone: "Asia/Kolkata",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (e) {
+      // No tz database in this engine — drop the row rather than show a stub.
+      const wrapper = timeEl.closest("[data-local-time-block]");
+      if (wrapper) wrapper.remove();
+      else timeEl.remove();
     }
   }
   updateLocalTime();
   setInterval(updateLocalTime, 1000);
+
+  /* ===================================
+       FOOTER COPYRIGHT YEAR
+    =================================== */
+  const footerYear = document.getElementById("footer-year");
+  if (footerYear) {
+    footerYear.textContent = new Date().getFullYear();
+  }
 
   /* ===================================
        PRELOADER ANIMATION
@@ -523,6 +540,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (entry.target.classList.contains("counter")) {
             startCounter(entry.target);
           }
+          // These reveals are one-shot; releasing them keeps counters from
+          // being re-triggered and drops the observer's work to zero once the
+          // whole page has been seen.
+          observer.unobserve(entry.target);
         }
       });
     },
@@ -802,9 +823,25 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        COUNTER ANIMATION
     =================================== */
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
   function startCounter(el) {
+    // Guard against double-starts: the reveal observer can re-fire when an
+    // element scrolls back into view, and a second interval on the same node
+    // makes the two animations fight over innerText.
+    if (el.dataset.counted === "true") return;
+    el.dataset.counted = "true";
+
     const target = +el.dataset.target;
     const suffix = el.dataset.suffix || "";
+
+    if (!Number.isFinite(target) || target <= 0 || prefersReducedMotion) {
+      el.innerText = (Number.isFinite(target) ? target : 0) + suffix;
+      return;
+    }
+
     let count = 0;
     const inc = target / 50;
 
@@ -822,84 +859,131 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ===================================
        GITHUB STATS FETCHER
     =================================== */
+  /*
+   * The unauthenticated GitHub API allows 60 requests/hour per IP and this
+   * costs 2 of them per page view, so a busy hour (or a visitor behind a shared
+   * corporate NAT) used to blow the quota and fall through to four "--"
+   * placeholders. Two changes fix that: results are cached in localStorage for
+   * a day, and a failed fetch leaves the block hidden instead of rendering
+   * empty dashes.
+   *
+   * "Contributions" is deliberately gone: it isn't available from the REST API,
+   * and the old code shipped a hardcoded 1200 as if it were measured.
+   */
+  const GH_CACHE_KEY = "gh-stats-v1";
+  const GH_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+  function renderGitHubStats(stats) {
+    const statsBlock = document.getElementById("gh-stats");
+    if (!statsBlock) return;
+
+    const fields = [
+      ["gh-repos", stats.repos],
+      ["gh-stars", stats.stars],
+      ["gh-followers", stats.followers],
+    ];
+
+    statsBlock.classList.remove("hidden");
+
+    // The reveal observer can't have fired for these while the block was
+    // display:none, and it releases elements after their first hit — so activate
+    // them directly rather than relying on a second intersection.
+    statsBlock.querySelectorAll(".reveal-item").forEach((el) => {
+      el.classList.add("active");
+    });
+
+    fields.forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.dataset.target = value;
+      el.innerText = "0";
+      startCounter(el);
+    });
+  }
+
+  function readGitHubCache() {
+    try {
+      const raw = localStorage.getItem(GH_CACHE_KEY);
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      if (!cached || Date.now() - cached.at > GH_CACHE_TTL) return null;
+      return cached.stats;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function fetchGitHubStats() {
     const username = "octopols";
 
-    try {
-      // Fetch user data
-      const userResponse = await fetch(
-        `https://api.github.com/users/${username}`,
-      );
-      const userData = await userResponse.json();
+    const cached = readGitHubCache();
+    if (cached) {
+      renderGitHubStats(cached);
+      return;
+    }
 
-      // Fetch repos to calculate total stars
-      const reposResponse = await fetch(
-        `https://api.github.com/users/${username}/repos?per_page=100`,
-      );
+    try {
+      const [userResponse, reposResponse] = await Promise.all([
+        fetch(`https://api.github.com/users/${username}`),
+        fetch(`https://api.github.com/users/${username}/repos?per_page=100`),
+      ]);
+
+      // Rate-limited responses are 403/429 with a JSON *object*, so checking ok
+      // matters: the old code called .reduce() on that object and threw.
+      if (!userResponse.ok || !reposResponse.ok) {
+        throw new Error(
+          `GitHub API returned ${userResponse.status}/${reposResponse.status}`,
+        );
+      }
+
+      const userData = await userResponse.json();
       const reposData = await reposResponse.json();
 
-      const totalStars = reposData.reduce(
-        (acc, repo) => acc + repo.stargazers_count,
-        0,
-      );
-
-      // Update the DOM
-      const reposEl = document.getElementById("gh-repos");
-      const starsEl = document.getElementById("gh-stars");
-      const followersEl = document.getElementById("gh-followers");
-      const contributionsEl = document.getElementById("gh-contributions");
-
-      if (reposEl) {
-        reposEl.dataset.target = userData.public_repos;
-        reposEl.innerText = "0";
-        startCounter(reposEl);
+      if (!Array.isArray(reposData)) {
+        throw new Error("Unexpected repos payload");
       }
 
-      if (starsEl) {
-        starsEl.dataset.target = totalStars;
-        starsEl.innerText = "0";
-        startCounter(starsEl);
+      const stats = {
+        repos: userData.public_repos ?? 0,
+        stars: reposData.reduce(
+          (acc, repo) => acc + (repo.stargazers_count || 0),
+          0,
+        ),
+        followers: userData.followers ?? 0,
+      };
+
+      try {
+        localStorage.setItem(
+          GH_CACHE_KEY,
+          JSON.stringify({ at: Date.now(), stats }),
+        );
+      } catch (e) {
+        /* private mode / quota — caching is best-effort */
       }
 
-      if (followersEl) {
-        followersEl.dataset.target = userData.followers;
-        followersEl.innerText = "0";
-        startCounter(followersEl);
-      }
-
-      // Estimate contributions (GitHub API doesn't provide this easily without GraphQL)
-      // Using a placeholder for now
-      if (contributionsEl) {
-        contributionsEl.dataset.target = 1200; // Placeholder
-        contributionsEl.innerText = "0";
-        startCounter(contributionsEl);
-      }
+      renderGitHubStats(stats);
     } catch (error) {
-      console.error("Error fetching GitHub stats:", error);
-      // Set fallback values
-      document.getElementById("gh-repos").innerText = "--";
-      document.getElementById("gh-stars").innerText = "--";
-      document.getElementById("gh-followers").innerText = "--";
-      document.getElementById("gh-contributions").innerText = "--";
+      // Leave #gh-stats hidden. Empty stats read worse than no stats.
+      console.warn("GitHub stats unavailable, hiding the block:", error.message);
     }
   }
 
   // Fetch GitHub stats when repository section is visible
   const repositorySection = document.querySelector("#repository");
   if (repositorySection) {
-    const observer = new IntersectionObserver(
+    const ghObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             fetchGitHubStats();
-            observer.unobserve(entry.target);
+            ghObserver.unobserve(entry.target);
           }
         });
       },
       { threshold: 0.1 },
     );
 
-    observer.observe(repositorySection);
+    ghObserver.observe(repositorySection);
   }
 
   /* ===================================
@@ -979,49 +1063,93 @@ document.addEventListener("DOMContentLoaded", () => {
   const skillCards = document.querySelectorAll(".tilt-card[data-skill]");
 
   const skillEvidence = {
-    javascript: {
-      title: "JavaScript / TypeScript",
-      evidence: [
-        "Built complete RCS implementation: single send, templates, webhooks, broadcasts, bot management",
-        "Developed billing dashboard with React + Redux for AI model usage tracking and rate cards",
-        "Created popup widget infrastructure with element targeting and progression tracking",
-        "Implemented campaign APIs with health checks, frequency capping, and trajectory analysis",
-      ],
-    },
     nodejs: {
       title: "Node.js / Express",
       evidence: [
         "Built all BSP APIs and webhooks for data storage and report generation",
-        "Revamped Shopify sync flow removing multiple state machines and reducing errors",
+        "Implemented the Node.js microservices behind provider-agnostic campaign execution",
         "Developed scheduled jobs for phone number quality monitoring across all stores",
         "Implemented IP/domain reputation fetching with automated Slack alerts for ESP blocks",
       ],
     },
-    react: {
-      title: "React / Redux",
+    events: {
+      title: "Event-Driven Architecture / Message Queues",
       evidence: [
-        "Built secure billing dashboard with role-based rate card management (Redux)",
-        "Created popup configuration UI with element targeting & A/B test tracking",
-        "Developed territory management app with Firestore real-time sync",
-        "Implemented common component library shared across BIK & Manifest platforms",
+        "Rebuilt Pub/Sub consumer flow control, ack-deadline handling and backpressure — delivery delay 2.4 hours to 94 seconds",
+        "Cut steady-state backlog from 236K messages to ~100, retiring a 38-node scale-out",
+        "Built the webhook-driven status update pipeline behind RCS broadcast delivery",
+        "Designed a generic channel abstraction for provider-agnostic campaign execution",
       ],
     },
-    cpp: {
-      title: "C++ / Qt",
+    devops: {
+      title: "State Machines / Orchestration",
       evidence: [
-        "Designed multi-file metadata editing subsystem for VLC's 3 billion users (GSoC 2024)",
-        "Built reusable popup and inline text editing system for MuseScore 4.6 (GSoC 2023)",
-        "Refactored VLC legacy internal APIs, mentored directly by VideoLAN founder JB Kempf",
-        "Created popup widget infrastructure reused by next year's GSoC developers",
+        "Rearchitected Shopify segment sync as a two-machine state machine (orchestrator + sync executor)",
+        "Added run-scoped checkpointing, idempotent retries and paced execution under GraphQL rate limits",
+        "Sustains reliable sync across 250+ Shopify stores and customer lists exceeding 2M+ records",
+        "Built Cancel/Retry Broadcast, aborting in-flight state machines and Cloud Tasks",
+      ],
+    },
+    apis: {
+      title: "Microservices / REST APIs",
+      evidence: [
+        "Developed all BSP APIs and webhooks for data storage and report generation",
+        "Built complete RCS APIs: single send, template send, template sync, webhooks, broadcasts",
+        "Implemented WhatsApp cost calculation APIs with country-based pricing",
+        "Created MM Lite onboarding APIs and generic channel for 3rd party API testing",
       ],
     },
     cloud: {
-      title: "GCP / Firebase",
+      title: "GCP / Pub/Sub",
       evidence: [
-        "Built territory app on Firestore for BSP data storage and report generation",
+        "Rebuilt Pub/Sub flow control and backpressure, cutting steady-state backlog from 236K messages to ~100",
         "Implemented Cloud Tasks for broadcast orchestration with abort logic",
-        "Developed full-stack Cancel/Retry Broadcast feature aborting state machines and Cloud Tasks",
-        "Created generic channel infrastructure for testing 3rd party APIs and broadcasts",
+        "Company-wide GCP administration with org-level IAM ownership",
+        "Built territory app on Firestore for BSP data storage and report generation",
+      ],
+    },
+    cloudtasks: {
+      title: "Cloud Tasks / Cloud Functions",
+      evidence: [
+        "Hardened external webhook delivery into per-store Cloud Tasks isolation with bounded retries",
+        "Built a rolling health evaluator that auto-blocks endpoints past a 50% failure rate",
+        "Eliminated duplicate deliveries caused by ack-deadline overruns",
+        "Implemented Cloud Tasks for broadcast orchestration with abort logic",
+      ],
+    },
+    aws: {
+      title: "AWS / Step Functions",
+      evidence: [
+        "Architected the shared Step Functions orchestration behind all WhatsApp, email, RCS and SMS broadcasts",
+        "Replaced per-channel delivery paths with one provider-agnostic path",
+        "Company-wide AWS administration with org-level IAM ownership",
+        "Drove SOC 2 Type 2 and ISO 27001 to certification alongside the CTO",
+      ],
+    },
+    postgres: {
+      title: "PostgreSQL / SQL",
+      evidence: [
+        "Redesigned campaign analytics on a two-tier PostgreSQL cache + Elasticsearch data stream pipeline",
+        "Took analytics page load from 20s to 200ms while doubling page size",
+        "Own billing across every revenue channel, including per-client rate card management",
+        "Implemented a full billing audit trail after closing a 3-hour daily event tracking gap",
+      ],
+    },
+    elasticsearch: {
+      title: "Elasticsearch",
+      evidence: [
+        "Built the Elasticsearch data stream pipeline behind campaign analytics",
+        "Implemented segment sorting with A/B testing to prioritize active customers first",
+        "Built broadcast trajectory analysis for campaign frequency capping",
+        "Created 'never engage' and bounce segment detection for frequency capping cases",
+      ],
+    },
+    redis: {
+      title: "Redis",
+      evidence: [
+        "Implemented Redis-backed segment delivery for RCS broadcast execution",
+        "Serves 2.5M messages/month across 50+ enterprise clients",
+        "Part of the Node.js microservices behind provider-agnostic campaign execution",
       ],
     },
     database: {
@@ -1033,49 +1161,38 @@ document.addEventListener("DOMContentLoaded", () => {
         "Developed template analytics backend and phone number quality tracking system",
       ],
     },
-    elasticsearch: {
-      title: "Elasticsearch",
+    javascript: {
+      title: "TypeScript / JavaScript",
       evidence: [
-        "Implemented segment sorting with A/B testing to prioritize active customers first",
-        "Built broadcast trajectory analysis for campaign frequency capping",
-        "Created 'never engage' and bounce segment detection for frequency capping cases",
-        "Developed comprehensive logic using Elastic data for seamless customer targeting",
-      ],
-    },
-    devops: {
-      title: "State Machines / Cloud Tasks",
-      evidence: [
-        "Designed state machine workflows for Shopify sync and broadcast management",
-        "Implemented broadcast abortion logic for state machines and Cloud Tasks",
-        "Removed multiple state machines in Shopify sync optimization",
-        "Built Cancel/Retry Broadcast feature with state machine orchestration",
+        "Built complete RCS implementation: single send, templates, webhooks, broadcasts, bot management",
+        "Implemented campaign APIs with health checks, frequency capping, and trajectory analysis",
+        "Built all BSP APIs and webhooks for data storage and report generation",
+        "Created popup widget infrastructure with element targeting and progression tracking",
       ],
     },
     python: {
-      title: "QML",
+      title: "Python",
       evidence: [
-        "Developed Qt/QML popup and inline text editing system for MuseScore (GSoC 2023)",
-        "Implemented QML-based popup widgets with keyboard navigation support",
-        "Created reusable QML components for text style and frame editing interfaces",
-        "Built popup widget infrastructure later reused by other MuseScore developers",
+        "Reverse-engineered Google Trends into a Python wrapper with REST API, CLI tools and web dashboard",
+        "Published as an open-source toolkit for programmatic Trends data access",
       ],
     },
-    apis: {
-      title: "REST APIs / Webhooks",
+    cpp: {
+      title: "C++ / Qt / QML",
       evidence: [
-        "Developed all BSP APIs, webhooks for data storage and report generation",
-        "Built complete RCS APIs: single send, template send, template sync, webhooks, broadcasts",
-        "Implemented WhatsApp cost calculation APIs with country-based pricing",
-        "Created MM Lite onboarding APIs and generic channel for 3rd party API testing",
+        "Designed multi-file metadata editing subsystem for VLC's 3 billion users (GSoC 2024)",
+        "Built reusable popup and inline text editing system for MuseScore 4.6 (GSoC 2023)",
+        "Refactored VLC legacy internal APIs, mentored directly by VideoLAN founder JB Kempf",
+        "Created popup widget infrastructure reused by next year's GSoC developers",
       ],
     },
     tools: {
-      title: "Git / Open Source",
+      title: "Docker / CI/CD / Git",
       evidence: [
-        "Contributed to VLC Media Player (GSoC 2024) and MuseScore (GSoC 2023)",
-        "Contributing to GitHub Desktop as open source contributor",
+        "Published a walkthrough on developing VLC for Windows with Docker",
         "Managed complex Git workflows across distributed open source teams",
-        "Created 2-hour educational video on rebasing feature branches with MuseScore lead dev",
+        "Created a 2-hour educational video on rebasing feature branches with MuseScore's lead dev",
+        "Ships this site through a GitHub Actions build and deploy pipeline",
       ],
     },
   };

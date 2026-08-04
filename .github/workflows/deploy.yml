@@ -29,6 +29,9 @@ jobs:
           mkdir -p dist
           cp index.html dist/
           cp photography.html dist/
+          # /writing/<slug>/index.html — GitHub Pages resolves these as clean
+          # URLs, so the directory structure has to be preserved verbatim.
+          cp -r writing dist/
           cp robots.txt dist/
           cp sitemap.xml dist/
           cp site.webmanifest dist/

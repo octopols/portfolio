@@ -27,23 +27,17 @@
       property="og:description"
       content="Explore the photography portfolio of Hirnaymay Bhaskar - capturing moments through a unique lens."
     />
-    <meta
-      property="og:image"
-      content="https://hirnaymay.com/assets/images/photography-og.jpg"
-    />
+    <!-- TODO: photography-og.jpg was never committed, so this tag resolved a 404
+         on every share. Omitted until a real card exists. -->
     <meta property="og:site_name" content="Hirnaymay Bhaskar Portfolio" />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:url" content="https://hirnaymay.com/photography.html" />
     <meta name="twitter:title" content="Photography | Hirnaymay Bhaskar" />
     <meta
       name="twitter:description"
       content="Explore the photography portfolio of Hirnaymay Bhaskar - capturing moments through a unique lens."
-    />
-    <meta
-      name="twitter:image"
-      content="https://hirnaymay.com/assets/images/photography-og.jpg"
     />
     <meta name="twitter:creator" content="@octopols" />
 
@@ -66,7 +60,8 @@
 
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Pinned: see index.html — lucide@latest rolled to 1.x. -->
+    <script src="https://unpkg.com/lucide@1.28.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 
     <!-- External Styles -->
@@ -178,6 +173,11 @@
 
   <body class="antialiased selection:bg-white selection:text-black">
     <!-- ===================================
+         ACCESSIBILITY: SKIP LINKS
+    =================================== -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ===================================
          PRELOADER
     =================================== -->
     <div id="preloader">
@@ -238,7 +238,7 @@
     <!-- ===================================
          MAIN CONTENT WRAPPER
     =================================== -->
-    <main class="main-content">
+    <main id="main-content" class="main-content">
       <!-- ===================================
              HERO SECTION
         =================================== -->
@@ -408,6 +408,13 @@
                 class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
                 >Medium</a
               >
+              <a
+                href="https://instagram.com/hirnaymay"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                >Instagram</a
+              >
             </nav>
           </div>
 
@@ -417,13 +424,19 @@
               About
             </h3>
             <p class="text-neutral-400 text-sm leading-relaxed mb-4">
-              Software Engineer passionate about building scalable systems and
-              contributing to open source.
+              Backend engineer building messaging, billing and event
+              infrastructure. Photographs when away from the terminal.
             </p>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-3">
-              Local Time
-            </h3>
-            <p class="text-neutral-400 text-sm" id="local-time">--:-- --</p>
+            <div data-local-time-block>
+              <h3
+                class="text-xs uppercase tracking-widest text-neutral-600 mb-3"
+              >
+                Local Time
+              </h3>
+              <p class="text-neutral-400 text-sm" id="local-time">
+                <span class="sr-only">Loading local time</span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -435,10 +448,10 @@
             <span class="font-display font-bold text-white mr-4"
               >HIRNAYMAY BHASKAR</span
             >
-            © 2025 All rights reserved.
+            © <span id="footer-year">2026</span> All rights reserved.
           </div>
           <div class="flex gap-4 flex-wrap justify-center">
-            <span class="text-neutral-600">Software Engineer</span>
+            <span class="text-neutral-600">Backend Engineer</span>
             <span class="text-neutral-600">Photographer</span>
           </div>
         </div>

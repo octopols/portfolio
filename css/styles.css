@@ -1166,3 +1166,210 @@ body {
     right: 1rem;
   }
 }
+
+/* ===================================
+   WRITING: ARTICLE LAYOUT
+   Long-form prose for /writing/<slug>. Tailwind preflight strips heading and
+   list styles, so the article body sets its own using the existing tokens.
+=================================== */
+.article-prose {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: #c9c9c9;
+}
+
+.article-prose > * + * {
+  margin-top: 1.5rem;
+}
+
+.article-prose h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #fff;
+  margin-top: 3.5rem;
+  scroll-margin-top: 6rem;
+}
+
+.article-prose h3 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 2.5rem;
+  scroll-margin-top: 6rem;
+}
+
+.article-prose h2 + *,
+.article-prose h3 + * {
+  margin-top: 1rem;
+}
+
+.article-prose strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.article-prose a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  transition: border-color 0.3s ease;
+}
+
+.article-prose a:hover {
+  border-bottom-color: #fff;
+}
+
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.25rem;
+}
+
+.article-prose ul {
+  list-style: none;
+}
+
+.article-prose ol {
+  list-style: decimal;
+}
+
+.article-prose li + li {
+  margin-top: 0.625rem;
+}
+
+.article-prose ul > li {
+  position: relative;
+}
+
+.article-prose ul > li::before {
+  content: "•";
+  position: absolute;
+  left: -1.25rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.article-prose blockquote {
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  padding-left: 1.25rem;
+  color: #999;
+  font-style: normal;
+}
+
+.article-prose hr {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 3rem;
+}
+
+.article-prose figure figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #777;
+}
+
+/* Inline code */
+.article-prose :not(pre) > code {
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Code blocks — scroll inside their own box so the page never scrolls
+   sideways on a 375px screen. */
+.article-prose pre {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-prose pre code {
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: #d4d4d4;
+  white-space: pre;
+  display: block;
+}
+
+.article-prose pre::-webkit-scrollbar {
+  height: 6px;
+}
+
+.article-prose pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.article-prose pre::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* Comment / string / number tint for hand-marked code spans */
+.article-prose .tok-c {
+  color: #6b7280;
+}
+
+.article-prose .tok-s {
+  color: #9ca3af;
+}
+
+.article-prose .tok-k {
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .article-prose {
+    font-size: 1rem;
+  }
+
+  .article-prose h2 {
+    font-size: 1.5rem;
+    margin-top: 2.75rem;
+  }
+
+  .article-prose pre {
+    padding: 1rem;
+    border-radius: 0.375rem;
+  }
+}
+
+/* ===================================
+   WRITING: ARTICLE CARDS (index)
+=================================== */
+.article-card {
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 1.75rem;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.5s var(--ease-out);
+}
+
+.article-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.article-meta {
+  font-family: "Space Grotesk", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #666;
+}

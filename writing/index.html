@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>Writing | Hirnaymay Bhaskar</title>
+    <meta name="title" content="Writing | Hirnaymay Bhaskar" />
+    <meta
+      name="description"
+      content="Engineering notes on distributed systems, message delivery, backpressure and billing correctness — from production backend work at BIK.AI."
+    />
+    <meta
+      name="keywords"
+      content="Distributed Systems, Backpressure, Pub/Sub, Message Queues, Backend Engineering, Engineering Notes, Hirnaymay Bhaskar"
+    />
+    <meta name="author" content="Hirnaymay Bhaskar" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://hirnaymay.com/writing/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hirnaymay.com/writing/" />
+    <meta property="og:title" content="Writing | Hirnaymay Bhaskar" />
+    <meta
+      property="og:description"
+      content="Engineering notes on distributed systems, message delivery, backpressure and billing correctness — from production backend work at BIK.AI."
+    />
+    <meta property="og:site_name" content="Hirnaymay Bhaskar Portfolio" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://hirnaymay.com/writing/" />
+    <meta name="twitter:title" content="Writing | Hirnaymay Bhaskar" />
+    <meta
+      name="twitter:description"
+      content="Engineering notes on distributed systems, message delivery, backpressure and billing correctness — from production backend work at BIK.AI."
+    />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <link rel="apple-touch-icon" href="/assets/logos/favicon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Performance: DNS Prefetch & Preconnect -->
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="/css/styles.css" as="style" />
+
+    <!-- Dependencies -->
+    <script>
+      window.process = { env: { NODE_ENV: "production" } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pinned: see index.html — lucide 1.x dropped brand icons. -->
+    <script src="https://unpkg.com/lucide@1.28.0/dist/umd/lucide.min.js"></script>
+
+    <!-- External Styles -->
+    <link rel="stylesheet" href="/css/styles.css" />
+
+    <style>
+      /* Animation CSS inline with !important to override Tailwind preflight */
+      .reveal-item {
+        opacity: 0 !important;
+        transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      }
+
+      .reveal-item.fade-up {
+        transform: translateY(60px) !important;
+      }
+
+      .reveal-item.fade-up.active {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+
+      .split-line {
+        overflow: hidden !important;
+        display: block !important;
+      }
+
+      .split-line span {
+        display: block !important;
+        transform: translateY(100%) !important;
+        transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      }
+
+      .split-line.active span {
+        transform: translateY(0) !important;
+      }
+    </style>
+  </head>
+
+  <body class="antialiased selection:bg-white selection:text-black">
+    <!-- ===================================
+         ACCESSIBILITY: SKIP LINKS
+    =================================== -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ===================================
+         UI OVERLAYS
+    =================================== -->
+    <div class="noise-overlay"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-circle"></div>
+
+    <!-- ===================================
+         NAVIGATION
+    =================================== -->
+    <nav
+      class="fixed w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference text-white"
+    >
+      <a
+        href="/"
+        class="font-display font-bold text-xl tracking-tighter hoverable"
+      >
+        OCTOPOLS
+      </a>
+      <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
+        <a
+          href="/#work"
+          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
+          >WORK</a
+        >
+        <a
+          href="/#projects"
+          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
+          >PROJECTS</a
+        >
+      </div>
+      <a
+        href="/"
+        class="hoverable border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+      >
+        Back
+      </a>
+    </nav>
+
+    <!-- ===================================
+         MAIN CONTENT WRAPPER
+    =================================== -->
+    <main id="main-content" class="main-content">
+      <!-- ===================================
+             HEADER
+        =================================== -->
+      <header
+        class="relative pt-40 pb-20 px-6 md:px-12 overflow-hidden bg-[#050505]"
+      >
+        <div class="section-label">[ 00. WRITING ]</div>
+
+        <div class="max-w-3xl mx-auto">
+          <h1
+            class="font-display text-6xl md:text-8xl font-bold leading-[0.85] tracking-tighter"
+          >
+            <span class="block split-line"><span>ENGINEERING</span></span>
+            <span class="block split-line" style="transition-delay: 0.1s"
+              ><span>NOTES</span></span
+            >
+          </h1>
+
+          <p
+            class="mt-8 text-lg text-neutral-400 reveal-item fade-up"
+            style="transition-delay: 0.3s"
+          >
+            Write-ups of things I actually had to fix — delivery backlogs,
+            retry semantics, billing correctness. Mostly the reasoning that
+            didn't fit in a commit message.
+          </p>
+        </div>
+      </header>
+
+      <!-- ===================================
+             SECTION 01: ARTICLES
+        =================================== -->
+      <section
+        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
+      >
+        <div class="section-label">[ 01. ARTICLES ]</div>
+
+        <div class="max-w-3xl mx-auto">
+          <div class="flex flex-col gap-6">
+            <!-- Article: pubsub-backpressure -->
+            <a
+              href="/writing/pubsub-backpressure/"
+              class="article-card hoverable reveal-item fade-up"
+            >
+              <div class="flex items-center gap-3 mb-3 flex-wrap">
+                <span class="article-meta">Draft</span>
+                <span class="article-meta">·</span>
+                <span class="article-meta">Distributed Systems</span>
+              </div>
+              <h2
+                class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
+              >
+                What 38 nodes were hiding
+              </h2>
+              <p class="text-neutral-400 text-sm leading-relaxed">
+                A Pub/Sub delivery backlog the team had been absorbing with
+                hardware, and what actually fixed it: consumer flow control,
+                ack-deadline handling and backpressure.
+              </p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================
+             SECTION 02: ELSEWHERE
+        =================================== -->
+      <section
+        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
+      >
+        <div class="section-label">[ 02. ELSEWHERE ]</div>
+
+        <div class="max-w-3xl mx-auto">
+          <div class="mb-8">
+            <h2 class="text-2xl font-display font-bold mb-2">Elsewhere</h2>
+            <p class="text-neutral-500 text-sm">
+              Earlier writing, published on Medium and the MuseScore blog.
+            </p>
+          </div>
+
+          <ul class="flex flex-col divide-y divide-white/5">
+            <li>
+              <a
+                href="https://octopols.medium.com/developing-vlc-for-windows-with-docker-a-step-by-step-guide-06417ad803bd"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start justify-between gap-6 py-5 hoverable"
+              >
+                <span>
+                  <span
+                    class="block text-white group-hover:text-neutral-300 transition-colors"
+                    >Developing VLC for Windows with Docker</span
+                  >
+                  <span class="article-meta mt-1 block">Medium</span>
+                </span>
+                <i
+                  data-lucide="arrow-up-right"
+                  class="w-4 h-4 mt-1 flex-shrink-0 text-neutral-600 group-hover:text-white transition-colors"
+                ></i>
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://octopols.medium.com/gsoc-2024-with-videolan-cb4799d54086"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start justify-between gap-6 py-5 hoverable"
+              >
+                <span>
+                  <span
+                    class="block text-white group-hover:text-neutral-300 transition-colors"
+                    >GSoC 2024 with VideoLAN</span
+                  >
+                  <span class="article-meta mt-1 block">Medium</span>
+                </span>
+                <i
+                  data-lucide="arrow-up-right"
+                  class="w-4 h-4 mt-1 flex-shrink-0 text-neutral-600 group-hover:text-white transition-colors"
+                ></i>
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://musescore.org/en/user/4385394/blog/2023/10/08/gsoc-2023-text-style-popup"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start justify-between gap-6 py-5 hoverable"
+              >
+                <span>
+                  <span
+                    class="block text-white group-hover:text-neutral-300 transition-colors"
+                    >Text Style Popup — GSoC 2023</span
+                  >
+                  <span class="article-meta mt-1 block">MuseScore Blog</span>
+                </span>
+                <i
+                  data-lucide="arrow-up-right"
+                  class="w-4 h-4 mt-1 flex-shrink-0 text-neutral-600 group-hover:text-white transition-colors"
+                ></i>
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://octopols.medium.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-start justify-between gap-6 py-5 hoverable"
+              >
+                <span>
+                  <span
+                    class="block text-white group-hover:text-neutral-300 transition-colors"
+                    >More on Medium</span
+                  >
+                  <span class="article-meta mt-1 block">Archive</span>
+                </span>
+                <i
+                  data-lucide="arrow-up-right"
+                  class="w-4 h-4 mt-1 flex-shrink-0 text-neutral-600 group-hover:text-white transition-colors"
+                ></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===================================
+         FOOTER
+    =================================== -->
+    <footer class="bg-black text-white border-t border-white/5">
+      <div
+        class="max-w-3xl mx-auto px-6 md:px-12 py-12 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
+      >
+        <div>
+          <span class="font-display font-bold text-white mr-4"
+            >HIRNAYMAY BHASKAR</span
+          >
+          © <span id="footer-year">2026</span> All rights reserved.
+        </div>
+        <div class="flex gap-4">
+          <a
+            href="https://github.com/octopols"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-white transition-colors hoverable"
+            >GitHub</a
+          >
+          <a
+            href="https://linkedin.com/in/hirnaymay"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-white transition-colors hoverable"
+            >LinkedIn</a
+          >
+          <a
+            href="mailto:hirnaymay@gmail.com"
+            class="hover:text-white transition-colors hoverable"
+            >Email</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/writing.js"></script>
+  </body>
+</html>
