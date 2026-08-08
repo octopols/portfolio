@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>HomeCam TV — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="An Android TV app that puts a Dahua NVR on the television — camera wall, recorded playback on a scrubbable timeline, and recording health. Built for the remote."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/projects/homecam-tv/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hirnaymay.com/projects/homecam-tv/" />
+    <meta property="og:title" content="HomeCam TV" />
+    <meta
+      property="og:description"
+      content="An Android TV app that puts a Dahua NVR on the television. Free and open source."
+    />
+    <meta property="og:image" content="https://hirnaymay.com/projects/homecam-tv/images/01-camera-wall.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #737880;
+        --accent: #68d391;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+      /* ---- nav ---- */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 28px 0;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      /* ---- hero ---- */
+      header.hero { padding: 96px 0 64px; }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(52px, 11vw, 132px);
+        line-height: 0.92;
+        letter-spacing: -0.045em;
+        font-weight: 700;
+      }
+
+      .tagline {
+        margin: 28px 0 0;
+        max-width: 34ch;
+        font-size: clamp(19px, 2.4vw, 26px);
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .meta {
+        margin-top: 36px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .meta span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+
+      .actions { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 12px; }
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 13px 26px;
+        border-radius: 999px;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        border: 1px solid var(--line);
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+      }
+      .btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+      .btn.primary { background: var(--accent); color: #0c2c1a; border-color: var(--accent); font-weight: 600; }
+      .btn.primary:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+      /* ---- sections ---- */
+      section { padding: 80px 0; border-top: 1px solid var(--line); }
+
+      .label {
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 28px;
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+
+      h2 {
+        margin: 0 0 36px;
+        font-size: clamp(30px, 4.6vw, 46px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      /* ---- feature list ---- */
+      .features { display: grid; gap: 0; }
+      .feature {
+        display: grid;
+        grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+        gap: 8px 40px;
+        padding: 22px 0;
+        border-top: 1px solid var(--line);
+      }
+      .feature:last-child { border-bottom: 1px solid var(--line); }
+      .feature h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+      .feature p { margin: 0; color: var(--muted); font-size: 16px; }
+
+      /* ---- media ---- */
+      figure { margin: 0; }
+      img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); }
+      .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .full { margin-top: 8px; }
+
+      figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); }
+
+      /* ---- prose ---- */
+      .prose { max-width: 62ch; color: var(--muted); }
+      .prose p { margin: 0 0 18px; }
+      .prose strong { color: var(--text); font-weight: 600; }
+      .prose a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(104, 211, 145, 0.35); }
+      .prose a:hover { border-bottom-color: var(--accent); }
+
+      /* ---- stack ---- */
+      .stack { display: flex; flex-wrap: wrap; gap: 10px; }
+      .stack span {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      /* ---- footer ---- */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 36px 0 56px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 720px) {
+        .shots { grid-template-columns: 1fr; }
+        .feature { grid-template-columns: 1fr; gap: 4px; }
+        header.hero { padding: 64px 0 48px; }
+        section { padding: 56px 0; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/#projects">← All projects</a>
+      </nav>
+
+      <header class="hero">
+        <h1>HomeCam&nbsp;TV</h1>
+        <p class="tagline">
+          Your Dahua NVR on the television, driven entirely by the remote.
+        </p>
+
+        <div class="meta">
+          <span>Android TV</span>
+          <span>Kotlin</span>
+          <span>Jetpack Compose</span>
+          <span>Open source</span>
+        </div>
+
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/octopols/homecam-tv/releases/latest">Download v1.0</a>
+          <a class="btn" href="https://github.com/octopols/homecam-tv">View on GitHub</a>
+        </div>
+      </header>
+
+      <figure class="full">
+        <img src="images/01-camera-wall.jpg" alt="HomeCam TV camera wall showing four live cameras in a 2×2 grid" />
+      </figure>
+
+      <section>
+        <div class="label">[ <b>01</b> — What it does ]</div>
+        <h2>Four screens, no menus.</h2>
+
+        <div class="features">
+          <div class="feature">
+            <h3>Camera wall</h3>
+            <p>Every camera at once, 1×1 / 2×2 / 3×3. Select one for fullscreen.</p>
+          </div>
+          <div class="feature">
+            <h3>Recorded playback</h3>
+            <p>Scrub a 24-hour timeline of the recorder's own archive to any moment.</p>
+          </div>
+          <div class="feature">
+            <h3>Status</h3>
+            <p>Whether everything is actually recording, and which stream each camera is on.</p>
+          </div>
+          <div class="feature">
+            <h3>Channel up / down</h3>
+            <p>Changes camera. In playback it keeps the time, so 18:05 on camera 1 becomes 18:05 on camera 2.</p>
+          </div>
+          <div class="feature">
+            <h3>Self-configuring</h3>
+            <p>Asks the recorder for its channels and uses its names. Nothing about the setup is compiled in.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — Screens ]</div>
+        <div class="shots">
+          <figure>
+            <img src="images/02-recordings.jpg" alt="Recordings screen with four camera cards" />
+            <figcaption>Pick a camera.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/03-playback.jpg" alt="Playback with a 24-hour timeline showing recorded segments" />
+            <figcaption>Scrub the day. Green is footage that exists.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/04-status.png" alt="Status screen reading Everything is recording" />
+            <figcaption>One sentence, then the detail.</figcaption>
+          </figure>
+          <figure>
+            <img src="images/05-settings.png" alt="Settings screen with wall layout and stream buffer options" />
+            <figcaption>Everything stays on the TV.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — Why ]</div>
+        <h2>The hard part is the d-pad.</h2>
+        <div class="prose">
+          <p>
+            Most camera apps on a television are phone apps with a TV manifest entry. Focus lands
+            nowhere, controls can't be reached, and text is sized for arm's length.
+          </p>
+          <p>
+            <strong>Every screen here names the control it opens on</strong>, so the remote never goes
+            dead. Up out of a page returns to the tab you were on. Anything at a screen edge names its
+            vertical neighbour rather than trusting geometry — because focus search only considers what
+            sits inside its beam, and a right-aligned button with nothing above it finds nothing at all.
+          </p>
+          <p>
+            It also notices when a camera's sub-stream returns audio and no picture — a real fault on
+            real hardware — and quietly falls back to the main stream for that channel.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — Built with ]</div>
+        <div class="stack">
+          <span>Kotlin 2.0</span>
+          <span>Jetpack Compose</span>
+          <span>androidx.tv-material</span>
+          <span>libVLC</span>
+          <span>Dahua CGI over HTTP Digest</span>
+          <span>RTSP</span>
+        </div>
+      </section>
+
+      <footer>
+        <div>HomeCam TV — free and open source.</div>
+        <div class="links">
+          <a href="https://github.com/octopols/homecam-tv">Repository</a>
+          <a href="https://github.com/octopols/homecam-tv/releases/latest">Releases</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
