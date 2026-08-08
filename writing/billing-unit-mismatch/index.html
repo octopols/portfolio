@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>We sold a count and billed an amount — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="A billing system that quietly gave some customers ten times what they paid for, and charged others a dollar an operation. Rebuilding it was the easy part; the unit mismatch underneath it is still there."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/billing-unit-mismatch/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://hirnaymay.com/writing/billing-unit-mismatch/" />
+    <meta property="og:title" content="We sold a count and billed an amount" />
+    <meta
+      property="og:description"
+      content="A billing system that quietly gave some customers ten times what they paid for. Rebuilding it was the easy part."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+
+      .kicker {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(38px, 7vw, 66px);
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        font-weight: 700;
+      }
+
+      .standfirst {
+        margin: 26px 0 0;
+        font-size: clamp(18px, 2.2vw, 21px);
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      section { padding: 56px 0 0; }
+
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px;
+        border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+
+      h2 {
+        margin: 0 0 24px;
+        font-size: clamp(26px, 3.6vw, 34px);
+        line-height: 1.12; letter-spacing: -0.025em; font-weight: 700;
+      }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+
+      pre {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        overflow-x: auto;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: #cbd5e0;
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        margin: 0 0 24px;
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #e2e8f0;
+      }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      blockquote {
+        margin: 0 0 24px;
+        padding: 4px 0 4px 22px;
+        border-left: 2px solid var(--accent);
+        color: var(--text);
+        font-size: 19px;
+        line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; }
+      td strong { color: var(--text); }
+
+      .callout {
+        border: 1px solid var(--line);
+        border-left: 2px solid var(--warn);
+        border-radius: 8px;
+        padding: 18px 20px;
+        margin: 0 0 24px;
+        background: rgba(246, 224, 94, 0.03);
+      }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag {
+        font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--warn); display: block; margin-bottom: 8px;
+      }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line);
+        padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;
+        font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/writing/">← All writing</a>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Billing systems · Notes from production</div>
+        <h1>We sold a count and billed an amount</h1>
+        <p class="standfirst">
+          For months, some customers were quietly getting ten times what they had paid for, and
+          others were being charged a dollar for an operation that cost a fraction of a cent.
+          Rebuilding the system was the easy part. The mismatch underneath it is still there.
+        </p>
+      </header>
+
+      <section>
+        <div class="label">[ <b>01</b> — What the customer bought ]</div>
+        <h2>Ten thousand operations</h2>
+        <p>
+          I work on the platform side of a company that runs marketing campaigns for e-commerce
+          brands. Part of what we sell is AI: agents that answer customer messages, write copy,
+          handle voice calls. Customers buy it in the simplest unit anyone could ask for.
+        </p>
+        <blockquote>
+          <p>10,000 AI operations per month.</p>
+        </blockquote>
+        <p>
+          No credits. No currency. No mention of which model runs, or what it costs us when it does.
+          A number of things the AI will do for you, per month. That is the whole promise, and it is
+          a good one — it is the only version of this a non-technical buyer can hold in their head.
+        </p>
+        <p>
+          Everything that went wrong afterwards comes from the gap between that sentence and what a
+          billing ledger can actually store.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — What the system stored ]</div>
+        <h2>A pool and a rate</h2>
+        <p>
+          The first version stored two numbers per customer: a <code>creditPool</code>, which was
+          usually just the contracted operation count, and a <code>baseRate</code> per operation,
+          typed in by whoever set the account up. Operations available was the division of one by
+          the other.
+        </p>
+        <pre><code>creditPool = 10,000        (the contracted count, stored directly)
+
+rate = 1.0  →  10,000 / 1.0 =  10,000 ops   correct
+rate = 0.5  →  10,000 / 0.5 =  20,000 ops   2× the contract
+rate = 0.1  →  10,000 / 0.1 = 100,000 ops   10× the contract</code></pre>
+        <p>
+          The intended value was always <code>1</code>. The field was free text on an internal form,
+          filled in by account managers who had no reason to know that this particular number was
+          load-bearing. It was labelled like a price. It behaved like a divisor.
+        </p>
+        <p>
+          So a rate of <code>0.1</code> did not make anything cheaper. It multiplied the customer's
+          allocation by ten.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — Why nobody noticed ]</div>
+        <h2>The screen showed the contract, not the consequence</h2>
+        <p>
+          Here is the part I keep coming back to. The bug was visible in the data from the first
+          day. It was never visible on a screen.
+        </p>
+        <p>
+          Every interface — the account manager's view, the customer's dashboard — displayed the
+          contracted number. <strong>10,000.</strong> The figure that actually governed consumption,
+          <code>pool / rate</code>, was never rendered anywhere. It existed only as an intermediate
+          value inside a deduction that ran nightly and printed nothing.
+        </p>
+        <p>
+          Nobody was ignoring a warning sign. There was no warning sign. A customer on a
+          <code>0.1</code> rate used a hundred thousand operations against a ten thousand operation
+          contract, and every screen either party could look at agreed that everything was fine.
+        </p>
+        <blockquote>
+          <p>
+            A derived value that governs money and is displayed nowhere is not a calculation. It is
+            an unexploded assumption.
+          </p>
+        </blockquote>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — The other direction ]</div>
+        <h2>A dollar an operation</h2>
+        <p>
+          The same free-text field failed the opposite way for customers billed in dollars. Some
+          accounts were set up with <code>rate = 1</code> — read as "one unit per operation", which
+          sounds like the sensible default. In a pool denominated in dollars, it means
+          <strong>one dollar per operation.</strong>
+        </p>
+        <p>
+          This stayed invisible for as long as the free allocation lasted, because deductions came
+          out of the free pool and nobody was being invoiced. The moment a customer exhausted their
+          free credits, every subsequent operation billed a dollar from their main wallet — several
+          orders of magnitude above what the underlying model call cost.
+        </p>
+        <p>
+          It went undetected for the most boring reason available: in that version, almost nobody
+          ever finished their free credits. The bug needed a heavy customer to surface, and heavy
+          customers were exactly who we did not have yet.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — The rebuild ]</div>
+        <h2>Credits become money</h2>
+        <p>
+          The second version changed four things. Only one of them is interesting.
+        </p>
+        <p>
+          The boring three: rates moved into a single central, versioned rate card, keyed by
+          <code>tier × country × usage type</code>, editable only through an admin console with an
+          audit log — account managers can no longer type a rate at all. Margin became an explicit
+          per-customer markup percentage, stored separately, so the base rate always reflects real
+          cost. And voice became a first-class dimension, because a voice vendor charges per second
+          and no amount of pretending makes a second an operation.
+        </p>
+        <p>
+          The interesting one: <strong>the free credit pool stopped being a count and became an
+          amount of money.</strong>
+        </p>
+        <pre><code>allocatedFreeCredits = contractedOps × finalRate     // in the customer's currency</code></pre>
+        <p>
+          The nightly job now deducts currency, not counts. Every unit of usage is priced through
+          the rate card, marked up, and subtracted from a balance denominated in dollars or rupees.
+          This is correct in a way the first version could not be: a rate change no longer silently
+          re-scales somebody's entitlement, because entitlement is money and money does not care
+          what the rate is.
+        </p>
+        <p>
+          It also created the problem that the rest of this piece is about.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>06</b> — Migration ]</div>
+        <h2>The dashboards were the audit</h2>
+        <p>
+          Alongside the rebuild we shipped a usage dashboard: spend per customer, usage per feature,
+          billed against free, trends over time. It was meant to be an operational convenience.
+        </p>
+        <p>
+          What it actually did was make the first version's arithmetic visible for the first time.
+          Migrating old contracts meant translating a count and a rate into an amount, and the old
+          bugs came through the translation intact and compounded — a customer on a
+          <code>0.1</code> rate migrated to a credit pool ten times larger than it should have been.
+          Every migrated account had to be recalculated against the new rate card and normalised, by
+          hand.
+        </p>
+        <p>
+          That manual audit was the direct cost of never having had a central place where rates
+          lived. Not the bug itself — the bug was one bad divisor. The cost was that there was no
+          single thing to look at to find out how many accounts it had touched.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>07</b> — The first thing we can't fix ]</div>
+        <h2>An exchange rate that will not hold still</h2>
+        <p>
+          The rate card is in dollars. Customers billed in rupees have a wallet in rupees. On
+          billing day the dollar rate is converted at that day's exchange rate, and the deduction is
+          made in rupees. That part is right — the customer pays rupees at the rate that applied on
+          the day the usage happened.
+        </p>
+        <p>
+          The trouble is the other direction. The contract promises a count, so somewhere a screen
+          has to turn a rupee balance back into operations:
+        </p>
+        <pre><code>balance = ₹42,500        (50,000 ops at $0.01, converted at 85)
+
+at 85:  floor(42,500 / 0.85) = 50,000 ops      as promised
+at 88:  floor(42,500 / 0.88) = 48,295 ops      1,705 short
+at 90:  floor(42,500 / 0.90) = 47,222 ops      2,778 short
+at 95:  floor(42,500 / 0.95) = 44,736 ops      5,264 short</code></pre>
+        <p>
+          Nothing has been deducted between those four lines. The wallet holds the same ₹42,500 in
+          all of them. The only thing that moved was the currency market, and a customer who was
+          sold fifty thousand operations watches the number on their dashboard drift down through
+          the month.
+        </p>
+        <p>
+          The billing is financially correct throughout. The <em>display</em> is not reliably
+          aligned with the contract, and it cannot be, because the contract is denominated in a unit
+          the ledger does not store and the bridge between them is a number neither side controls.
+        </p>
+        <div class="callout">
+          <span class="tag">Unresolved</span>
+          <p>
+            The contract is in operations. The wallet is in rupees. The exchange rate between them
+            is not fixed, so there is no honest way to render one as the other. Voice sidesteps this
+            by being displayed as credits — but only because "one voice operation" was never a
+            meaningful unit to begin with.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>08</b> — The second thing we can't fix ]</div>
+        <h2>Five pricing tiers, all set to the same number</h2>
+        <p>
+          The rate card supports five model tiers, so that a cheap model and an expensive one can
+          be priced differently. It works. It is tested. Every tier is currently set to the same
+          rate, and we cannot change that.
+        </p>
+        <p>
+          Consider two customers, both sold ten thousand operations. One spends theirs on a cheap
+          tier, one on an expensive tier. If tiers carry different rates, the same monetary
+          allocation yields a different number of operations for each — and both were promised the
+          same count. Worse, a single customer's total shifts month to month depending on which
+          features they happened to use.
+        </p>
+        <p>
+          So the tier infrastructure sits there, fully built, deliberately flattened. It is not a
+          technical limitation. It is what happens when the pricing model can express something the
+          sales promise cannot.
+        </p>
+        <blockquote>
+          <p>
+            You cannot price by model tier while selling by operation count. Pick one. We shipped
+            both and had to disable the half that was working.
+          </p>
+        </blockquote>
+      </section>
+
+      <section>
+        <div class="label">[ <b>09</b> — The quiet ones ]</div>
+        <h2>Two gaps that only show up if you look</h2>
+        <p>
+          <strong>Renewal doesn't refill anything.</strong> When a billing cycle rolls over, the
+          contract's start and end dates update automatically. The free credit balance does not.
+          Nothing resets it and nothing re-provisions the new cycle's allocation — somebody has to
+          call an admin endpoint per customer, every cycle. Miss it, and the customer enters the new
+          month either with last month's leftovers or with nothing, billing straight to their main
+          wallet with no free buffer in front of it.
+        </p>
+        <p>
+          <strong>A missing flag means free usage.</strong> Every usage event carries a boolean
+          marking whether it belongs to a free agent or a billable one. The nightly job requires it
+          to be explicitly true or false. If a feature emits an event without it, those events fall
+          into the aggregation's missing bucket and are skipped — no error, no alert, no charge.
+        </p>
+        <p>
+          The dashboard has a column for it. We call it <em>loss</em>: real usage, correctly
+          recorded, never billed. It is the only place that number appears, and it only appears if
+          someone opens the page and reads it.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>10</b> — What I'd carry forward ]</div>
+        <h2>Three things I believe more strongly now</h2>
+        <p>
+          <strong>Render every number that governs money.</strong> The original bug was one bad
+          divisor, and it survived for months purely because the value it produced was never drawn
+          on a screen. The fix that mattered most was not the rebuild — it was the dashboard that
+          made the arithmetic visible. If a derived figure decides what someone is charged, it
+          belongs in the interface, even an ugly internal one.
+        </p>
+        <p>
+          <strong>A free-text numeric field on an internal form is a production input.</strong> It
+          deserves the validation, the audit trail and the review you would give an API. The rate
+          field had none, because it looked like configuration rather than code.
+        </p>
+        <p>
+          <strong>Decide what the unit is before you build the ledger.</strong> Everything still
+          open here — the exchange-rate drift, the flattened tiers — traces back to selling a count
+          and storing an amount. Both models are defensible. Holding both at once means permanently
+          maintaining a conversion that cannot be made honest, and no amount of engineering
+          downstream repairs a unit mismatch decided in a sales conversation.
+        </p>
+      </section>
+
+      <footer>
+        <div>Details anonymised; specifics generalised.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
