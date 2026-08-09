@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>The model is rented. The memory is yours. — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="A roadmap from prototype to product for a lifelong memory engine wrapped around a frozen LLM — written as gates, not milestones. Each phase has one number you must hit before you earn the next."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/lifelong-memory/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://hirnaymay.com/writing/lifelong-memory/" />
+    <meta property="og:title" content="The model is rented. The memory is yours." />
+    <meta
+      property="og:description"
+      content="A roadmap written as gates. The frozen model does the talking; the memory is the part that is yours and never stops learning."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: .6; transition: opacity .2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(36px, 6.4vw, 64px); line-height: 1.03; letter-spacing: -.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      section { padding: 56px 0 0; }
+      .label {
+        font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+      code { font-family: var(--mono); font-size: .9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+
+      blockquote {
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* ===== architecture loop ===== */
+      .loop { min-width: 620px; }
+      .loop-lane { display: grid; grid-template-columns: 74px 1fr; gap: 16px; align-items: center; }
+      .loop-tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.3; }
+      .loop-row { display: flex; align-items: stretch; gap: 0; }
+      .node {
+        flex: 1; border: 1px solid var(--line); border-radius: 9px; padding: 13px 12px;
+        background: var(--panel); text-align: center;
+      }
+      .node .n-t { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; }
+      .node .n-s { font-size: 11.5px; color: var(--dim); margin-top: 3px; line-height: 1.4; }
+      .node.frozen { border-style: dashed; border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.02); }
+      .node.frozen .n-t { color: var(--muted); }
+      .node.yours { border-color: rgba(104,211,145,.45); background: rgba(104,211,145,.07); }
+      .node.yours .n-t { color: var(--accent); }
+      .arw { display: flex; align-items: center; padding: 0 9px; color: var(--dim); font-family: var(--mono); font-size: 14px; }
+      .loop-back {
+        margin: 8px 0 0 90px; border-left: 1px dashed rgba(104,211,145,.4);
+        border-bottom: 1px dashed rgba(104,211,145,.4); border-bottom-left-radius: 8px;
+        height: 20px; position: relative;
+      }
+      .loop-back span {
+        position: absolute; left: 16px; top: 11px; font-size: 11px; color: var(--accent);
+        background: var(--bg); padding: 0 8px;
+      }
+      .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; color: var(--dim); }
+      .legend i { display: inline-block; width: 22px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+      .legend i.f { border: 1px dashed rgba(255,255,255,.3); }
+      .legend i.y { border: 1px solid rgba(104,211,145,.5); background: rgba(104,211,145,.15); }
+
+      /* ===== gate ladder ===== */
+      .gates { min-width: 560px; }
+      .gate {
+        display: grid; grid-template-columns: 46px 1fr 250px; gap: 18px; align-items: start;
+        padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      .gate:last-child { border-bottom: 0; }
+      .gate-n {
+        font-family: var(--mono); font-size: 12px; color: var(--dim);
+        border: 1px solid var(--line); border-radius: 6px; padding: 5px 0; text-align: center;
+      }
+      .gate.key .gate-n { border-color: rgba(104,211,145,.5); color: var(--accent); }
+      .gate-t { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+      .gate-d { font-size: 13.5px; color: var(--dim); margin-top: 4px; line-height: 1.55; }
+      .gate-g {
+        border-left: 2px solid rgba(104,211,145,.45); padding: 2px 0 2px 14px;
+        font-size: 13px; color: #b9e6cb; line-height: 1.5;
+      }
+      .gate-g em { color: var(--dim); font-style: normal; display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 4px; }
+
+      /* ===== timeline ===== */
+      .tl { margin: 0 0 30px; }
+      .tl-inner { min-width: 620px; }
+      .tl-row { display: grid; grid-template-columns: 116px 1fr; gap: 18px; align-items: center; }
+      .tl-name { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.3; }
+      .tl-track { position: relative; height: 38px; }
+      .tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed rgba(255,255,255,.06); }
+      .tl-span {
+        position: absolute; top: 8px; height: 22px; border-radius: 4px; display: flex; align-items: center;
+        padding: 0 9px; font-size: 11.5px; white-space: nowrap; border: 1px solid var(--line);
+        background: rgba(255,255,255,.05); color: #c8cdd4;
+      }
+      .tl-span.accent { border-color: rgba(104,211,145,.45); background: rgba(104,211,145,.1); color: #b9e6cb; }
+      .tl-span.ghost { border-style: dashed; background: transparent; color: var(--dim); }
+      .tl-axis { position: relative; height: 24px; margin-top: 2px; }
+      .tl-axis::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--line); }
+      .tl-t { position: absolute; top: 6px; transform: translateX(-50%); font-size: 10px; color: var(--dim); font-family: var(--mono); white-space: nowrap; }
+      .tl-t::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: rgba(255,255,255,.18); }
+
+      /* ===== experiment ===== */
+      .exp { min-width: 560px; }
+      .exp-head { text-align: center; margin-bottom: 14px; }
+      .exp-arms { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+      .arm { border: 1px solid var(--line); border-radius: 9px; padding: 14px; background: var(--panel); }
+      .arm.b { border-color: rgba(104,211,145,.45); background: rgba(104,211,145,.06); }
+      .arm-r { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+      .arm.b .arm-r { color: var(--accent); }
+      .arm-t { font-size: 14.5px; font-weight: 600; }
+      .arm-s { font-size: 12px; color: var(--dim); margin-top: 4px; line-height: 1.45; }
+      .exp-join { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 14px; margin-bottom: 8px; }
+      .exp-fork { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+      .fork { border-radius: 9px; padding: 13px 14px; font-size: 13px; }
+      .fork.win { border: 1px solid rgba(104,211,145,.4); background: rgba(104,211,145,.06); color: #b9e6cb; }
+      .fork.pivot { border: 1px solid rgba(246,224,94,.35); background: rgba(246,224,94,.05); color: #ecdf9a; }
+      .fork b { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 5px; opacity: .8; }
+
+      /* ===== status bars ===== */
+      .st { min-width: 480px; }
+      .st-row { display: grid; grid-template-columns: 1fr 92px 118px; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+      .st-row:last-child { border-bottom: 0; }
+      .st-n { font-size: 14px; color: #c8cdd4; }
+      .st-b { height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+      .st-b i { display: block; height: 100%; }
+      .st-b i.done { width: 100%; background: rgba(104,211,145,.5); }
+      .st-b i.part { width: 55%; background: rgba(246,224,94,.45); }
+      .st-b i.todo { width: 8%; background: rgba(252,129,129,.4); }
+      .st-l { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+
+      /* ===== walls ===== */
+      .walls { display: grid; gap: 14px; }
+      .wall { border: 1px solid var(--line); border-left: 2px solid var(--bad); border-radius: 8px; padding: 16px 18px; background: rgba(252,129,129,.03); }
+      .wall-t { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+      .wall-d { font-size: 13.5px; color: var(--dim); line-height: 1.55; }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/writing/">← All writing</a>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Lifelong memory · Roadmap</div>
+        <h1>The model is rented.<br />The memory is yours.</h1>
+        <p class="standfirst">
+          The destination is not a new LLM. It is an assistant that remembers you and gets better at
+          being yours. Here is the path from prototype to something usable — written as gates, not
+          milestones. Each phase has one number you have to hit before you earn the next.
+        </p>
+      </header>
+
+      <section>
+        <div class="label">[ <b>01</b> — The bet ]</div>
+        <h2>A frozen model with a living memory</h2>
+        <p>
+          The model does the talking and the reasoning, and it never changes. That capability is
+          rented — it improves when someone else ships a better one, and swapping it is a config
+          change.
+        </p>
+        <p>
+          Everything that makes the assistant <em>yours</em> lives outside it: a memory that
+          consolidates, forgets the noise, indexes by structure, weights what matters, and is shaped
+          by your feedback. Each person's copy drifts into their own.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="loop">
+              <div class="loop-lane">
+                <div class="loop-tag">Answering</div>
+                <div class="loop-row">
+                  <div class="node"><div class="n-t">you</div><div class="n-s">a message</div></div>
+                  <div class="arw">→</div>
+                  <div class="node yours"><div class="n-t">recall</div><div class="n-s">retrieve what is relevant</div></div>
+                  <div class="arw">→</div>
+                  <div class="node yours"><div class="n-t">context</div><div class="n-s">gist plus linked detail</div></div>
+                  <div class="arw">→</div>
+                  <div class="node frozen"><div class="n-t">frozen LLM</div><div class="n-s">talks, reasons, never learns</div></div>
+                </div>
+              </div>
+
+              <div class="loop-back"><span>reply returns to you</span></div>
+
+              <div class="loop-lane" style="margin-top:10px">
+                <div class="loop-tag">Learning</div>
+                <div class="loop-row">
+                  <div class="node yours"><div class="n-t">perceive</div><div class="n-s">store the exchange, weighted</div></div>
+                  <div class="arw">→</div>
+                  <div class="node yours"><div class="n-t">memory</div><div class="n-s">graph · salience · valence</div></div>
+                  <div class="arw">→</div>
+                  <div class="node yours"><div class="n-t">sleep</div><div class="n-s">consolidate · forget · replay</div></div>
+                  <div class="arw">↺</div>
+                  <div class="node yours"><div class="n-t">feedback</div><div class="n-s">corrections become reward</div></div>
+                </div>
+              </div>
+
+              <div class="legend">
+                <span><i class="f"></i>rented — swappable, frozen</span>
+                <span><i class="y"></i>yours — the part that never stops learning</span>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Two paths, one store.</b> The top runs per message. The bottom runs after, and offline.
+            Only one box in this diagram is bought in — and it is the one everyone else is competing
+            on.
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            If the frozen box gets better, you inherit it for free. If the sage boxes get better,
+            nobody can copy it, because it is shaped by one person's history.
+          </p>
+        </blockquote>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — How to read this ]</div>
+        <h2>Gates, not milestones</h2>
+        <p>
+          A milestone is something you finish. A gate is a number you either hit or you don't, and
+          missing it means you change direction rather than push harder.
+        </p>
+        <p>
+          The distinction matters for a solo project, because the failure mode is not running out of
+          ideas. It is spending six months building an application on top of a premise that was
+          wrong in week three, and never having run the experiment that would have said so.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="gates">
+              <div class="gate">
+                <div class="gate-n">P0</div>
+                <div>
+                  <div class="gate-t">Nail one testable claim</div>
+                  <div class="gate-d">Write the single thing this beats plain RAG at, as a sentence you can measure. Mine: a consolidating, structure-indexed memory answers questions about a long history more accurately, on fewer retrieved tokens, than flat vector search.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>You can state it, and you know how you would measure it.</div>
+              </div>
+
+              <div class="gate key">
+                <div class="gate-n">P1</div>
+                <div>
+                  <div class="gate-t">Prove the wedge</div>
+                  <div class="gate-d">Swap the hash encoder for real embeddings, wire the memory in as a retriever, race it against flat vector RAG on the same corpus and the same questions.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>Beat flat RAG on answer accuracy at equal or lower retrieved-token budget.</div>
+              </div>
+
+              <div class="gate">
+                <div class="gate-n">P2</div>
+                <div>
+                  <div class="gate-t">The assistant loop</div>
+                  <div class="gate-d">Wrap the frozen model. Retrieve before it answers, perceive after, consolidate offline on a schedule. Persistence already exists. Ship a thin CLI or web chat and live in it.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>You use it for a week and it visibly remembers and improves.</div>
+              </div>
+
+              <div class="gate">
+                <div class="gate-n">P3</div>
+                <div>
+                  <div class="gate-t">Feedback and personalisation</div>
+                  <div class="gate-d">Wire real signals — thumbs, corrections, what you return to — into salience and valence through reward-modulated plasticity. Rails first, not after.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>A correction changes future answers, and a flood of bad feedback cannot wreck it.</div>
+              </div>
+
+              <div class="gate">
+                <div class="gate-n">P4</div>
+                <div>
+                  <div class="gate-t">Survive real users</div>
+                  <div class="gate-d">Per-user state, background consolidation, bounded memory, multi-tenant serving, per-user encryption — each store is somebody's private life.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>Two strangers run diverging assistants without leaking into each other.</div>
+              </div>
+
+              <div class="gate">
+                <div class="gate-n">P5</div>
+                <div>
+                  <div class="gate-t">Harden lifelong learning</div>
+                  <div class="gate-d">Replay during sleep, drift monitoring, and an interference test in CI so a fresh stretch of life cannot silently wipe old skills. Starts at P2 and never finishes.</div>
+                </div>
+                <div class="gate-g"><em>Gate</em>The interference test stays green across a long run.</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>One number per phase.</b> The right-hand column is the only thing that decides whether
+            you move on.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — Sequencing ]</div>
+        <h2>What a solo build actually looks like</h2>
+        <p>
+          Rough, and deliberately front-loaded. The two cheapest phases are the two that decide
+          everything; the expensive ones only start once the premise has survived.
+        </p>
+
+        <div class="tl">
+          <div class="fig-scroll"><div class="tl-inner">
+            <div class="tl-row">
+              <div class="tl-name">P0 · claim</div>
+              <div class="tl-track"><div class="tl-span accent" style="left:0%; width:4%"></div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name">P1 · wedge</div>
+              <div class="tl-track"><div class="tl-span accent" style="left:4%; width:13%">prove it or pivot</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name">P2 · assistant</div>
+              <div class="tl-track"><div class="tl-span" style="left:17%; width:22%">the thing you can show</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name">P3 · feedback</div>
+              <div class="tl-track"><div class="tl-span" style="left:39%; width:14%">rails first</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name">P4 · multi-user</div>
+              <div class="tl-track"><div class="tl-span" style="left:53%; width:45%">where you want help or money</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name">P5 · hardening</div>
+              <div class="tl-track"><div class="tl-span ghost" style="left:39%; width:55%">runs alongside, never finishes</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-name"></div>
+              <div class="tl-axis">
+                <span class="tl-t" style="left:0%">week 0</span>
+                <span class="tl-t" style="left:18%">4</span>
+                <span class="tl-t" style="left:36%">8</span>
+                <span class="tl-t" style="left:55%">12</span>
+                <span class="tl-t" style="left:73%">16</span>
+                <span class="tl-t" style="left:91%">20</span>
+              </div>
+            </div>
+          </div></div>
+          <p class="cap">
+            <b>Three and a half weeks buys the answer to the only question that matters.</b> P5 is
+            drawn dashed because it is not a phase — it is a tax you start paying at P2 and never
+            stop.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — The ballgame ]</div>
+        <h2>Phase 1 decides whether this is a product</h2>
+        <p>
+          Do not skip this to go and build the app. Flat RAG is strong, simple, and well understood.
+          If structure-indexed memory cannot beat it, you want to find out in week three, not month
+          six.
+        </p>
+        <p>
+          The experiment is small on purpose. One corpus, two retrievers, the same frozen model
+          answering the same questions, two numbers.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="exp">
+              <div class="exp-head">
+                <div class="node" style="display:inline-block; min-width:280px">
+                  <div class="n-t">one long history</div>
+                  <div class="n-s">multi-session log or corpus</div>
+                </div>
+              </div>
+              <div class="exp-join">↓ &nbsp; ↓</div>
+              <div class="exp-arms">
+                <div class="arm">
+                  <div class="arm-r">Baseline</div>
+                  <div class="arm-t">flat vector RAG</div>
+                  <div class="arm-s">top-k over embeddings. No structure, no forgetting, no consolidation.</div>
+                </div>
+                <div class="arm b">
+                  <div class="arm-r">Yours</div>
+                  <div class="arm-t">the memory engine</div>
+                  <div class="arm-s">gist, structure routing, salience, forgetting.</div>
+                </div>
+              </div>
+              <div class="exp-join">↓ &nbsp; ↓</div>
+              <div class="exp-head">
+                <div class="node frozen" style="display:inline-block; min-width:280px">
+                  <div class="n-t">the same frozen LLM</div>
+                  <div class="n-s">same questions, same prompt</div>
+                </div>
+              </div>
+              <div class="exp-join">↓</div>
+              <div class="exp-head">
+                <div class="node" style="display:inline-block; min-width:280px">
+                  <div class="n-t">two numbers</div>
+                  <div class="n-s">answer accuracy · retrieved tokens</div>
+                </div>
+              </div>
+              <div class="exp-fork">
+                <div class="fork win">
+                  <b>Accuracy up, tokens not up</b>
+                  The wedge is real. You have a product direction and, incidentally, a paper.
+                </div>
+                <div class="fork pivot">
+                  <b>Anything else</b>
+                  The value is efficiency or personalisation, not retrieval accuracy. Reframe the
+                  pitch before building anything heavy.
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Both outcomes are wins in week three.</b> The only losing move is not running it and
+            finding out in month six.
+          </p>
+        </div>
+
+        <div class="callout good">
+          <span class="tag">Why token budget is in the gate</span>
+          <p>
+            Accuracy alone is easy to buy — retrieve more and you will usually score better. Holding
+            the token budget equal or lower is what makes the claim about <em>structure</em> rather
+            than about spending more context on the same problem.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — Inventory ]</div>
+        <h2>Most of the engine exists. The proof does not.</h2>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="st">
+              <div class="st-row">
+                <div class="st-n">Weighted memory graph, recall, consolidation, forgetting</div>
+                <div class="st-b"><i class="done"></i></div>
+                <div class="st-l">built</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Text to vectors, swappable encoder</div>
+                <div class="st-b"><i class="done"></i></div>
+                <div class="st-l">built</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Persistence, bounded per-brain capacity</div>
+                <div class="st-b"><i class="done"></i></div>
+                <div class="st-l">built</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Reward-modulated plasticity, curiosity</div>
+                <div class="st-b"><i class="part"></i></div>
+                <div class="st-l">mechanism only</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Staged lifelong training, maturation</div>
+                <div class="st-b"><i class="part"></i></div>
+                <div class="st-l">scaffold</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Memory-as-retriever vs RAG evaluation</div>
+                <div class="st-b"><i class="todo"></i></div>
+                <div class="st-l">phase 1</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Frozen-LLM assistant loop</div>
+                <div class="st-b"><i class="todo"></i></div>
+                <div class="st-l">phase 2</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Safety rails on feedback</div>
+                <div class="st-b"><i class="todo"></i></div>
+                <div class="st-l">phase 3</div>
+              </div>
+              <div class="st-row">
+                <div class="st-n">Multi-user serving and privacy</div>
+                <div class="st-b"><i class="todo"></i></div>
+                <div class="st-l">phase 4</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>The gap is not the engine.</b> It is integration and evidence — which is a much better
+            problem to have, and a much easier one to underestimate.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>06</b> — Honest ]</div>
+        <h2>Three walls, none of them cosmetic</h2>
+
+        <div class="walls">
+          <div class="wall">
+            <div class="wall-t">Scale</div>
+            <div class="wall-d">
+              Continual learning without wrecking old knowledge works here at toy scale, and it
+              wobbled before tuning. At real scale this is open research, and it costs money. Phase 5
+              is not a task; it is an ongoing fight.
+            </div>
+          </div>
+          <div class="wall">
+            <div class="wall-t">Safety</div>
+            <div class="wall-d">
+              The moment a system learns from feedback it can be gamed. Wrong rewards teach the wrong
+              lesson, and whoever supplies the feedback steers the model. This is precisely why
+              shipped models are frozen — and why the rails get built in Phase 3, before anything
+              learns from a stranger.
+            </div>
+          </div>
+          <div class="wall">
+            <div class="wall-t">Proof</div>
+            <div class="wall-d">
+              Synthetic numbers are for thinking, not for claiming. A product needs real long-memory
+              and personalisation benchmarks, which is exactly what Phase 1 forces you to confront
+              before anything else gets built on top.
+            </div>
+          </div>
+        </div>
+
+        <p style="margin-top:26px">
+          Naming these early is not pessimism. Each one maps to a gate, and a wall you have written
+          down is a wall you can measure yourself against instead of walking into.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>07</b> — Start here ]</div>
+        <h2>The short version</h2>
+        <p>
+          The engine is mostly built. Phase 1 tells you whether the core bet is real, and it costs
+          three weeks. Phase 2 turns it into something a person can actually use. Everything after
+          that is a scaling problem, and scaling problems are the good kind — they only exist if the
+          thing works.
+        </p>
+        <blockquote>
+          <p>
+            Don't start at the code. Start at the gate.
+          </p>
+        </blockquote>
+      </section>
+
+      <footer>
+        <div>A roadmap, written as gates.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
