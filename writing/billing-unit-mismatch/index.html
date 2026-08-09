@@ -4,19 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>We sold a count and billed an amount — Hirnaymay Bhaskar</title>
+    <title>How to bill AI usage — Hirnaymay Bhaskar</title>
     <meta
       name="description"
-      content="A billing system that quietly gave some customers ten times what they paid for, and charged others a dollar an operation. Rebuilding it was the easy part; the unit mismatch underneath it is still there."
+      content="Metering AI is easy. Billing it correctly is a unit problem, a clock problem and a visibility problem. A working design, the failure modes that shaped it, and why every number that touches money belongs on a screen."
     />
     <link rel="canonical" href="https://hirnaymay.com/writing/billing-unit-mismatch/" />
 
     <meta property="og:type" content="article" />
     <meta property="og:url" content="https://hirnaymay.com/writing/billing-unit-mismatch/" />
-    <meta property="og:title" content="We sold a count and billed an amount" />
+    <meta property="og:title" content="How to bill AI usage" />
     <meta
       property="og:description"
-      content="A billing system that quietly gave some customers ten times what they paid for. Rebuilding it was the easy part."
+      content="A working design for metering and billing AI usage — units, rate cards, credit waterfalls, the nightly run, and the two clocks that never agree."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@octopols" />
@@ -36,23 +36,20 @@
         --dim: #6b7178;
         --accent: #68d391;
         --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       }
 
       html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
       body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
+        margin: 0; background: var(--bg); color: var(--text);
         font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
           "Helvetica Neue", Arial, sans-serif;
-        font-size: 17px;
-        line-height: 1.65;
-        -webkit-font-smoothing: antialiased;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
       }
-
       a { color: inherit; }
-      .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
 
       nav {
         display: flex; justify-content: space-between; align-items: center;
@@ -63,75 +60,34 @@
       nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
 
       header.hero { padding: 80px 0 48px; }
-
-      .kicker {
-        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-        color: var(--dim); margin-bottom: 24px;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: clamp(38px, 7vw, 66px);
-        line-height: 1.02;
-        letter-spacing: -0.035em;
-        font-weight: 700;
-      }
-
-      .standfirst {
-        margin: 26px 0 0;
-        font-size: clamp(18px, 2.2vw, 21px);
-        line-height: 1.5;
-        color: var(--muted);
-      }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
 
       section { padding: 56px 0 0; }
-
       .label {
         font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-        color: var(--dim); margin-bottom: 20px; padding-top: 40px;
-        border-top: 1px solid var(--line);
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
       }
       .label b { color: var(--accent); font-weight: 500; }
-
-      h2 {
-        margin: 0 0 24px;
-        font-size: clamp(26px, 3.6vw, 34px);
-        line-height: 1.12; letter-spacing: -0.025em; font-weight: 700;
-      }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 
       p { margin: 0 0 20px; color: #c8cdd4; }
       p strong { color: var(--text); font-weight: 600; }
       em { color: var(--text); font-style: italic; }
 
       pre {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 18px 20px;
-        overflow-x: auto;
-        font-size: 13.5px;
-        line-height: 1.6;
-        color: #cbd5e0;
-        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-        margin: 0 0 24px;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+        color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
       }
-      code {
-        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-        font-size: 0.9em;
-        background: rgba(255, 255, 255, 0.06);
-        padding: 2px 6px;
-        border-radius: 4px;
-        color: #e2e8f0;
-      }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
       pre code { background: none; padding: 0; font-size: inherit; }
 
       blockquote {
-        margin: 0 0 24px;
-        padding: 4px 0 4px 22px;
-        border-left: 2px solid var(--accent);
-        color: var(--text);
-        font-size: 19px;
-        line-height: 1.5;
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
       }
       blockquote p { color: inherit; margin: 0; }
 
@@ -142,101 +98,113 @@
       td strong { color: var(--text); }
 
       .callout {
-        border: 1px solid var(--line);
-        border-left: 2px solid var(--warn);
-        border-radius: 8px;
-        padding: 18px 20px;
-        margin: 0 0 24px;
-        background: rgba(246, 224, 94, 0.03);
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
       }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
       .callout p:last-child { margin-bottom: 0; }
-      .callout .tag {
-        font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-        color: var(--warn); display: block; margin-bottom: 8px;
-      }
-
-
-      /* ---- timelines ---- */
-      .tl { margin: 0 0 30px; }
-      .tl-scroll { overflow-x: auto; padding-bottom: 6px; }
-      .tl-inner { min-width: 600px; }
-
-      .tl-row { display: grid; grid-template-columns: 118px 1fr; gap: 18px; align-items: center; }
-      .tl-name {
-        font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-        color: var(--dim); text-align: right; line-height: 1.35;
-      }
-      .tl-track { position: relative; height: 44px; }
-      .tl-track::before {
-        content: ""; position: absolute; left: 0; right: 0; top: 50%;
-        border-top: 1px dashed rgba(255, 255, 255, 0.07);
-      }
-
-      .tl-span {
-        position: absolute; top: 11px; height: 22px;
-        border-radius: 4px; display: flex; align-items: center;
-        padding: 0 9px; font-size: 11.5px; white-space: nowrap;
-        border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
-        color: #c8cdd4;
-      }
-      .tl-span.accent { border-color: rgba(104, 211, 145, 0.4); background: rgba(104, 211, 145, 0.08); color: #b9e6cb; }
-      .tl-span.warn   { border-color: rgba(246, 224, 94, 0.35); background: rgba(246, 224, 94, 0.07); color: #ecdf9a; }
-      .tl-span.ghost  { border-style: dashed; color: var(--dim); }
-
-      .tl-point { position: absolute; top: 4px; height: 36px; width: 0; }
-      .tl-point::before {
-        content: ""; position: absolute; left: -1px; top: 0; width: 2px; height: 100%;
-        background: var(--accent);
-      }
-      .tl-point.warn::before { background: var(--warn); }
-      .tl-point span {
-        position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
-        font-size: 11.5px; white-space: nowrap; color: #cbd5e0;
-      }
-      .tl-point.flip span { left: auto; right: 8px; }
-
-      .tl-band {
-        position: absolute; top: 0; bottom: 0;
-        background: rgba(246, 224, 94, 0.07);
-        border-left: 1px solid rgba(246, 224, 94, 0.3);
-        border-right: 1px solid rgba(246, 224, 94, 0.3);
-      }
-
-      .tl-axis { position: relative; height: 26px; margin-top: 2px; }
-      .tl-axis::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--line); }
-      .tl-t {
-        position: absolute; top: 7px; transform: translateX(-50%);
-        font-size: 10px; letter-spacing: 0.06em; color: var(--dim);
-        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: nowrap;
-      }
-      .tl-t::before { content: ""; position: absolute; left: 50%; top: -7px; width: 1px; height: 5px; background: rgba(255,255,255,0.18); }
-
-      .tl-link {
-        position: absolute; top: 50%; height: 0;
-        border-top: 1px dashed rgba(104, 211, 145, 0.55);
-      }
-      .tl-link::before {
-        content: ""; position: absolute; left: 0; top: -3px;
-        border: 3px solid transparent; border-right-color: rgba(104, 211, 145, 0.8);
-      }
-      .tl-link span {
-        position: absolute; left: 50%; top: -20px; transform: translateX(-50%);
-        font-size: 11px; color: var(--accent); white-space: nowrap;
-        background: var(--bg); padding: 0 8px;
-      }
-
-      .tl-cap { font-size: 13px; color: var(--dim); margin: 10px 0 0; line-height: 1.5; }
-      .tl-cap b { color: var(--muted); font-weight: 500; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
 
       ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
       li { margin-bottom: 10px; }
       li::marker { color: var(--dim); }
 
+      /* ============ shared figure chrome ============ */
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* ============ unit diagram ============ */
+      .units { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; min-width: 540px; }
+      .unit-box { border: 1px solid var(--line); border-radius: 10px; padding: 16px 14px; text-align: center; background: var(--panel); }
+      .unit-box .u-role { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+      .unit-box .u-unit { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+      .unit-box .u-sub { font-size: 12px; color: var(--dim); margin-top: 4px; font-family: var(--mono); }
+      .unit-box.solid { border-color: rgba(104,211,145,.4); background: rgba(104,211,145,.06); }
+      .unit-box.solid .u-unit { color: var(--accent); }
+      .unit-box.shaky { border-color: rgba(246,224,94,.35); background: rgba(246,224,94,.05); }
+      .unit-box.shaky .u-unit { color: var(--warn); }
+      .u-arrow { padding: 0 10px; text-align: center; color: var(--dim); font-size: 11px; letter-spacing: .1em; }
+      .u-arrow div { font-family: var(--mono); font-size: 15px; color: var(--muted); }
+
+      /* ============ bars ============ */
+      .bars { min-width: 420px; }
+      .bar-row { display: grid; grid-template-columns: 110px 1fr 88px; gap: 14px; align-items: center; margin-bottom: 10px; }
+      .bar-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
+      .bar-track { height: 22px; background: rgba(255,255,255,.04); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
+      .bar-fill { height: 100%; }
+      .bar-fill.ok { background: rgba(104,211,145,.45); }
+      .bar-fill.warn { background: rgba(246,224,94,.4); }
+      .bar-fill.bad { background: rgba(252,129,129,.4); }
+      .bar-val { font-size: 12.5px; color: #c8cdd4; font-family: var(--mono); }
+
+      /* ============ waterfall ============ */
+      .wf { min-width: 480px; }
+      .wf-bar { display: flex; height: 40px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+      .wf-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; white-space: nowrap; padding: 0 8px; }
+      .wf-seg.free { background: rgba(104,211,145,.18); color: #b9e6cb; border-right: 1px solid rgba(104,211,145,.35); }
+      .wf-seg.wallet { background: rgba(255,255,255,.05); color: #c8cdd4; }
+      .wf-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); font-family: var(--mono); margin-top: 6px; }
+
+      /* ============ chain ============ */
+      .chain { min-width: 460px; }
+      .chain-step { display: grid; grid-template-columns: 26px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,.07); }
+      .chain-step:last-child { border-bottom: 0; }
+      .chain-n { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--dim); font-family: var(--mono); }
+      .chain-step.hit .chain-n { border-color: rgba(104,211,145,.5); color: var(--accent); }
+      .chain-step.miss .chain-n { border-color: rgba(252,129,129,.4); color: var(--bad); }
+      .chain-note { font-size: 12.5px; color: var(--dim); margin-top: 3px; }
+
+      /* ============ pipeline ============ */
+      .pipe { min-width: 520px; }
+      .pipe-step { display: grid; grid-template-columns: 92px 1fr; gap: 18px; }
+      .pipe-when { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); text-align: right; padding-top: 16px; }
+      .pipe-body { border-left: 1px solid var(--line); padding: 0 0 18px 20px; position: relative; }
+      .pipe-step:last-child .pipe-body { border-left-color: transparent; }
+      .pipe-body::before { content: ""; position: absolute; left: -4px; top: 17px; width: 7px; height: 7px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--dim); }
+      .pipe-step.key .pipe-body::before { border-color: var(--accent); background: var(--accent); }
+      .pipe-title { padding-top: 10px; font-size: 15.5px; font-weight: 600; }
+      .pipe-desc { font-size: 13.5px; color: var(--dim); margin-top: 3px; line-height: 1.55; }
+
+      /* ============ timelines ============ */
+      .tl { margin: 0 0 30px; }
+      .tl-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .tl-inner { min-width: 600px; }
+      .tl-row { display: grid; grid-template-columns: 118px 1fr; gap: 18px; align-items: center; }
+      .tl-name { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.35; }
+      .tl-track { position: relative; height: 44px; }
+      .tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed rgba(255,255,255,.07); }
+      .tl-span { position: absolute; top: 11px; height: 22px; border-radius: 4px; display: flex; align-items: center; padding: 0 9px; font-size: 11.5px; white-space: nowrap; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: #c8cdd4; }
+      .tl-span.accent { border-color: rgba(104,211,145,.4); background: rgba(104,211,145,.08); color: #b9e6cb; }
+      .tl-span.warn { border-color: rgba(246,224,94,.35); background: rgba(246,224,94,.07); color: #ecdf9a; }
+      .tl-span.ghost { border-style: dashed; color: var(--dim); }
+      .tl-point { position: absolute; top: 4px; height: 36px; width: 0; }
+      .tl-point::before { content: ""; position: absolute; left: -1px; top: 0; width: 2px; height: 100%; background: var(--accent); }
+      .tl-point span { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 11.5px; white-space: nowrap; color: #cbd5e0; }
+      .tl-band { position: absolute; top: 0; bottom: 0; background: rgba(246,224,94,.07); border-left: 1px solid rgba(246,224,94,.3); border-right: 1px solid rgba(246,224,94,.3); }
+      .tl-axis { position: relative; height: 26px; margin-top: 2px; }
+      .tl-axis::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--line); }
+      .tl-t { position: absolute; top: 7px; transform: translateX(-50%); font-size: 10px; letter-spacing: .06em; color: var(--dim); font-family: var(--mono); white-space: nowrap; }
+      .tl-t::before { content: ""; position: absolute; left: 50%; top: -7px; width: 1px; height: 5px; background: rgba(255,255,255,.18); }
+      .tl-link { position: absolute; top: 50%; height: 0; border-top: 1px dashed rgba(104,211,145,.55); }
+      .tl-link::before { content: ""; position: absolute; left: 0; top: -3px; border: 3px solid transparent; border-right-color: rgba(104,211,145,.8); }
+      .tl-link span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); font-size: 11px; color: var(--accent); white-space: nowrap; background: var(--bg); padding: 0 8px; }
+
+      /* ============ event anatomy ============ */
+      .anat { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 520px; }
+      .anat-head { background: rgba(255,255,255,.03); padding: 10px 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line); }
+      .anat-row { display: grid; grid-template-columns: 165px 1fr; gap: 16px; padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13.5px; }
+      .anat-row:last-child { border-bottom: 0; }
+      .anat-f { font-family: var(--mono); font-size: 12.5px; color: #e2e8f0; }
+      .anat-w { color: var(--dim); }
+      .anat-row.req { background: rgba(252,129,129,.04); }
+      .anat-row.req .anat-f { color: #ffc9c9; }
+
       footer {
-        margin-top: 64px; border-top: 1px solid var(--line);
-        padding: 32px 0 56px;
-        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;
-        font-size: 13px; color: var(--dim);
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
       }
       footer a { text-decoration: none; }
       footer a:hover { color: var(--text); }
@@ -261,244 +229,372 @@
       </nav>
 
       <header class="hero">
-        <div class="kicker">Billing systems · Notes from production</div>
-        <h1>We sold a count and billed an amount</h1>
+        <div class="kicker">Billing systems · Field notes</div>
+        <h1>How to bill AI usage</h1>
         <p class="standfirst">
-          For months, some customers were quietly getting ten times what they had paid for, and
-          others were being charged a dollar for an operation that cost a fraction of a cent.
-          Rebuilding the system was the easy part. The mismatch underneath it is still there.
+          Metering AI is easy — every call can emit an event. Billing it correctly is three harder
+          problems: choosing a unit, reconciling two clocks, and making the arithmetic visible. Here
+          is a design that holds up, and the failure modes that shaped it.
         </p>
       </header>
 
       <section>
-        <div class="label">[ <b>01</b> — What the customer bought ]</div>
-        <h2>Ten thousand operations</h2>
+        <div class="label">[ <b>01</b> — The decision that determines everything ]</div>
+        <h2>Pick the unit before you build the ledger</h2>
         <p>
-          I work on the platform side of a company that runs marketing campaigns for e-commerce
-          brands. Part of what we sell is AI: agents that answer customer messages, write copy,
-          handle voice calls. Customers buy it in the simplest unit anyone could ask for.
-        </p>
-        <blockquote>
-          <p>10,000 AI operations per month.</p>
-        </blockquote>
-        <p>
-          No credits. No currency. No mention of which model runs, or what it costs us when it does.
-          A number of things the AI will do for you, per month. That is the whole promise, and it is
-          a good one — it is the only version of this a non-technical buyer can hold in their head.
+          Every AI billing system has three units in it, and they are rarely the same unit.
         </p>
         <p>
-          Everything that went wrong afterwards comes from the gap between that sentence and what a
-          billing ledger can actually store.
+          There is what you <em>sold</em> — usually a count, because that is what a buyer can hold in
+          their head. There is what you <em>store</em>, which wants to be money, because money is
+          what a ledger is good at. And there is what you <em>show</em>, which has to match the
+          contract or the customer will not believe you.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="units">
+              <div class="unit-box solid">
+                <div class="u-role">Contract</div>
+                <div class="u-unit">operations</div>
+                <div class="u-sub">10,000 / month</div>
+              </div>
+              <div class="u-arrow"><div>×</div>rate</div>
+              <div class="unit-box solid">
+                <div class="u-role">Ledger</div>
+                <div class="u-unit">currency</div>
+                <div class="u-sub">balance in USD / INR</div>
+              </div>
+              <div class="u-arrow"><div>÷</div>rate</div>
+              <div class="unit-box shaky">
+                <div class="u-role">Display</div>
+                <div class="u-unit">operations</div>
+                <div class="u-sub">balance ÷ rate</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Money in the middle, counts on both ends.</b> The two conversions are where every
+            problem in this article lives. Both use a rate — and a rate is a number that changes.
+          </p>
+        </div>
+
+        <p>
+          Store money. A currency balance stays correct when rates change, when a model gets cheaper,
+          when you add a modality you had not planned for. A balance denominated in operations
+          silently re-prices itself every time you touch the rate card.
+        </p>
+        <p>
+          But be honest about the right-hand box. The moment you sell a count and store an amount,
+          you have committed to maintaining a conversion forever, and it is only as stable as the
+          rate underneath it.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>02</b> — What the system stored ]</div>
-        <h2>A pool and a rate</h2>
+        <div class="label">[ <b>02</b> — The system before ]</div>
+        <h2>What a free-text rate field costs you</h2>
         <p>
-          The first version stored two numbers per customer: a <code>creditPool</code>, which was
-          usually just the contracted operation count, and a <code>baseRate</code> per operation,
-          typed in by whoever set the account up. Operations available was the division of one by
-          the other.
+          The system I inherited stored two numbers per customer: a pool, which was just the
+          contracted operation count, and a per-operation rate typed in by whoever set the account
+          up. Available operations was one divided by the other.
         </p>
-        <pre><code>creditPool = 10,000        (the contracted count, stored directly)
+        <p>
+          The intended rate was always <code>1</code>. It was a free-text field on an internal form,
+          labelled like a price, and it behaved like a divisor.
+        </p>
 
-rate = 1.0  →  10,000 / 1.0 =  10,000 ops   correct
-rate = 0.5  →  10,000 / 0.5 =  20,000 ops   2× the contract
-rate = 0.1  →  10,000 / 0.1 = 100,000 ops   10× the contract</code></pre>
-        <p>
-          The intended value was always <code>1</code>. The field was free text on an internal form,
-          filled in by account managers who had no reason to know that this particular number was
-          load-bearing. It was labelled like a price. It behaved like a divisor.
-        </p>
-        <p>
-          So a rate of <code>0.1</code> did not make anything cheaper. It multiplied the customer's
-          allocation by ten.
-        </p>
-      </section>
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="bars">
+              <div class="bar-row">
+                <div class="bar-key">rate = 1.0</div>
+                <div class="bar-track"><div class="bar-fill ok" style="width:10%"></div></div>
+                <div class="bar-val">10,000</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">rate = 0.5</div>
+                <div class="bar-track"><div class="bar-fill warn" style="width:20%"></div></div>
+                <div class="bar-val">20,000</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">rate = 0.1</div>
+                <div class="bar-track"><div class="bar-fill bad" style="width:100%"></div></div>
+                <div class="bar-val">100,000</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Operations actually available on a 10,000-operation contract.</b> Nobody typed a
+            number meaning "give this account ten times its allocation". They typed a price.
+          </p>
+        </div>
 
-      <section>
-        <div class="label">[ <b>03</b> — Why nobody noticed ]</div>
-        <h2>The screen showed the contract, not the consequence</h2>
         <p>
-          Here is the part I keep coming back to. The bug was visible in the data from the first
-          day. It was never visible on a screen.
+          The same field failed the other way for customers billed in dollars. A rate of
+          <code>1</code> reads as "one unit per operation" — sensible-sounding — and in a pool
+          denominated in dollars it means <strong>one dollar per operation</strong>. Invisible while
+          free credits lasted, then orders of magnitude above cost the moment they ran out.
         </p>
         <p>
-          Every interface — the account manager's view, the customer's dashboard — displayed the
-          contracted number. <strong>10,000.</strong> The figure that actually governed consumption,
-          <code>pool / rate</code>, was never rendered anywhere. It existed only as an intermediate
-          value inside a deduction that ran nightly and printed nothing.
-        </p>
-        <p>
-          Nobody was ignoring a warning sign. There was no warning sign. A customer on a
-          <code>0.1</code> rate used a hundred thousand operations against a ten thousand operation
-          contract, and every screen either party could look at agreed that everything was fine.
+          The lesson is not really about a rate field:
         </p>
         <blockquote>
           <p>
-            A derived value that governs money and is displayed nowhere is not a calculation. It is
-            an unexploded assumption.
+            Every screen showed the contracted number. The figure that governed consumption was
+            never rendered anywhere. It existed only inside a nightly job that printed nothing.
           </p>
         </blockquote>
-      </section>
-
-      <section>
-        <div class="label">[ <b>04</b> — The other direction ]</div>
-        <h2>A dollar an operation</h2>
         <p>
-          The same free-text field failed the opposite way for customers billed in dollars. Some
-          accounts were set up with <code>rate = 1</code> — read as "one unit per operation", which
-          sounds like the sensible default. In a pool denominated in dollars, it means
-          <strong>one dollar per operation.</strong>
-        </p>
-        <p>
-          This stayed invisible for as long as the free allocation lasted, because deductions came
-          out of the free pool and nobody was being invoiced. The moment a customer exhausted their
-          free credits, every subsequent operation billed a dollar from their main wallet — several
-          orders of magnitude above what the underlying model call cost.
-        </p>
-        <p>
-          It went undetected for the most boring reason available: in that version, almost nobody
-          ever finished their free credits. The bug needed a heavy customer to surface, and heavy
-          customers were exactly who we did not have yet.
+          Nobody ignored a warning — there was no warning. A derived value that decides what someone
+          is charged, and appears in no interface, is not a calculation. It is an unexploded
+          assumption. That single observation is why the rest of this design looks the way it does.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>05</b> — The rebuild ]</div>
-        <h2>Credits become money</h2>
+        <div class="label">[ <b>03</b> — The meter ]</div>
+        <h2>Make the usage event carry everything</h2>
         <p>
-          The second version changed four things. Only one of them is interesting.
+          One event per AI call, emitted by the feature that made it. The billing job never asks a
+          model what it did; it reads events. So the event has to be complete when it is written,
+          because nothing downstream can reconstruct what was never recorded.
         </p>
-        <p>
-          The boring three: rates moved into a single central, versioned rate card, keyed by
-          <code>tier × country × usage type</code>, editable only through an admin console with an
-          audit log — account managers can no longer type a rate at all. Margin became an explicit
-          per-customer markup percentage, stored separately, so the base rate always reflects real
-          cost. And voice became a first-class dimension, because a voice vendor charges per second
-          and no amount of pretending makes a second an operation.
-        </p>
-        <p>
-          The interesting one: <strong>the free credit pool stopped being a count and became an
-          amount of money.</strong>
-        </p>
-        <pre><code>allocatedFreeCredits = contractedOps × finalRate     // in the customer's currency</code></pre>
-        <p>
-          The nightly job now deducts currency, not counts. Every unit of usage is priced through
-          the rate card, marked up, and subtracted from a balance denominated in dollars or rupees.
-          This is correct in a way the first version could not be: a rate change no longer silently
-          re-scales somebody's entitlement, because entitlement is money and money does not care
-          what the rate is.
-        </p>
-        <p>
-          It also created the problem that the rest of this piece is about.
-        </p>
-      </section>
 
-      <section>
-        <div class="label">[ <b>06</b> — Migration ]</div>
-        <h2>The dashboards were the audit</h2>
-        <p>
-          Alongside the rebuild we shipped a usage dashboard: spend per customer, usage per feature,
-          billed against free, trends over time. It was meant to be an operational convenience.
-        </p>
-        <p>
-          What it actually did was make the first version's arithmetic visible for the first time.
-          Migrating old contracts meant translating a count and a rate into an amount, and the old
-          bugs came through the translation intact and compounded — a customer on a
-          <code>0.1</code> rate migrated to a credit pool ten times larger than it should have been.
-          Every migrated account had to be recalculated against the new rate card and normalised, by
-          hand.
-        </p>
-        <p>
-          That manual audit was the direct cost of never having had a central place where rates
-          lived. Not the bug itself — the bug was one bad divisor. The cost was that there was no
-          single thing to look at to find out how many accounts it had touched.
-        </p>
-      </section>
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="anat">
+              <div class="anat-head">Usage event · one per AI call</div>
+              <div class="anat-row req">
+                <div class="anat-f">tier</div>
+                <div class="anat-w">Which price band the model sits in. Missing → no rate resolves, and the event drops out of costing entirely.</div>
+              </div>
+              <div class="anat-row req">
+                <div class="anat-f">usageType</div>
+                <div class="anat-w">text · image · video · audio. Decides both the rate and the unit.</div>
+              </div>
+              <div class="anat-row req">
+                <div class="anat-f">billable</div>
+                <div class="anat-w">Explicitly true or false. <strong>Absent is not false</strong> — absent means the job cannot classify it, so it is skipped.</div>
+              </div>
+              <div class="anat-row">
+                <div class="anat-f">usageUnits</div>
+                <div class="anat-w">Seconds, for audio. The one modality not counted in operations.</div>
+              </div>
+              <div class="anat-row">
+                <div class="anat-f">weight</div>
+                <div class="anat-w">Lets one call count as several operations. Defaults to 1.</div>
+              </div>
+              <div class="anat-row">
+                <div class="anat-f">feature · channel</div>
+                <div class="anat-w">Not used in the arithmetic. Used in every question anyone asks afterwards.</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>The three highlighted fields are load-bearing.</b> Anything missing one cannot be
+            priced — and usage that cannot be priced is revenue you never see again.
+          </p>
+        </div>
 
-      <section>
-        <div class="label">[ <b>07</b> — The first thing we can't fix ]</div>
-        <h2>An exchange rate that will not hold still</h2>
         <p>
-          The rate card is in dollars. Customers billed in rupees have a wallet in rupees. On
-          billing day the dollar rate is converted at that day's exchange rate, and the deduction is
-          made in rupees. That part is right — the customer pays rupees at the rate that applied on
-          the day the usage happened.
-        </p>
-        <p>
-          The trouble is the other direction. The contract promises a count, so somewhere a screen
-          has to turn a rupee balance back into operations:
-        </p>
-        <pre><code>balance = ₹42,500        (50,000 ops at $0.01, converted at 85)
-
-at 85:  floor(42,500 / 0.85) = 50,000 ops      as promised
-at 88:  floor(42,500 / 0.88) = 48,295 ops      1,705 short
-at 90:  floor(42,500 / 0.90) = 47,222 ops      2,778 short
-at 95:  floor(42,500 / 0.95) = 44,736 ops      5,264 short</code></pre>
-        <p>
-          Nothing has been deducted between those four lines. The wallet holds the same ₹42,500 in
-          all of them. The only thing that moved was the currency market, and a customer who was
-          sold fifty thousand operations watches the number on their dashboard drift down through
-          the month.
-        </p>
-        <p>
-          The billing is financially correct throughout. The <em>display</em> is not reliably
-          aligned with the contract, and it cannot be, because the contract is denominated in a unit
-          the ledger does not store and the bridge between them is a number neither side controls.
+          Voice is why <code>usageType</code> has to exist from day one. A voice vendor bills per
+          second; no amount of modelling makes a second an operation. Retrofitting a second unit into
+          a system that assumed one is far more expensive than carrying the field before you need it.
         </p>
         <div class="callout">
-          <span class="tag">Unresolved</span>
+          <span class="tag">Validate at emit</span>
           <p>
-            The contract is in operations. The wallet is in rupees. The exchange rate between them
-            is not fixed, so there is no honest way to render one as the other. Voice sidesteps this
-            by being displayed as credits — but only because "one voice operation" was never a
-            meaningful unit to begin with.
+            Nothing downstream can stop a feature shipping events without the required fields. If you
+            take one thing from this section: enforce the schema where the event is written, not
+            where it is read. By the time the nightly job sees it, the only options are to guess or
+            to drop — and dropping is silent.
           </p>
         </div>
       </section>
 
       <section>
-        <div class="label">[ <b>08</b> — The second thing we can't fix ]</div>
-        <h2>Five pricing tiers, all set to the same number</h2>
+        <div class="label">[ <b>04</b> — Prices ]</div>
+        <h2>One rate card, versioned, resolved by fallback</h2>
         <p>
-          The rate card supports five model tiers, so that a cheap model and an expensive one can
-          be priced differently. It works. It is tested. Every tier is currently set to the same
-          rate, and we cannot change that.
+          Rates live in exactly one place, keyed by <code>tier × country × usageType</code>, one
+          version active at a time and every previous version retained. Nobody outside that document
+          sets a price — there is no per-customer rate field, because that is the bug in section two.
         </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="chain">
+              <div class="chain-step hit">
+                <div class="chain-n">1</div>
+                <div>
+                  <code>rate[tier][country][type]</code>
+                  <div class="chain-note">Exact match. The normal path.</div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">2</div>
+                <div>
+                  <code>rate[tier]["OTHER"][type]</code>
+                  <div class="chain-note">Country fallback, so a new market bills correctly on day one instead of failing.</div>
+                </div>
+              </div>
+              <div class="chain-step miss">
+                <div class="chain-n">3</div>
+                <div>
+                  <code>not found</code>
+                  <div class="chain-note">Skip the item and alert loudly. Never invent a price and never default to zero — one bills the wrong number, the other bills nothing and looks like success.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="cap"><b>Resolution order.</b> Two fallbacks and a refusal.</p>
+        </div>
+
         <p>
-          Consider two customers, both sold ten thousand operations. One spends theirs on a cheap
-          tier, one on an expensive tier. If tiers carry different rates, the same monetary
-          allocation yields a different number of operations for each — and both were promised the
-          same count. Worse, a single customer's total shifts month to month depending on which
-          features they happened to use.
+          Keep every version and the timestamp it became active. You will be asked what something
+          cost on a specific day last month — for a report, a dispute, a recalculation — and the only
+          honest answer comes from the card that was live that day, not the one live now.
         </p>
+
+        <h3>Margin is a separate number</h3>
         <p>
-          So the tier infrastructure sits there, fully built, deliberately flattened. It is not a
-          technical limitation. It is what happens when the pricing model can express something the
-          sales promise cannot.
+          Markup is stored per customer, apart from the base rate, so the rate card always reflects
+          what the thing actually costs you:
         </p>
-        <blockquote>
-          <p>
-            You cannot price by model tier while selling by operation count. Pick one. We shipped
-            both and had to disable the half that was working.
-          </p>
-        </blockquote>
+        <pre><code>finalRate = baseRate[tier][country][type] × (1 + markup / 100)
+
+// non-USD contract
+finalRateLocal = finalRate × conversionRate</code></pre>
+        <p>
+          Fold margin into the base rate and you lose the ability to answer "are we making money on
+          this account" without archaeology.
+        </p>
       </section>
 
       <section>
-        <div class="label">[ <b>09</b> — Two clocks ]</div>
-        <h2>The day it happened, and the day it was counted</h2>
+        <div class="label">[ <b>05</b> — Spending ]</div>
+        <h2>Free credits are a balance, not a counter</h2>
         <p>
-          Usage and billing run on different clocks, and almost every confusing question anyone has
-          ever asked about this system comes from the gap between them.
+          Allocate free credits as an amount — <code>contractedOps × finalRate</code> — and let the
+          job spend it like money. Each day's cost draws against free credits first; only the
+          remainder reaches the wallet.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="wf">
+              <div class="wf-bar">
+                <div class="wf-seg free" style="width:62%">drawn from free credits</div>
+                <div class="wf-seg wallet" style="width:38%">charged to wallet</div>
+              </div>
+              <div class="wf-scale"><span>0</span><span>free balance exhausted →</span><span>day's total cost</span></div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>One day, one customer, one category.</b> The split is computed, not chosen:
+            <code>fromFree = min(cost, balance)</code>. Voice and non-voice run separately, against
+            separate balances.
+          </p>
+        </div>
+
+        <p>
+          Run the waterfall independently per category. Voice and messages have different balances
+          and different units, and merging them means a chatty month silently eats a customer's voice
+          allowance.
         </p>
         <p>
-          A usage event is stamped when the AI call happens — some ordinary afternoon moment. The
-          billing job doesn't run until roughly three in the morning the following day, and when it
-          writes its own events, they carry <em>that</em> timestamp. So the record of the money is
-          always about twelve hours to the right of the thing it charges for.
+          Write both halves to the ledger even when one is zero. A free-credit draw is a real
+          economic event — it consumes something the customer was given — and a ledger that only
+          records money leaving the wallet cannot tell you how much of the allowance is left.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>06</b> — The run ]</div>
+        <h2>What the nightly job actually does</h2>
+        <p>
+          Bill in arrears, once a day, per customer. Not per call — per-call billing multiplies write
+          volume by traffic and buys you nothing a daily aggregate does not.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="pipe">
+              <div class="pipe-step key">
+                <div class="pipe-when">Guard</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Has this day already been billed?</div>
+                  <div class="pipe-desc">Query the ledger for entries matching this customer and date range. If any exist, skip and alert. This is the only thing standing between a retried cron and a double charge.</div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">Window</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Resolve the day to a UTC range</div>
+                  <div class="pipe-desc">A billing day is a local calendar day, not a UTC one. Convert once, at the boundary, and end just short of midnight so clock skew cannot drag in tomorrow.</div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">Read</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Aggregate usage by tier × type × billable</div>
+                  <div class="pipe-desc">Audio buckets sum seconds; the rest sum weighted operation counts. One query, one composite aggregation.</div>
+                </div>
+              </div>
+              <div class="pipe-step key">
+                <div class="pipe-when">Price</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Resolve rate, apply markup, convert currency</div>
+                  <div class="pipe-desc">Per bucket. Price the non-billable usage too — you want to know what you gave away, even though nothing is deducted for it.</div>
+                </div>
+              </div>
+              <div class="pipe-step key">
+                <div class="pipe-when">Deduct</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Free credits, then wallet</div>
+                  <div class="pipe-desc">Atomic decrement on the balance, a ledger entry for each half. Snapshot the wallet before and after, so a run is auditable without replaying it.</div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">Write back</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Emit an event per deduction</div>
+                  <div class="pipe-desc">Amount, currency, source of funds, and a per-tier and per-feature breakdown. This is what every dashboard downstream reads.</div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">Settle</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Push to the payment platform, record the job</div>
+                  <div class="pipe-desc">Only if there is something to charge. Record per-customer status so a partial failure shows up as a row, not as a gap.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Batch it.</b> Small groups with a pause between them — a nightly job that stampedes
+            your datastore is a nightly outage on a schedule.
+          </p>
+        </div>
+
+        <div class="callout good">
+          <span class="tag">Design for the retry</span>
+          <p>
+            Assume the job will run twice. The duplicate guard, the per-customer job rows and the
+            before/after balances all exist for the morning when it does — so "did we charge them
+            twice" takes a query, not an afternoon.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>07</b> — Two clocks ]</div>
+        <h2>The day it happened, and the day it was counted</h2>
+        <p>
+          Usage is stamped when the call happens. Billing records are stamped when the job runs,
+          about twelve hours later. Nearly every confusing question anyone asks about a system like
+          this comes from that gap.
         </p>
 
         <div class="tl">
@@ -512,50 +608,41 @@ at 95:  floor(42,500 / 0.95) = 44,736 ops      5,264 short</code></pre>
             <div class="tl-row">
               <div class="tl-name">Billing<br />job</div>
               <div class="tl-track">
-                <div class="tl-link" style="left:22%; right:11%"><span>sourceId = 1 May</span></div>
-                <div class="tl-point" style="left:89%"><span>writes billing events</span></div>
+                <div class="tl-link" style="left:22%; right:11%"><span>tagged with the day it bills</span></div>
+                <div class="tl-point" style="left:89%"><span>writes billing records</span></div>
               </div>
             </div>
             <div class="tl-row">
               <div class="tl-name"></div>
               <div class="tl-axis">
-                <span class="tl-t" style="left:0%">1 May 00:00</span>
+                <span class="tl-t" style="left:0%">day D · 00:00</span>
                 <span class="tl-t" style="left:40%">12:00</span>
                 <span class="tl-t" style="left:79%">23:56</span>
-                <span class="tl-t" style="left:89%">2 May 03:00</span>
+                <span class="tl-t" style="left:89%">D+1 · 03:00</span>
               </div>
             </div>
           </div></div>
-          <p class="tl-cap">
-            <b>The join is not the timestamp.</b> Every billing event carries the date it is
-            <em>about</em>, not the date it was written. That field is the only thing tying the two
-            clocks together.
+          <p class="cap">
+            <b>Never join on the write timestamp.</b> Stamp every billing record with the day it is
+            <em>about</em> and join on that. One field, and it removes an entire category of
+            off-by-one reporting bug.
           </p>
         </div>
 
         <p>
-          Both windows are cut to Indian Standard Time, midnight to <code>23:56:56</code>. The
-          missing three minutes are deliberate — they keep events with slightly skewed clocks from
-          bleeding in from the following day.
-        </p>
-        <p>
-          It also means one view of the dashboard can never quite agree with the other. Usage for
-          today exists and is real; it has simply not been charged yet, and won't be until tomorrow
-          morning. Rather than show it next to billed figures and invite the question, today's usage
-          is surfaced on its own, labelled as not yet billed.
+          The corollary: today can never be shown next to yesterday. Today's usage is real, but
+          nothing has priced it. Show it — separately, labelled as not yet billed — rather than
+          letting it quietly widen a total that is meant to reconcile.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>10</b> — The seam ]</div>
-        <h2>Three hours where the contract is wrong</h2>
+        <div class="label">[ <b>08</b> — The seam ]</div>
+        <h2>Cycle rollover lands inside the offset</h2>
         <p>
-          Now put a cycle boundary in the middle of that offset.
-        </p>
-        <p>
-          A cycle ends on the 31st. Around midnight, the contract rolls: start and end dates update
-          to the new month. Three hours later the billing job wakes up and charges the 31st — by
-          which time the contract it belongs to says the cycle began yesterday.
+          Now put a billing cycle boundary in the middle of that gap. The cycle rolls at midnight;
+          the job runs at three. For those three hours the contract has moved on while the charge
+          being applied belongs to the month that just closed.
         </p>
 
         <div class="tl">
@@ -586,7 +673,7 @@ at 95:  floor(42,500 / 0.95) = 44,736 ops      5,264 short</code></pre>
               <div class="tl-name">Free credit<br />balance</div>
               <div class="tl-track">
                 <div class="tl-band" style="left:66%; width:9%"></div>
-                <div class="tl-span ghost" style="left:0%; width:100%">May's leftover balance · never reset</div>
+                <div class="tl-span ghost" style="left:0%; width:100%">last month's leftover · never reset</div>
               </div>
             </div>
             <div class="tl-row">
@@ -599,76 +686,189 @@ at 95:  floor(42,500 / 0.95) = 44,736 ops      5,264 short</code></pre>
               </div>
             </div>
           </div></div>
-          <p class="tl-cap">
-            <b>The shaded band is the seam</b> — the contract has already rolled to June, and the
-            charge being applied inside it belongs to May.
+          <p class="cap">
+            <b>The shaded band is the seam.</b> Three lanes roll at midnight. The fourth does not,
+            and that is the actual bug.
           </p>
         </div>
 
         <p>
-          The charge itself is fine. The job never checks contract dates; it asks which customers
-          have billing enabled and what usage exists for the day it was told to bill. May's usage
-          gets May's price either way.
+          The charge itself is fine — the job bills the day it was told to bill, at that day's
+          prices, whatever the contract now says. Drawing it is still worth doing, because the fourth
+          lane is invisible in prose and unmistakable on an axis.
         </p>
         <p>
-          What the picture makes obvious is the fourth lane. <strong>Nothing refills the free credit
-          balance.</strong> The dates roll automatically; the money does not. June opens with
-          whatever May happened to leave behind — often nothing — and until someone manually
-          provisions the new allocation, every operation bills straight to the main wallet with no
-          free buffer in front of it.
+          <strong>Rolling the dates does not refill the balance.</strong> If your cycle update
+          changes two dates and stops, the new month opens with whatever the old one left behind —
+          often nothing — and every operation bills straight to the wallet with no buffer in front of
+          it. Provision credits in the same transaction that rolls the cycle, or you have built a
+          monthly chore that somebody will eventually forget.
         </p>
-        <div class="callout">
-          <span class="tag">Still manual</span>
+      </section>
+
+      <section>
+        <div class="label">[ <b>09</b> — The rate you don't control ]</div>
+        <h2>When the display unit floats</h2>
+        <p>
+          If you price in one currency and bill in another, the deduction is straightforward: charge
+          local currency at the day's rate. The conversion to watch is the one going back the other
+          way, when a balance has to be rendered as the count on the contract.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="bars">
+              <div class="bar-row">
+                <div class="bar-key">at 85</div>
+                <div class="bar-track"><div class="bar-fill ok" style="width:100%"></div></div>
+                <div class="bar-val">50,000</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">at 88</div>
+                <div class="bar-track"><div class="bar-fill warn" style="width:96.6%"></div></div>
+                <div class="bar-val">48,295</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">at 90</div>
+                <div class="bar-track"><div class="bar-fill warn" style="width:94.4%"></div></div>
+                <div class="bar-val">47,222</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">at 95</div>
+                <div class="bar-track"><div class="bar-fill bad" style="width:89.5%"></div></div>
+                <div class="bar-val">44,736</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>The same untouched balance, four exchange rates.</b> Nothing was spent between these
+            rows. A customer sold 50,000 operations watches the number fall through the month.
+          </p>
+        </div>
+
+        <p>
+          The billing stays correct throughout. The <em>display</em> cannot be, because the contract
+          is denominated in a unit the ledger does not store and the bridge between them is a number
+          neither party controls.
+        </p>
+        <p>
+          There are three honest ways out, and all of them are somebody else's decision: fix the
+          conversion rate for the life of the contract, sell in the currency you bill in, or sell an
+          amount instead of a count. Engineering cannot repair this downstream — it can only display
+          it accurately and raise it early.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>10</b> — Show everything ]</div>
+        <h2>More metrics means more questions, and that is the point</h2>
+        <p>
+          The change that mattered most was not the rate card. It was the dashboard.
+        </p>
+        <p>
+          Two views, deliberately fed from different sources. One reads billing records and answers
+          <em>what did we charge</em>. The other reads raw usage and answers <em>what did they
+          use</em>. Keeping them separate is what makes them useful: when they disagree, the
+          disagreement is the finding.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="bars">
+              <div class="bar-row">
+                <div class="bar-key">billed</div>
+                <div class="bar-track"><div class="bar-fill ok" style="width:74%"></div></div>
+                <div class="bar-val">charged</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">given away</div>
+                <div class="bar-track"><div class="bar-fill warn" style="width:18%"></div></div>
+                <div class="bar-val">priced, free</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">dropped</div>
+                <div class="bar-track"><div class="bar-fill bad" style="width:8%"></div></div>
+                <div class="bar-val">unbillable</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Give the third bar a name and a column.</b> Usage that arrived without the fields
+            needed to price it is revenue leaving quietly. It should be as visible as the revenue
+            that arrived.
+          </p>
+        </div>
+
+        <p>
+          Every metric we exposed generated questions. Why is that account's voice spend triple last
+          month. Why does this feature cost more than the one beside it. Why is there a gap between
+          used and charged. Each question was answerable, and answering it hardened something — a
+          missing field, a wrong weight, an account on the wrong tier.
+        </p>
+        <blockquote>
           <p>
-            The cycle rollover updates two dates and stops. Re-provisioning free credits is a
-            per-customer admin call that somebody has to remember to make, every cycle, for every
-            account.
+            "We can't show that easily" is never an acceptable answer about a number that decides
+            what someone pays. It means the number exists and nobody can check it — which is exactly
+            the condition the original bug needed in order to survive.
           </p>
-        </div>
-      </section>
-
-      <section>
-        <div class="label">[ <b>11</b> — The quiet one ]</div>
-        <h2>A missing flag means free usage</h2>
+        </blockquote>
         <p>
-          Every usage event carries a boolean
-          marking whether it belongs to a free agent or a billable one. The nightly job requires it
-          to be explicitly true or false. If a feature emits an event without it, those events fall
-          into the aggregation's missing bucket and are skipped — no error, no alert, no charge.
-        </p>
-        <p>
-          The dashboard has a column for it. We call it <em>loss</em>: real usage, correctly
-          recorded, never billed. It is the only place that number appears, and it only appears if
-          someone opens the page and reads it.
+          Instrumentation is not overhead you add once the system works. On a billing system it
+          <em>is</em> the system working. It is the only mechanism by which anyone finds out that the
+          arithmetic has quietly stopped being true.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>12</b> — What I'd carry forward ]</div>
-        <h2>Three things I believe more strongly now</h2>
+        <div class="label">[ <b>11</b> — Checklist ]</div>
+        <h2>What I'd insist on next time</h2>
+        <table>
+          <tr>
+            <th style="width:38%">Decision</th>
+            <th>Why</th>
+          </tr>
+          <tr>
+            <td><strong>Store money, not counts</strong></td>
+            <td>A currency balance survives rate changes. A count re-prices itself silently.</td>
+          </tr>
+          <tr>
+            <td><strong>Settle the contract unit first</strong></td>
+            <td>Selling a count and storing an amount commits you to a conversion forever. Fine — but decide it deliberately, not by accident.</td>
+          </tr>
+          <tr>
+            <td><strong>One rate card, versioned, no per-customer prices</strong></td>
+            <td>A price that can be typed per account will be typed wrong, and there will be nowhere single to look.</td>
+          </tr>
+          <tr>
+            <td><strong>Margin separate from cost</strong></td>
+            <td>Otherwise "are we profitable on this account" needs archaeology.</td>
+          </tr>
+          <tr>
+            <td><strong>Validate usage events at emit</strong></td>
+            <td>Downstream can only guess or drop, and dropping is silent.</td>
+          </tr>
+          <tr>
+            <td><strong>Tag billing records with the day they bill</strong></td>
+            <td>Never join reporting on the write timestamp. The clocks are twelve hours apart.</td>
+          </tr>
+          <tr>
+            <td><strong>Provision credits in the step that rolls the cycle</strong></td>
+            <td>Anything left as a manual monthly chore is a future outage with a date on it.</td>
+          </tr>
+          <tr>
+            <td><strong>Render every number that touches money</strong></td>
+            <td>Including the derived ones. Especially the derived ones.</td>
+          </tr>
+        </table>
         <p>
-          <strong>Render every number that governs money.</strong> The original bug was one bad
-          divisor, and it survived for months purely because the value it produced was never drawn
-          on a screen. The fix that mattered most was not the rebuild — it was the dashboard that
-          made the arithmetic visible. If a derived figure decides what someone is charged, it
-          belongs in the interface, even an ugly internal one.
-        </p>
-        <p>
-          <strong>A free-text numeric field on an internal form is a production input.</strong> It
-          deserves the validation, the audit trail and the review you would give an API. The rate
-          field had none, because it looked like configuration rather than code.
-        </p>
-        <p>
-          <strong>Decide what the unit is before you build the ledger.</strong> Everything still
-          open here — the exchange-rate drift, the flattened tiers — traces back to selling a count
-          and storing an amount. Both models are defensible. Holding both at once means permanently
-          maintaining a conversion that cannot be made honest, and no amount of engineering
-          downstream repairs a unit mismatch decided in a sales conversation.
+          None of this is exotic. It is a rate table, a nightly aggregate, a waterfall and two
+          dashboards. What makes it reliable is not sophistication — it is that every number in it
+          can be seen by somebody who is allowed to ask why.
         </p>
       </section>
 
       <footer>
-        <div>Details anonymised; specifics generalised.</div>
+        <div>Written from production. Details generalised.</div>
         <div class="links">
           <a href="/writing/">All writing</a>
           <a href="/">Portfolio</a>
