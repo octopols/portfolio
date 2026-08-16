@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>How to add a fourth channel without building a fourth pipeline — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="Multi-channel messaging systems tend to grow one pipeline per channel, because provider differences are loud and the shared concerns are quiet. A guide to drawing the boundary in the right place: what belongs in orchestration, what belongs in an adapter, and how to tell which is which."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/one-pipeline-not-four/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
+    <meta property="og:url" content="https://hirnaymay.com/writing/one-pipeline-not-four/" />
+    <meta property="og:title" content="How to add a fourth channel without building a fourth pipeline" />
+    <meta
+      property="og:description"
+      content="Provider differences are visible. The shared concerns are invisible. That asymmetry is why messaging systems end up with one pipeline per channel."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --info: #90cdf4;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(34px, 5.6vw, 56px); line-height: 1.06; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      .toc { margin: 40px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02); }
+      .toc h2 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin: 0 0 14px; font-weight: 500; }
+      .toc ol { margin: 0; padding-left: 20px; color: #c8cdd4; font-size: 15px; }
+      .toc li { margin-bottom: 7px; }
+      .toc li::marker { color: var(--dim); font-family: var(--mono); font-size: 12px; }
+      .toc a { text-decoration: none; border-bottom: 1px solid transparent; }
+      .toc a:hover { border-bottom-color: var(--dim); }
+
+      section { padding: 56px 0 0; scroll-margin-top: 24px; }
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+
+      pre {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+        color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
+      }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+      .tok-c { color: #6b7178; }
+      .tok-k { color: #b794f4; }
+      .tok-s { color: #f6ad55; }
+      .tok-t { color: #90cdf4; }
+
+      blockquote {
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 14.5px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; }
+      td strong { color: var(--text); }
+      .mono { font-family: var(--mono); font-size: 13px; }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout.case { border-left-color: var(--info); background: rgba(144,205,244,.035); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+      .callout.case .tag { color: var(--info); }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* split table: shared vs channel-specific */
+      .split { min-width: 560px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .split-col { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+      .split-col.core { border-color: rgba(104,211,145,.35); }
+      .split-col.edge { border-color: rgba(144,205,244,.3); }
+      .split-head { padding: 11px 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+      .split-col.core .split-head { color: var(--accent); background: rgba(104,211,145,.06); }
+      .split-col.edge .split-head { color: var(--info); background: rgba(144,205,244,.05); }
+      .split-col ul { margin: 0; padding: 12px 16px 14px 32px; font-size: 14px; }
+      .split-col li { margin-bottom: 7px; color: #c8cdd4; }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <a href="/writing/">← All writing</a>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Architecture · Guide</div>
+        <h1>How to add a fourth channel without building a fourth pipeline</h1>
+        <p class="standfirst">
+          Multi-channel messaging systems reliably grow one pipeline per channel. Not
+          because anyone decides to — because the differences between providers are
+          loud and visible, and everything the channels share is quiet and abstract.
+        </p>
+
+        <nav class="toc" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#drift">How you end up with four of everything</a></li>
+            <li><a href="#boundary">Drawing the boundary in the right place</a></li>
+            <li><a href="#orchestration">What the orchestration owns</a></li>
+            <li><a href="#adapter">What the adapter owns</a></li>
+            <li><a href="#failures">Four ways the split leaks</a></li>
+            <li><a href="#production">What this looked like in production</a></li>
+            <li><a href="#test">The only test that matters</a></li>
+          </ol>
+        </nav>
+      </header>
+
+      <section id="drift">
+        <div class="label">[ <b>01</b> — The drift ]</div>
+        <h2>How you end up with four of everything</h2>
+        <p>
+          Nobody sits down and designs four parallel messaging pipelines. You get there
+          one reasonable decision at a time.
+        </p>
+        <p>
+          You start with email, because everyone starts with email. It needs a way to
+          resolve an audience, schedule a send, pace itself so the provider doesn't
+          throttle you, retry the failures, and collect delivery status from a webhook.
+          You build that. It works.
+        </p>
+        <p>
+          Then someone sells WhatsApp. WhatsApp has template approval, a completely
+          different payload shape, its own auth, its own rate limits, and a status
+          webhook with different names for similar things. You look at the email
+          pipeline, you look at WhatsApp, and the honest engineering assessment is:
+          <em>this is not the same thing</em>. So you build a second pipeline.
+        </p>
+        <p>
+          That assessment is wrong, but it is wrong in a way that is genuinely hard to
+          see at the time. Here is the asymmetry that causes it:
+        </p>
+
+        <blockquote>
+          <p>
+            What differs between channels is concrete, visible, and in the API docs
+            in front of you. What they share is abstract, invisible, and only becomes
+            obvious on the third one.
+          </p>
+        </blockquote>
+
+        <p>
+          Payload shape is a thing you can see. "Retry policy" is not a thing you can
+          see. So the boundary gets drawn around the visible difference — the channel —
+          instead of around the actual concern. Then SMS arrives and you do it a third
+          time, because now there is a precedent, and matching the precedent is the
+          conservative choice.
+        </p>
+
+        <h3>Why the cost is worse than 4×</h3>
+        <p>
+          Duplicated infrastructure is usually priced as "we wrote it four times." The
+          real bill is larger and arrives later:
+        </p>
+        <ul>
+          <li>
+            <strong>Fixes stop propagating.</strong> A retry bug found in email gets
+            fixed in email. The same bug in SMS is a separate ticket that nobody
+            files, because nobody knows it exists.
+          </li>
+          <li>
+            <strong>Semantics diverge under pressure.</strong> "Delivered" comes to
+            mean four different things. Support cannot answer "why didn't this send"
+            without knowing which channel it was, and eventually neither can you.
+          </li>
+          <li>
+            <strong>Every cross-channel feature costs four times.</strong> Global
+            suppression, per-tenant rate limits, a unified audit trail — each one
+            becomes four implementations and a reconciliation problem.
+          </li>
+          <li>
+            <strong>The next channel is quoted from the last one.</strong> Once
+            "adding a channel" means "building a pipeline," the estimate for channel
+            five is the cost of channel four. That number is what kills the feature.
+          </li>
+        </ul>
+      </section>
+
+      <section id="boundary">
+        <div class="label">[ <b>02</b> — The boundary ]</div>
+        <h2>Drawing the boundary in the right place</h2>
+        <p>
+          The fix is not "abstract the channels." It is to sort every responsibility in
+          the system into one of two buckets, and be strict about it: does this concern
+          the <em>lifecycle of a broadcast</em>, or does it concern
+          <em>talking to one specific provider</em>?
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="split">
+              <div class="split-col core">
+                <div class="split-head">Orchestration — one implementation</div>
+                <ul>
+                  <li>Audience resolution and segmentation</li>
+                  <li>Scheduling and time-zone handling</li>
+                  <li>Fan-out and batching</li>
+                  <li>Rate pacing</li>
+                  <li>Retry policy and backoff</li>
+                  <li>Idempotency per recipient</li>
+                  <li>Status aggregation</li>
+                  <li>Suppression and consent</li>
+                  <li>Audit trail</li>
+                </ul>
+              </div>
+              <div class="split-col edge">
+                <div class="split-head">Adapter — one per channel</div>
+                <ul>
+                  <li>Payload construction</li>
+                  <li>Provider authentication</li>
+                  <li>Provider-specific limits</li>
+                  <li>Webhook parsing</li>
+                  <li>Mapping provider status → your status</li>
+                  <li>Channel constraints (templates, length, capability)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>The left column is the system. The right column is a translation layer.</b>
+            Almost every mistake in this design is something from the left column
+            leaking into the right — where it immediately becomes four things again.
+          </p>
+        </div>
+
+        <p>
+          Notice what is <em>not</em> in the right-hand column. Retry is not there.
+          Scheduling is not there. Idempotency is not there. Those feel channel-specific
+          when you are elbow-deep in a provider's API, because that provider has
+          opinions about all three — but the opinion is a parameter, not a policy.
+          WhatsApp's rate limit is a number the orchestration should be given, not a
+          reason for WhatsApp to own its own pacing loop.
+        </p>
+      </section>
+
+      <section id="orchestration">
+        <div class="label">[ <b>03</b> — The core ]</div>
+        <h2>What the orchestration owns</h2>
+        <p>
+          A broadcast is a long-running process. It can run for hours, it must survive
+          deploys, and it has to be resumable from wherever it was when something
+          failed. That rules out "a loop in a worker" almost immediately, and points at
+          durable orchestration — a managed workflow engine, or a state machine you own
+          with checkpoints in a database.
+        </p>
+        <p>The lifecycle it drives is the same for every channel:</p>
+
+        <pre><code><span class="tok-c">// Identical for email, SMS, WhatsApp, RCS, and whatever is next.</span>
+resolve audience      <span class="tok-c">→ who, minus suppression and consent</span>
+fan out               <span class="tok-c">→ batches sized for the provider</span>
+pace                  <span class="tok-c">→ against that provider's rate limit</span>
+attempt               <span class="tok-c">→ hand one batch to the adapter</span>
+record                <span class="tok-c">→ per-recipient outcome, idempotently</span>
+retry                 <span class="tok-c">→ bounded, only what is retryable</span>
+finalise              <span class="tok-c">→ aggregate, close out, emit audit</span></code></pre>
+
+        <h3>Idempotency belongs here, not in the adapter</h3>
+        <p>
+          Anything durable and resumable will re-enter. A workflow retries a step, a
+          deploy interrupts a run, an operator replays a failed broadcast. Every one of
+          those can hand the same recipient to the adapter twice.
+        </p>
+        <p>
+          The guard is a per-recipient, per-broadcast key checked before the send, in
+          the orchestration. Put it in the adapter and you have written it four times —
+          and the fourth one will be subtly different, and it will be the one that
+          double-charges someone's SMS bill.
+        </p>
+
+        <h3>Pacing belongs here too</h3>
+        <p>
+          Fan-out without pacing is how you discover a provider's rate limit in
+          production. The orchestration should hold the token bucket, because it is the
+          only component that knows how many batches are in flight across the whole
+          broadcast. An adapter only ever sees the batch it was handed, so an adapter
+          that tries to self-pace is guessing.
+        </p>
+      </section>
+
+      <section id="adapter">
+        <div class="label">[ <b>04</b> — The edge ]</div>
+        <h2>What the adapter owns</h2>
+        <p>
+          An adapter should be boring, small, and stateless. It converts your internal
+          representation into a provider's, makes the call, and converts what comes back
+          into your vocabulary. That is the entire job.
+        </p>
+
+        <pre><code><span class="tok-c">// The contract, in whichever type system you have.</span>
+<span class="tok-k">interface</span> <span class="tok-t">ChannelAdapter</span> {
+  send(batch: Recipient[], content: Content): Promise&lt;AttemptResult[]&gt;;
+  parseWebhook(raw: unknown): StatusEvent[];
+  limits(): { batchSize: number; perSecond: number };
+}</code></pre>
+
+        <p>
+          The third method is the one people leave out, and it is what keeps pacing in
+          the orchestration while still respecting per-provider constraints. The adapter
+          <em>declares</em> its limits; the orchestration <em>enforces</em> them. Policy
+          in one place, parameters at the edge.
+        </p>
+        <p>
+          <code>AttemptResult</code> and <code>StatusEvent</code> are your types, not the
+          provider's. This matters more than it looks. The moment a provider's status
+          string reaches anything downstream — a dashboard, a report, a database column —
+          you have re-coupled to that provider, and swapping it becomes a migration
+          instead of a config change.
+        </p>
+      </section>
+
+      <section id="failures">
+        <div class="label">[ <b>05</b> — Failure modes ]</div>
+        <h2>Four ways the split leaks</h2>
+        <p>
+          Getting the boundary right once is easy. Keeping it right while shipping is
+          the actual work, and it fails in a small number of recognisable ways.
+        </p>
+
+        <table>
+          <thead>
+            <tr><th>Leak</th><th>How it starts</th><th>What it costs</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Retry in the adapter</strong></td>
+              <td>One provider has a flaky endpoint, so someone adds a quick retry loop inside its adapter.</td>
+              <td>Two retry policies now compose unpredictably. Attempt counts stop meaning anything.</td>
+            </tr>
+            <tr>
+              <td><strong>Provider status leaking out</strong></td>
+              <td>A dashboard needs a detail your normalised status doesn't carry, so the raw code gets passed through.</td>
+              <td>Every consumer of that field is now coupled to that provider.</td>
+            </tr>
+            <tr>
+              <td><strong>Channel branches in the core</strong></td>
+              <td><code>if (channel === "whatsapp")</code> in the orchestration, once, for a deadline.</td>
+              <td>It is never once. This is the pipeline growing back inside the shared code.</td>
+            </tr>
+            <tr>
+              <td><strong>Non-durable orchestration</strong></td>
+              <td>The workflow holds state in memory because it's simpler and broadcasts are "usually quick".</td>
+              <td>A deploy mid-broadcast either drops recipients or re-sends them.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <span class="tag">The tell</span>
+          <p>
+            When someone asks for a cross-channel feature — global suppression, a unified
+            delivery report, one rate limit per tenant — count how many files change. One
+            means the boundary held. Four means it didn't, and the architecture diagram
+            is now fiction.
+          </p>
+        </div>
+      </section>
+
+      <section id="production">
+        <div class="label">[ <b>06</b> — In production ]</div>
+        <h2>What this looked like in production</h2>
+        <p>
+          The version of this I worked on had four channels — WhatsApp, email, RCS and
+          SMS — and, predictably, four sets of scheduling, retry and status-tracking
+          code. Four implementations of the same three problems, four sets of bugs, four
+          places to change anything.
+        </p>
+        <p>
+          We consolidated them onto shared AWS Step Functions orchestration, with a thin
+          adapter per channel: one workflow owning the lifecycle above, Redis-backed
+          segment delivery for fan-out, and a webhook-driven status pipeline normalising
+          provider callbacks into one stream.
+        </p>
+
+        <div class="callout case">
+          <span class="tag">The part that proved it worked</span>
+          <p>
+            RCS launched <em>on</em> that infrastructure rather than beside it. It needed
+            an adapter — payload shape, auth, webhook parsing — and nothing else. No
+            scheduler, no retry policy, no status pipeline, because those already
+            existed and were channel-agnostic. It now carries
+            <strong>2.5M messages a month for 50+ enterprise clients</strong>.
+          </p>
+        </div>
+
+        <p>
+          That is the whole argument for this design, and it is worth being precise about
+          what the achievement actually is. Shipping RCS is not interesting; it is a
+          feature, and someone was always going to build it. What is interesting is that
+          shipping it required writing an adapter instead of a pipeline — which is the
+          difference between a channel costing a sprint and a channel costing a quarter.
+        </p>
+        <p>
+          The consolidation is also the part that would never appear on a roadmap. It
+          shipped no user-visible feature on the day it landed. It only paid out later,
+          on the next channel, which is the general shape of infrastructure work and the
+          general reason it is hard to get prioritised.
+        </p>
+      </section>
+
+      <section id="test">
+        <div class="label">[ <b>07</b> — The takeaway ]</div>
+        <h2>The only test that matters</h2>
+        <p>
+          You can evaluate any multi-channel design with one question, and you do not
+          need to see the code to ask it:
+        </p>
+
+        <blockquote>
+          <p>
+            When you add the next channel, what do you have to build?
+          </p>
+        </blockquote>
+
+        <p>
+          If the answer is "an adapter" — payload, auth, webhook parsing, declared limits
+          — the boundary is in the right place. If the answer includes a scheduler, a
+          retry policy, or a status pipeline, then you do not have a multi-channel
+          system. You have several single-channel systems that share a repository, and
+          the fifth one will cost exactly what the fourth one did.
+        </p>
+        <p>
+          The related failure, in a different part of the same platform:
+          <a href="/writing/pubsub-backpressure/" style="color: var(--accent)">running Pub/Sub in a microservice system</a>,
+          where the shared thing that everyone forgot about was the downstream, not the
+          scheduler.
+        </p>
+      </section>
+
+      <footer>
+        <div>Hirnaymay Bhaskar — backend engineer, Bengaluru.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="https://github.com/octopols">GitHub</a>
+          <a href="https://linkedin.com/in/hirnaymay">LinkedIn</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

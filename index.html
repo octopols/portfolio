@@ -287,40 +287,50 @@
       <section id="work" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Selected work</p><h2>Three things that broke, and why</h2><p class="lede measure">
-              Three systems I own at BIK.AI, in more depth than a résumé bullet allows.
-              Everything else I did there is in the next section.
+            <p class="eyebrow">Selected work</p>
+            <h2>Three problems that break in non-obvious ways</h2>
+            <p class="lede measure">
+              Each of these is a general class of problem before it is anything I did.
+              I ran into a fairly ugly version of all three at BIK.AI, which is where
+              the numbers come from — full writeups linked.
             </p>
           </div>
 
           <!-- Case 01 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>01</b> — Message delivery</p><h3>38 nodes were hiding a bug</h3><p>
-                1.26M messages backed up across two Pub/Sub subscriptions. Worst case, a
-                message took 2.4 hours to show up. The standing answer had been more
-                consumers — 38 of them, on an autoscaler that had developed a habit of
-                never scaling back down.
+              <p class="case-n"><b>01</b> — Queues &amp; throughput</p>
+              <h3>When adding consumers makes a queue slower</h3>
+              <p>
+                More workers should mean more throughput. The queue is backed up, you
+                scale the consumer fleet, the backlog dips, and everyone moves on. Then
+                it comes back.
               </p>
               <p>
-                The fleet wasn't too small.
-                <strong>It was feeding the backlog.</strong>
+                What's usually happening: consumers are leasing more messages than they
+                can finish inside the ack deadline, so the broker redelivers them and the
+                same work gets done twice. That alone is only a discount — it would still
+                drain, slowly. It turns into a wall when every consumer shares one
+                downstream, because <strong>each node you add slows the handler on every
+                other node</strong>, pushing more messages past their deadline. Useful
+                throughput flattens while the bill keeps climbing. And if you autoscale on
+                queue depth, the autoscaler reads those redeliveries as demand and orders
+                more of the thing causing them.
               </p>
               <p>
-                Consumers were leasing more messages than they could finish before the ack
-                deadline, so Pub/Sub redelivered them and the work got done twice. The
-                nasty part: every consumer hit the same downstream, so each node added
-                pushed a few more messages on every <em>other</em> node past their
-                deadline. Nearly 4× the fleet bought under 2× the useful work — and the
-                autoscaler was reading a metric that counts redeliveries, so the churn
-                it created looked to it like more demand.
+                <strong>We hit a fairly complete version of this.</strong> Two Pub/Sub
+                subscriptions, 1.26M messages backed up, worst-case delivery running 2.4
+                hours behind — against a fleet that had grown to 38 nodes and rarely
+                scaled back down. Nearly 4× the consumers were returning well under 2× the
+                useful work. Rebuilding flow control, ack-deadline handling and
+                backpressure dropped the backlog under 4K and worst-case delay to 94
+                seconds. All 38 nodes came off. No capacity was added — the capacity had
+                been there the whole time, being spent twice.
               </p>
-              <p>
-                Rebuilt flow control, ack-deadline handling and backpressure. All 38
-                nodes came off.
-              </p><a class="case-link" href="/writing/pubsub-backpressure/"
-                >Running Pub/Sub in a microservice system →</a
-              ></div>
+              <a class="case-link" href="/writing/pubsub-backpressure/"
+                >Guide: running Pub/Sub in a microservice system →</a
+              >
+            </div>
             <dl class="rail">
               <div>
                 <dt>Worst-case delay</dt>
@@ -330,51 +340,64 @@
                 <dt>Combined backlog</dt>
                 <dd>1.26M → &lt;4K</dd>
               </div>
-              <div><dt>Scale-out</dt>
-                <dd>38 → 0 extra</dd></div>
+              <div>
+                <dt>Scale-out</dt>
+                <dd>38 → 0 extra</dd>
+              </div>
             </dl>
           </article>
 
           <!-- Case 02 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>02</b> — Billing correctness</p>
-              <h3>Money is the only safe unit</h3>
+              <p class="case-n"><b>02</b> — Usage billing</p>
+              <h3>Why usage billing fails quietly instead of loudly</h3>
               <p>
-                I own billing across every revenue channel, which means I own the part where
-                being wrong costs real money.
+                Metering AI usage is easy — every call can emit an event. Billing it is
+                three harder problems: choosing a unit, reconciling two clocks, and making
+                the arithmetic visible to someone who can notice it's wrong.
               </p>
               <p>
-                The AI billing system I inherited stored two numbers per customer: a
-                contracted operation count, and a per-operation rate typed into a
-                free-text field on an internal form. The field was labelled like a
-                price. It behaved like a divisor. Nobody ever typed a number meaning
-                "give this account ten times its allocation" — they typed a price, and
-                <strong>stores ended up drawing 2–10× what they had paid for</strong>.
+                Usage billing has a property that ordinary bugs don't: it fails without
+                erroring. Nothing 500s. Credits get granted, usage gets counted, invoices
+                generate, and every number is internally consistent with every other
+                number. The system is confidently wrong, which is the only kind of wrong
+                that survives in a billing system for long. The two structural causes are
+                nearly always the same — <strong>a value that decides what someone is
+                charged and appears on no screen</strong>, and a unit conversion sitting
+                between what you sold and what you store.
               </p>
               <p>
-                Rebuilt on a central versioned rate card keyed on tier, country and usage
-                type, with credits denominated in money instead of counts. Along the
-                way: 12.5% of email billing revenue recovered from a 3-hour daily
-                cutoff, and a WhatsApp credit runner with 18:30 UTC hardcoded as
-                midnight in five separate places. Which is midnight in India, and
-                nowhere else on earth.
-              </p><a class="case-link" href="/writing/billing-unit-mismatch/"
-                >How to bill AI usage →</a
+                <strong>Ours was a good example.</strong> The system stored a contracted
+                operation count and a per-operation rate typed into a free-text field on
+                an internal form. The field was labelled like a price and behaved like a
+                divisor: enter 0.1 where 1 was meant, and the account silently gets ten
+                times its allocation. Nobody ever typed "give this customer 10×" — they
+                typed a price. Some accounts were drawing 2–10× what they'd paid for, and
+                no interface anywhere rendered the number that decided it. Rebuilt on a
+                central versioned rate card keyed on tier, country and usage type, with
+                credits denominated in money rather than operation counts. Separately:
+                12.5% of email billing revenue was being dropped by a 3-hour daily cutoff,
+                and a WhatsApp credit runner had 18:30 UTC hardcoded as midnight across
+                five call sites — correct in India, wrong in every other market it served.
+              </p>
+              <a class="case-link" href="/writing/billing-unit-mismatch/"
+                >Guide: how to bill AI usage →</a
               >
               <a
                 class="case-link"
                 href="/writing/hardcoded-midnight/"
                 style="margin-left: 1.5rem"
                 >18:30 UTC is not midnight →</a
-              ></div>
+              >
+            </div>
             <dl class="rail">
               <div>
                 <dt>Revenue recovered</dt>
                 <dd>12.5%</dd>
               </div>
               <div>
-                <dt>Overdraw found</dt>
+                <dt>Silent overdraw</dt>
                 <dd>2–10×</dd>
               </div>
               <div>
@@ -387,21 +410,35 @@
           <!-- Case 03 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>03</b> — Broadcast infrastructure</p>
-              <h3>One delivery path, not four</h3>
+              <p class="case-n"><b>03</b> — Architecture</p>
+              <h3>How to add a fourth channel without building a fourth pipeline</h3>
               <p>
-                WhatsApp, email, RCS and SMS had each grown their own scheduling, retry and
-                status-tracking code. Four implementations of the same three problems,
-                four sets of bugs, four places to change anything.
+                Multi-channel messaging systems reliably grow one pipeline per channel.
+                Not by decision — because what differs between providers is concrete and
+                sitting in the API docs, while what they share is abstract and only
+                obvious on the third one.
               </p>
               <p>
-                Consolidated onto shared AWS Step Functions orchestration, which turned
-                <strong>adding a channel into writing an adapter</strong> instead of
-                building a pipeline. That is how RCS shipped — Redis-backed segment
-                delivery and a webhook status pipeline bolted onto infrastructure that
-                already existed. It carries 2.5M messages a month now, and I never had
-                to write a scheduler for it.
+                So the boundary gets drawn around the channel instead of around the
+                concern, and scheduling, retry and status tracking get written once per
+                provider. The bill isn't 4× — it's that fixes stop propagating,
+                "delivered" comes to mean four different things, and every cross-channel
+                feature costs four implementations. Drawn correctly,
+                <strong>the orchestration owns the lifecycle and the adapter owns only
+                the translation</strong>: payload, auth, webhook parsing, declared limits.
               </p>
+              <p>
+                <strong>We had the four-pipeline version</strong> across WhatsApp, email,
+                RCS and SMS, and consolidated it onto shared AWS Step Functions
+                orchestration with Redis-backed segment delivery and a webhook status
+                pipeline. The proof it worked wasn't the migration — it was RCS, which
+                launched on that infrastructure needing an adapter and nothing else. No
+                scheduler, no retry policy, no status pipeline. It carries 2.5M messages a
+                month for 50+ enterprise clients.
+              </p>
+              <a class="case-link" href="/writing/one-pipeline-not-four/"
+                >Guide: one pipeline instead of four →</a
+              >
             </div>
             <dl class="rail">
               <div>
@@ -929,9 +966,18 @@
                 Metering AI is easy. Billing it correctly is a unit problem, a clock
                 problem and a visibility problem.
               </div>
+            </a><a href="/writing/one-pipeline-not-four/" class="group">
+              <div class="k">Architecture<br /><span class="rowdate">August 2026</span></div>
+              <div class="v">
+                <span
+                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  >How to add a fourth channel without building a fourth pipeline</span
+                >
+                Provider differences are loud and visible. The shared concerns are quiet
+                and abstract — which is why the boundary ends up in the wrong place.
+              </div>
             </a>
-            <a href="/writing/hardcoded-midnight/" class="group">
-              <div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
+            <a href="/writing/hardcoded-midnight/" class="group"><div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
               <div class="v">
                 <span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
