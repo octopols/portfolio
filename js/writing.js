@@ -34,7 +34,7 @@
   }
 
   /* Reveals */
-  var targets = document.querySelectorAll(".reveal-item, .split-line");
+  var targets = document.querySelectorAll(".reveal-item, .split-line, .stagger");
   if (!targets.length) return;
 
   if (reduceMotion || !("IntersectionObserver" in window)) {

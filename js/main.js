@@ -47,7 +47,7 @@
   // .reveal is the homepage convention; .reveal-item/.split-line remain on
   // photography.html, which also loads this file.
   var revealTargets = document.querySelectorAll(
-    ".reveal, .reveal-item, .split-line",
+    ".reveal, .reveal-item, .split-line, .stagger",
   );
 
   var activateAll = function () {

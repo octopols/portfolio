@@ -159,8 +159,8 @@
     <!-- Site nav. Identical markup on every page — see the comment in
          js/main.js. Links are absolute so the same block works from an
          article three directories deep. -->
-    <nav class="fixed inset-x-0 top-0 z-50">
-      <div class="mix-blend-difference text-white">
+    <nav class="fixed inset-x-0 top-0 z-50 site-nav" id="site-nav">
+      <div class="text-white">
         <div class="shell flex items-center justify-between py-5">
           <a href="/" class="font-display font-bold text-lg tracking-tight"
             >Hirnaymay Bhaskar</a
@@ -170,27 +170,27 @@
           >
             <a
               href="/#work"
-              class="opacity-60 hover:opacity-100 transition-opacity"
+              class="nav-link"
               >Work</a
             >
             <a
               href="/#experience"
-              class="opacity-60 hover:opacity-100 transition-opacity"
+              class="nav-link"
               >CV</a
             >
             <a
               href="/#projects"
-              class="opacity-60 hover:opacity-100 transition-opacity"
+              class="nav-link"
               >Open source</a
             >
             <a
               href="/writing/"
-              class="opacity-60 hover:opacity-100 transition-opacity"
+              class="nav-link"
               >Writing</a
             >
             <a
               href="/#about"
-              class="opacity-60 hover:opacity-100 transition-opacity"
+              class="nav-link"
               >About</a
             >
           </div>
@@ -292,7 +292,7 @@
             go find out why.
           </p>
 
-          <div class="credits reveal" style="transition-delay: 0.16s">
+          <div class="credits reveal stagger" style="transition-delay: 0.16s">
             <a
               class="chip"
               href="https://bik.ai"
@@ -368,23 +368,38 @@
               </p>
               <p><strong>The fleet wasn't too small. It was feeding the backlog.</strong></p>
               <a class="case-link" href="/writing/pubsub-backpressure/"
-                >Why, and how to size it properly →</a
+                >Why, and how to size it properly <span class="arw">&rarr;</span></a
               >
             </div>
-            <dl class="rail">
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz1t viz1d">
+                  <title id="viz1t">Backlog over time</title>
+                  <desc id="viz1d">Backlog holds at its peak while the fleet grows, then collapses to near zero once flow control and backpressure are fixed — with no capacity added.</desc>
+                  <path d="M0,14 C34,12 62,17 92,13 L112,15" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55" fill="none" stroke="#68d391" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55 L240,64 L112,64 Z" fill="#68d391" opacity=".1"/>
+                  <line x1="112" y1="4" x2="112" y2="60" stroke="#68d391" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+                  <text x="0" y="62" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">1.26M</text>
+                  <text x="240" y="46" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">&lt;4K</text>
+                </svg>
+                <figcaption>Backlog, before and after the fix. No nodes added.</figcaption>
+              </figure>
+              <dl class="rail stagger">
               <div>
                 <dt>Worst-case delay</dt>
-                <dd>2.4 h &rarr; 94 s</dd>
+                <dd>2.4 h <em>&rarr;</em> <b>94 s</b></dd>
               </div>
               <div>
                 <dt>Combined backlog</dt>
-                <dd>1.26M &rarr; &lt;4K</dd>
+                <dd>1.26M <em>&rarr;</em> <b>&lt;4K</b></dd>
               </div>
               <div>
                 <dt>Scale-out</dt>
-                <dd>38 &rarr; 0 extra</dd>
+                <dd>38 <em>&rarr;</em> <b>0 extra</b></dd>
               </div>
             </dl>
+            </div>
           </article>
 
           <!-- Case 02 -->
@@ -402,29 +417,45 @@
                 divisor</strong> — and no screen anywhere rendered it.
               </p>
               <a class="case-link" href="/writing/billing-unit-mismatch/"
-                >Units, clocks, rate cards, credits →</a
+                >Units, clocks, rate cards, credits <span class="arw">&rarr;</span></a
               >
               <a
                 class="case-link"
                 href="/writing/hardcoded-midnight/"
                 style="margin-left: 1.5rem"
-                >And the timezone one →</a
+                >And the timezone one <span class="arw">&rarr;</span></a
               >
             </div>
-            <dl class="rail">
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz2t viz2d">
+                  <title id="viz2t">Contracted allocation versus drawn usage</title>
+                  <desc id="viz2d">What the customer paid for stays flat while what the account could draw runs two to ten times higher, until credits are re-denominated in money.</desc>
+                  <line x1="0" y1="44" x2="240" y2="44" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
+                  <text x="0" y="58" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">PAID 1&#215;</text>
+                  <path d="M0,44 L150,44 L150,10 L240,10" fill="none" stroke="#fc8181" stroke-width="2" stroke-linejoin="round" opacity=".85"/>
+                  <path d="M150,44 L150,10 L240,10 L240,44 Z" fill="#fc8181" opacity=".1"/>
+                  <text x="240" y="8" fill="#fc8181" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">DRAWN 2&#8211;10&#215;</text>
+                  <circle cx="150" cy="44" r="3" fill="#68d391"/>
+                  <text x="150" y="60" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">0.1 typed</text>
+                </svg>
+                <figcaption>One free-text field, read as a divisor.</figcaption>
+              </figure>
+              <dl class="rail stagger">
               <div>
                 <dt>Revenue recovered</dt>
-                <dd>12.5%</dd>
+                <dd><b>12.5%</b></dd>
               </div>
               <div>
                 <dt>Silent overdraw</dt>
-                <dd>2&ndash;10&times;</dd>
+                <dd><b>2&ndash;10&times;</b></dd>
               </div>
               <div>
                 <dt>Hardcoded midnight</dt>
-                <dd>5 call sites</dd>
+                <dd><b>5</b> call sites</dd>
               </div>
             </dl>
+            </div>
           </article>
 
           <!-- Case 03 -->
@@ -442,23 +473,42 @@
                 RCS</strong>, which launched needing an adapter and nothing else.
               </p>
               <a class="case-link" href="/writing/one-pipeline-not-four/"
-                >Where to draw the boundary →</a
+                >Where to draw the boundary <span class="arw">&rarr;</span></a
               >
             </div>
-            <dl class="rail">
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz3t viz3d">
+                  <title id="viz3t">Four delivery pipelines becoming one</title>
+                  <desc id="viz3d">WhatsApp, email, RCS and SMS each ran their own scheduling, retry and status logic; they now converge on one shared orchestration with a thin adapter per channel.</desc>
+                  <path d="M2,8 C60,8 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,24 C60,24 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,40 C60,40 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,56 C60,56 70,32 104,32" fill="none" stroke="#68d391" stroke-width="1.6"/>
+                  <circle cx="2" cy="8" r="2.5" fill="#8b9199"/><circle cx="2" cy="24" r="2.5" fill="#8b9199"/>
+                  <circle cx="2" cy="40" r="2.5" fill="#8b9199"/><circle cx="2" cy="56" r="2.5" fill="#68d391"/>
+                  <rect x="104" y="20" width="66" height="24" rx="6" fill="#68d391" fill-opacity=".12" stroke="#68d391" stroke-opacity=".5"/>
+                  <text x="137" y="35" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">ONE</text>
+                  <path d="M170,32 L204,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <text x="240" y="35" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">adapter</text>
+                </svg>
+                <figcaption>RCS, in green, needed only the adapter.</figcaption>
+              </figure>
+              <dl class="rail stagger">
               <div>
                 <dt>RCS volume</dt>
-                <dd>2.5M / mo</dd>
+                <dd><b>2.5M</b> / mo</dd>
               </div>
               <div>
                 <dt>Enterprise clients</dt>
-                <dd>50+</dd>
+                <dd><b>50+</b></dd>
               </div>
               <div>
                 <dt>Delivery paths</dt>
-                <dd>4 &rarr; 1</dd>
+                <dd>4 <em>&rarr;</em> <b>1</b></dd>
               </div>
             </dl>
+            </div>
           </article>
         </div>
       </section>
@@ -569,7 +619,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="text-sm text-dim hover:text-white transition-colors"
-                >github.com/octopols →</a
+                >github.com/octopols <span class="arw">&rarr;</span></a
               >
             </div>
 
@@ -653,7 +703,7 @@
             </p>
           </div>
 
-          <div class="rowlist reveal">
+          <div class="rowlist reveal stagger">
             <a href="/writing/pubsub-backpressure/" class="group">
               <div class="k">Distributed systems</div>
               <div class="v flex flex-wrap items-baseline gap-x-3">
@@ -737,7 +787,7 @@
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal stagger">
             <a
               href="/projects/homecam-tv/"
               class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
@@ -797,7 +847,7 @@
 
           <div class="mt-10 pt-8 border-t border-white/5 reveal">
             <p class="eyebrow mb-4">Earlier repositories</p>
-            <ul class="repolist">
+            <ul class="repolist stagger">
               <li>
                 <a
                   href="https://github.com/octopols/Quack"

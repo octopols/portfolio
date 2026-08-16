@@ -13,6 +13,33 @@
 (function () {
   "use strict";
 
+  /* -----------------------------------------------------------------
+     Scrolled state
+
+     The bar carries a light scrim at the top of the page and a stronger,
+     blurrier one once you are past it, so it always reads as a layer above
+     the content rather than part of it.
+  ----------------------------------------------------------------- */
+  var bar = document.getElementById("site-nav");
+  if (bar) {
+    var ticking = false;
+    var sync = function () {
+      bar.classList.toggle("is-scrolled", window.scrollY > 24);
+      ticking = false;
+    };
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(sync);
+        }
+      },
+      { passive: true },
+    );
+    sync();
+  }
+
   var toggle = document.getElementById("nav-toggle");
   var panel = document.getElementById("nav-panel");
   if (!toggle || !panel) return;
