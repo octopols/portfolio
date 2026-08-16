@@ -252,8 +252,8 @@
       <header class="hero">
         <h1>envswitch</h1>
         <p class="tagline">
-          Switch shell environments with a single command. No binaries, no hooks to approve, no
-          <code style="font-size: 0.8em">.env</code> files in your repos.
+          Switch shell environments with one word. No binaries, no hooks to approve,
+          no <code style="font-size: 0.8em">.env</code> files rotting in your repos.
         </p>
 
         <div class="meta">
@@ -270,10 +270,7 @@
       </header>
 
       <section>
-        <div class="label">[ <b>01</b> — What it does ]</div>
-        <h2>Type the environment name. That's the whole interface.</h2>
-
-        <pre class="term"><span class="p">$</span> staging
+        <div class="label">[ <b>01</b> — What it does ]</div><h2>Type the environment name. That's the whole interface.</h2><pre class="term"><span class="p">$</span> staging
  <span class="ok">✓</span> Loaded staging  <span class="cmt">(5 vars)</span>
 
 <span class="p">$</span> production
@@ -284,26 +281,25 @@
  <span class="ok">✓</span> Cleared production environment</pre>
 
         <p class="prose" style="margin-top: 28px">
-          Env files live in <code>~/.envs/</code>, one file per environment, outside every repository.
-          Each file automatically becomes a shell command — drop in
-          <code>production.env</code> and <code>production</code> is now a command. There is no
-          registry to update and no config to edit, because the filename is the configuration.
+          Env files live in <code>~/.envs/</code>, one per environment, outside every
+          repository. Each one automatically becomes a shell command — drop in
+          <code>production.env</code> and <code>production</code> is now a command.
+          No registry to update, no config to edit, nothing to register. The filename
+          <em>is</em> the configuration.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>02</b> — The monorepo problem ]</div>
-        <h2>One repo, many services, one shell.</h2>
-
-        <div class="prose">
+        <div class="label">[ <b>02</b> — The monorepo problem ]</div><h2>One repo, many services, one very confused shell.</h2><div class="prose">
           <p>
-            The problem this was actually built for: a monorepo where the environment you need depends
-            on which part of the tree you're in <em>and</em> which branch you're on. Directory alone
-            isn't enough — <code>growth/feature-x</code> and <code>payments/new-api</code> live in the
-            same checkout and want different credentials.
+            Here's the actual problem it was built for. In a monorepo, the environment
+            you need depends on where you are in the tree <em>and</em> what branch
+            you're on. Directory alone doesn't cut it —
+            <code>growth/feature-x</code> and <code>payments/new-api</code> live in
+            the same checkout and want completely different credentials.
           </p>
           <p>
-            So env files carry tags in their header, and the shell resolves them on
+            So env files carry tags in their header, and the shell works it out on
             <code>cd</code> and on branch switch:
           </p>
         </div>
@@ -327,48 +323,46 @@ API_KEY=sk-staging-123</pre>
  <span class="ok">✓</span> Left mapped directory, clearing payments_staging</pre>
 
         <p class="prose" style="margin-top: 26px">
-          The last line is the one that matters most. Leaving the directory
-          <strong>unloads</strong> the environment rather than leaving it resident — so a shell that
-          has wandered out of the monorepo is not still holding credentials for it.
+          That last line is the one that matters. Leaving the directory
+          <strong>unloads</strong> the environment instead of leaving it lying around
+          — so a terminal you opened three days ago and forgot about isn't still
+          holding credentials for a repo you've since wandered out of.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>03</b> — The design rule ]</div>
-        <h2>Only tag your safe defaults.</h2>
-
-        <div class="callout">
-          <p>
-            <strong>Tagged environments auto-load. Production is never tagged.</strong> It is reached
-            deliberately — by name, or through context resolution — and it can be marked
-            <code style="font-family: var(--mono); font-size: 0.85em">protected</code> so loading it
-            requires a typed confirmation.
+        <div class="label">[ <b>03</b> — The design rule ]</div><h2>Only tag the stuff that's safe to get wrong.</h2><div class="callout">
+          <p><strong>Tagged environments auto-load. Production never gets tagged.</strong>
+            You reach it on purpose — by name, or through context resolution — and you
+            can mark it
+            <code style="font-family: var(--mono); font-size: 0.85em">protected</code>
+            so loading it needs a typed confirmation.
           </p>
         </div>
 
         <div class="prose" style="margin-top: 28px">
           <p>
-            This is the whole safety model, and it is deliberately not clever. Anything that can
-            happen implicitly — on a <code>cd</code>, on a branch switch, without you asking — is
-            restricted to environments where being wrong is cheap. Everything expensive requires an
-            explicit act.
+            That's the entire safety model, and it's deliberately not clever. Anything
+            that can happen implicitly — on a <code>cd</code>, on a branch switch,
+            without you asking for it — only ever reaches environments where being
+            wrong is cheap. Anything expensive needs you to actually do something.
           </p>
           <p>
-            The alternative designs all fail the same way: if production can auto-load, then some
-            sequence of <code>git switch</code> and <code>cd</code> silently arms a shell with
-            production credentials, and you will find out which sequence at the worst possible moment.
+            Every alternative design fails the same way. If production can auto-load,
+            then <em>some</em> sequence of <code>git switch</code> and
+            <code>cd</code> silently arms a shell with production credentials — and
+            you will discover which sequence at the worst imaginable moment, probably
+            while running something with the word "delete" in it.
           </p>
         </div>
       </section>
 
       <section>
-        <div class="label">[ <b>04</b> — Cost ]</div>
-        <h2>It runs on every prompt, so it has to be free.</h2>
-
-        <div class="prose">
+        <div class="label">[ <b>04</b> — Cost ]</div><h2>It runs on every prompt, so it had better be free.</h2><div class="prose">
           <p>
-            Auto-loading means hooking directory and branch changes, which means this code runs
-            constantly. The resolution is tiered so the common cases cost nothing:
+            Auto-loading means hooking directory and branch changes, which means this
+            code runs constantly. So resolution is tiered, and the common cases cost
+            nothing:
           </p>
         </div>
 
@@ -383,22 +377,20 @@ API_KEY=sk-staging-123</pre>
           </div>
           <div class="feature">
             <h3>Branch disambiguation needed</h3>
-            <p>Git is read once (~1ms), and the result is cached.</p>
+            <p>Git gets read once (~1ms), then cached.</p>
           </div>
         </div>
 
         <p class="prose" style="margin-top: 30px">
-          Shelling out to <code>git rev-parse</code> on every prompt is the standard way tools like
-          this become the reason your terminal feels slow. Reading git only when the answer actually
-          depends on the branch keeps it off the hot path for everyone who isn't using that feature.
+          Shelling out to <code>git rev-parse</code> on every prompt is the classic way
+          a tool like this becomes the reason your terminal feels sluggish and you
+          can't work out why. Reading git only when the answer genuinely depends on
+          the branch keeps it off the hot path for everyone not using that feature.
         </p>
       </section>
 
       <section>
-        <div class="label">[ <b>05</b> — Against the alternatives ]</div>
-        <h2>Why not direnv.</h2>
-
-        <div class="tablescroll">
+        <div class="label">[ <b>05</b> — Against the alternatives ]</div><h2>Yes, I know direnv exists.</h2><div class="tablescroll">
           <table>
             <thead>
               <tr>
@@ -464,10 +456,11 @@ API_KEY=sk-staging-123</pre>
         </div>
 
         <p class="prose" style="margin-top: 30px">
-          direnv is the closest tool and it is a good one — but it is directory-scoped and
-          repo-resident by design. It answers "what does this folder need", and it puts a file in the
-          folder to say so. In a monorepo those are the two properties you don't want: one folder,
-          many answers, and no secrets checked in.
+          direnv is the closest thing and it's genuinely good — but it's
+          directory-scoped and repo-resident by design. It answers "what does this
+          folder need", and it drops a file in the folder to say so. In a monorepo
+          those are precisely the two properties you don't want: one folder, many
+          answers, and nothing secret going anywhere near a commit.
         </p>
       </section>
 

@@ -243,16 +243,16 @@
             class="mt-8 text-lg md:text-xl text-neutral-300 leading-relaxed measure reveal"
             style="transition-delay: 0.12s"
           >
-            I own the messaging, billing and event infrastructure at
+            I own messaging, billing and event infrastructure at
             <a
               href="https://bik.ai"
               target="_blank"
               rel="noopener noreferrer"
               class="text-white border-b border-white/40 hover:border-white transition-colors"
-              >BIK.AI</a
-            >, a YC + Sequoia-backed commerce platform. Mostly: finding why
-            something at scale is slow, wrong, or losing money — and fixing the
-            cause rather than the symptom.
+              >BIK.AI</a>, a YC + Sequoia-backed commerce platform. The job, mostly: something at
+            scale is slow, wrong, or quietly setting money on fire, and I go find
+            out why. The obvious answer is usually the wrong one. That's the fun
+            part.
           </p>
 
           <div
@@ -261,8 +261,7 @@
           >
             <a
               href="#work"
-              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors"
-              >See the work</a
+              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read the war stories</a
             >
             <a
               href="docs/hirnaymay_bhaskar_resume.pdf"
@@ -285,31 +284,35 @@
       <section id="work" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Selected work</p>
-            <h2>Three problems worth explaining</h2>
-            <p class="lede measure">
-              All three are production systems at BIK.AI. Two have full writeups;
-              the third is drawn below.
+            <p class="eyebrow">Selected work</p><h2>Three things that broke, and why</h2><p class="lede measure">
+              All three ran in production. Two have full writeups. The third gets a
+              diagram, because some things are easier to draw than describe.
             </p>
           </div>
 
           <!-- Case 01 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>01</b> — Message delivery</p>
-              <h3>A backlog that 38 nodes were hiding</h3>
-              <p>
-                Two Pub/Sub subscriptions carrying 1.26M messages of backlog, and a
-                fleet that had been grown to absorb it and never scaled back down.
-                The fleet was not undersized —
-                <strong>it was feeding the backlog</strong>.
+              <p class="case-n"><b>01</b> — Message delivery</p><h3>38 nodes were hiding a bug</h3><p>
+                1.26M messages backed up across two Pub/Sub subscriptions. Worst case, a
+                message took 2.4 hours to show up. The standing answer had been more
+                consumers — 38 of them, on an autoscaler that had developed a habit of
+                never scaling back down.
               </p>
               <p>
-                Consumers were leasing more messages than they could finish inside
-                the ack deadline, so a fixed share of every node's capacity went to
-                redelivered work. Adding nodes scaled the duplicate work in exact
-                proportion. Rebuilding flow control, ack-deadline handling and
-                backpressure fixed the ratio, and the scale-out came off.
+                The fleet wasn't too small.
+                <strong>It was feeding the backlog.</strong>
+              </p>
+              <p>
+                Consumers were leasing more messages than they could finish before the ack
+                deadline, so Pub/Sub redelivered them, and a fixed slice of every
+                node's capacity went to doing the same work twice. Add a node, add
+                duplicate work, in exact proportion. The ratio never moves, so the
+                backlog never drains.
+              </p>
+              <p>
+                Rebuilt flow control, ack-deadline handling and backpressure. All 38
+                nodes came off.
               </p>
               <a class="case-link" href="/writing/pubsub-backpressure/"
                 >Read the writeup →</a
@@ -337,18 +340,24 @@
               <p class="case-n"><b>02</b> — Billing correctness</p>
               <h3>Money is the only safe unit</h3>
               <p>
-                I own billing across every revenue channel. The AI billing system I
-                inherited stored a contracted operation count and a per-operation
-                rate typed into a free-text field — so a number that looked like a
-                price behaved like a divisor, and
-                <strong>stores were drawing 2–10× their allocation</strong>.
+                I own billing across every revenue channel, which means I own the part where
+                being wrong costs real money.
               </p>
               <p>
-                Rebuilt onto a central versioned rate card keyed on tier, country
-                and usage type, with credits denominated in money rather than
-                counts. Separately: 12.5% of email billing revenue recovered from a
-                3-hour daily cutoff, and a WhatsApp credit runner that had 18:30 UTC
-                hardcoded as midnight across five call sites.
+                The AI billing system I inherited stored two numbers per customer: a
+                contracted operation count, and a per-operation rate typed into a
+                free-text field on an internal form. The field was labelled like a
+                price. It behaved like a divisor. Nobody ever typed a number meaning
+                "give this account ten times its allocation" — they typed a price, and
+                <strong>stores ended up drawing 2–10× what they had paid for</strong>.
+              </p>
+              <p>
+                Rebuilt on a central versioned rate card keyed on tier, country and usage
+                type, with credits denominated in money instead of counts. Along the
+                way: 12.5% of email billing revenue recovered from a 3-hour daily
+                cutoff, and a WhatsApp credit runner with 18:30 UTC hardcoded as
+                midnight in five separate places. Which is midnight in India, and
+                nowhere else on earth.
               </p>
               <a class="case-link" href="/writing/billing-unit-mismatch/"
                 >Read the writeup →</a
@@ -376,16 +385,17 @@
               <p class="case-n"><b>03</b> — Broadcast infrastructure</p>
               <h3>One delivery path, not four</h3>
               <p>
-                Every broadcast channel had grown its own scheduling, retry and
-                status-tracking code — four implementations of the same three
-                problems, each with its own bugs.
+                WhatsApp, email, RCS and SMS had each grown their own scheduling, retry and
+                status-tracking code. Four implementations of the same three problems,
+                four sets of bugs, four places to change anything.
               </p>
               <p>
-                Consolidating them onto shared AWS Step Functions orchestration made
-                <strong>a new channel an adapter rather than a pipeline</strong>.
-                That is how RCS shipped: Redis-backed segment delivery and a
-                webhook-driven status pipeline hanging off infrastructure that
-                already existed.
+                Consolidated onto shared AWS Step Functions orchestration, which turned
+                <strong>adding a channel into writing an adapter</strong> instead of
+                building a pipeline. That is how RCS shipped — Redis-backed segment
+                delivery and a webhook status pipeline bolted onto infrastructure that
+                already existed. It carries 2.5M messages a month now, and I never had
+                to write a scheduler for it.
               </p>
             </div>
             <dl class="rail">
@@ -573,58 +583,61 @@
             </div>
 
             <p class="text-neutral-400 measure leading-relaxed mb-8">
-              Messaging, billing and event infrastructure on a 25-engineer team.
-              Beyond the three systems above:
+              Messaging, billing and event infrastructure on a 25-engineer team. Beyond
+              the three above:
             </p>
 
             <div class="rowlist">
               <div>
                 <div class="k">Shopify sync</div>
                 <div class="v">
-                  Replaced the codebase's #1 acknowledged tech debt with a resumable
-                  orchestrator/executor state machine — run-scoped checkpointing,
-                  idempotent retries, paced execution under GraphQL rate limits.
+                  The codebase's #1 acknowledged tech debt — everyone knew, nobody wanted it.
+                  Replaced with a resumable orchestrator/executor state machine:
+                  run-scoped checkpointing, idempotent retries, paced execution under
+                  GraphQL rate limits.
                   <strong>250+ stores, 2M+ records reprocessed, zero duplicates</strong>,
-                  flag-gated behind a legacy fallback.
+                  all of it flag-gated behind the legacy path in case I was wrong about
+                  that.
                 </div>
               </div>
               <div>
                 <div class="k">Campaign analytics</div>
                 <div class="v">
-                  Rebuilt on a Postgres-first data layer with on-demand Elasticsearch
-                  refresh and age-tiered caching. Page load
-                  <strong>20s → 200ms while doubling page size</strong>.
+                  A 20-second page load is long enough to alt-tab and forget why you opened
+                  it. Rebuilt on a Postgres-first data layer with on-demand
+                  Elasticsearch refresh and age-tiered caching:
+                  <strong>200ms, at double the page size</strong>.
                 </div>
               </div>
               <div>
                 <div class="k">External webhooks</div>
                 <div class="v">
-                  Built the system forwarding platform events to merchant endpoints,
-                  then isolated delivery per store on Cloud Tasks after tracing
-                  duplicate deliveries to ack-deadline overruns. 30s attempt timeout,
-                  three bounded retries, and a 24-hour health evaluator that
-                  auto-blocks endpoints past a 50% failure rate.
+                  Built the system that forwards platform events to merchant endpoints. Then
+                  merchants started seeing duplicates, which traced back to
+                  ack-deadline overruns, so delivery got isolated per store on Cloud
+                  Tasks — 30s attempt timeout, three bounded retries, and a 24-hour
+                  health evaluator that cuts off any endpoint failing more than half
+                  the time. One broken endpoint stops being everyone's problem.
                 </div>
               </div>
               <div>
                 <div class="k">Alerting platform</div>
                 <div class="v">
-                  Replaced email-only merchant notifications with multi-channel
-                  routing —
-                  <strong
-                    >now the path the other three engineering pods ship every alert
-                    type on</strong
-                  >. Role-based routing, per-instance delivery tracking, rate
-                  limiting, admin console.
+                  Merchants got email, and that was it. Built multi-channel alerting with
+                  role-based routing, per-instance delivery tracking, rate limiting and
+                  an admin console.
+                  <strong>The other three engineering pods now ship every alert type on
+                  it</strong>, which was not the plan but is a good outcome.
                 </div>
               </div>
               <div>
                 <div class="k">Operations</div>
                 <div class="v">
-                  On-call for the systems above. Drove
-                  <strong>SOC 2 Type 2 and ISO 27001</strong> to certification with
-                  the CTO; company-wide AWS/GCP administrator with org-level IAM
-                  ownership.
+                  On-call for everything above. Drove
+                  <strong>SOC 2 Type 2 and ISO 27001</strong> to certification alongside
+                  the CTO, and I am the company-wide AWS/GCP admin holding org-level
+                  IAM — a polite way of saying I have the permissions to delete the
+                  company.
                 </div>
               </div>
             </div>
@@ -669,11 +682,11 @@
                     VideoLAN · 2024
                   </p>
                   <p class="text-[15px] text-neutral-300 leading-relaxed">
-                    Multi-file metadata editing shipped into VLC — extensible
-                    metadata-provider interface with cross-file command-pattern
-                    undo/redo, cutting
-                    <span class="text-white">75% of the steps</span> in multi-file
-                    tagging. Mentored by founder Jean-Baptiste Kempf.
+                    Shipped multi-file metadata editing into VLC — the media player that has
+                    been downloaded about three billion times. Extensible
+                    metadata-provider interface, cross-file undo/redo via the command
+                    pattern, <span class="text-white">75% fewer steps</span> to tag a
+                    batch. Mentored by Jean-Baptiste Kempf, who founded the thing.
                   </p>
                 </div>
               </a>
@@ -699,10 +712,10 @@
                   </p>
                   <p class="text-[15px] text-neutral-300 leading-relaxed">
                     Built MuseScore 4.6's inline popup framework on Qt's model-view
-                    architecture; later GSoC cohorts extended the same
-                    infrastructure. Still contributing —
-                    <span class="text-white">10 merged PRs</span> across the
-                    inspector, UI framework and platform layers.
+                    architecture. Later GSoC cohorts built on top of it, which is about
+                    the most flattering thing that can happen to your code. Still
+                    sending patches — <span class="text-white">10 merged PRs</span>
+                    across the inspector, UI framework and platform layers.
                   </p>
                 </div>
               </a>
@@ -717,11 +730,9 @@
       <section id="projects" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Projects</p>
-            <h2>Built outside work</h2>
-            <p class="lede measure">
-              Both open source, both actually used — one by me every day, one by my
-              team.
+            <p class="eyebrow">Projects</p><h2>Things I built because I wanted them</h2><p class="lede measure">
+              Both open source. One I use daily, one my team does. Neither was anyone's
+              idea but mine.
             </p>
           </div>
 
@@ -747,9 +758,10 @@
                 </p>
                 <h3 class="text-xl font-display font-bold mb-2">HomeCam TV</h3>
                 <p class="text-neutral-400 text-[15px] leading-relaxed">
-                  A Dahua NVR on the television. The interesting constraint is the
-                  d-pad, not the video — every screen names the control it opens on,
-                  so focus never lands nowhere.
+                  My CCTV recorder, on the TV, driven entirely by the remote. The hard part
+                  isn't the video — it's the d-pad. Most TV camera apps are phone apps
+                  with a TV manifest entry, so focus lands nowhere and you end up
+                  pressing right into the void.
                 </p>
               </div>
             </a>
@@ -775,9 +787,11 @@
                 </p>
                 <h3 class="text-xl font-display font-bold mb-2">envswitch</h3>
                 <p class="text-neutral-400 text-[15px] leading-relaxed">
-                  Shell environments by name, auto-loaded by directory and git
-                  branch. Production is never auto-loaded — implicit actions only
-                  reach environments where being wrong is cheap.
+                  Type <code>staging</code>, get staging. No binaries, no hooks to approve, no
+                  .env files rotting in your repos. Auto-loads by directory and git
+                  branch — and never auto-loads production, because a
+                  <code>cd</code> should not be able to quietly arm your shell with
+                  prod credentials.
                 </p>
               </div>
             </a>
@@ -793,8 +807,8 @@
                 class="text-neutral-400 hover:text-white transition-colors"
                 >Quack</a
               >
-              — YouTube comment search over an inverted index, as a Chrome
-              extension. ·
+              — searches YouTube comments with an inverted index, because the native
+              search doesn't exist. ·
               <a
                 href="https://github.com/octopols/google-trends-api-toolkit"
                 target="_blank"
@@ -802,8 +816,8 @@
                 class="text-neutral-400 hover:text-white transition-colors"
                 >google-trends-api-toolkit</a
               >
-              — Python wrapper over Google Trends' undocumented endpoints,
-              reverse-engineered from network traffic. ·
+              — Python wrapper over Google Trends' undocumented endpoints, worked out by
+              staring at network traffic until it made sense. ·
               <a
                 href="https://github.com/octopols/coloc_mobile"
                 target="_blank"
@@ -811,8 +825,8 @@
                 class="text-neutral-400 hover:text-white transition-colors"
                 >Coloc</a
               >
-              — roommate matching on Gale-Shapley with Elo ratings; approach
-              published in IJFMR.
+              — roommate matching via Gale-Shapley and Elo ratings. Yes, really. The
+              approach got published in IJFMR.
             </p>
           </div>
         </div>
@@ -827,7 +841,7 @@
             <p class="eyebrow">Writing</p>
             <h2>Engineering notes</h2>
             <p class="lede measure">
-              The reasoning that didn't fit in a commit message.
+              The reasoning that wouldn't fit in a commit message.
             </p>
           </div>
 
@@ -906,9 +920,7 @@
       <section id="about" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">About</p>
-            <h2>Who's writing this</h2>
-          </div>
+            <p class="eyebrow">About</p><h2>Who's writing all this</h2></div>
 
           <div
             class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_15rem] gap-12 md:gap-16"
@@ -916,32 +928,35 @@
             <div class="reveal">
               <div class="space-y-5 text-neutral-300 leading-relaxed measure">
                 <p>
-                  Most of what I do is diagnosis. Something is slow, or wrong, or
-                  quietly costing money, and the interesting part is almost never the
-                  fix — it's working out which of the five plausible explanations is
-                  the real one.
+                  Most of my job is diagnosis. Something is slow, or wrong, or quietly leaking
+                  money, and the fix is rarely the interesting part. The interesting
+                  part is working out which of five plausible explanations is the
+                  actual one.
                 </p>
                 <p>
-                  The systems I've enjoyed most were the ones where the obvious
-                  answer was wrong: a queue that grew faster the more consumers we
-                  added, a billing figure that governed every invoice and appeared on
-                  no screen, a timezone constant that was correct in exactly one
-                  country.
+                  The bugs I've enjoyed most are the ones where the obvious answer was
+                  backwards. A queue that got worse the more consumers we threw at it.
+                  A number that decided every invoice and appeared on exactly zero
+                  screens. A timezone constant that was right in one country and wrong
+                  in every other one.
                 </p>
                 <p>
-                  The through-line, if there is one:
+                  If there's a pattern:
                   <strong class="text-white"
-                    >most "scale problems" are correctness problems in a
-                    costume</strong
-                  >. Idempotency, backpressure and blast-radius isolation have
-                  resolved more incidents for me than adding capacity ever has —
-                  partly because adding capacity often <em>is</em> the incident.
+                    >most "scale problems" are correctness problems in a costume</strong
+                  >. Idempotency, backpressure and blast-radius isolation have fixed
+                  more incidents for me than adding capacity ever has — partly because
+                  adding capacity is sometimes <em>how you get</em> the incident.
                 </p>
                 <p>
-                  Before this, two Google Summer of Code cycles in C++/Qt taught me
-                  to work in codebases far older and larger than my understanding of
-                  them. Away from a terminal I shoot film and digital, mostly street
-                  and mostly badly.
+                  Before this, two Google Summer of Code cycles in C++/Qt — which is how you
+                  learn to work in a codebase far older and larger than your
+                  understanding of it, mostly by breaking it and then reading a great
+                  deal of git blame.
+                </p>
+                <p>
+                  Away from a terminal I shoot film and digital. Mostly street, mostly
+                  badly, occasionally something worth keeping.
                 </p>
               </div>
 
@@ -1014,8 +1029,8 @@
           <h2
             class="font-display font-bold tracking-tighter leading-[1.02] mt-5 text-[clamp(1.9rem,5vw,3.25rem)] measure reveal"
           >
-            Happy to talk about queues, billing correctness, or anything that broke
-            in an interesting way.
+            Talk to me about queues, billing correctness, or anything that broke in a way
+            you're still thinking about.
           </h2>
 
           <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 reveal">

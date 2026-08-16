@@ -217,7 +217,8 @@
       <header class="hero">
         <h1>HomeCam&nbsp;TV</h1>
         <p class="tagline">
-          Your Dahua NVR on the television, driven entirely by the remote.
+          Your CCTV recorder on the TV, driven entirely by the remote. No phone, no
+          cloud, no subscription.
         </p>
 
         <div class="meta">
@@ -238,29 +239,31 @@
       </figure>
 
       <section>
-        <div class="label">[ <b>01</b> — What it does ]</div>
-        <h2>Four screens, no menus.</h2>
-
-        <div class="features">
+        <div class="label">[ <b>01</b> — What it does ]</div><h2>Four screens. No menus.</h2><div class="features">
           <div class="feature">
             <h3>Camera wall</h3>
-            <p>Every camera at once, 1×1 / 2×2 / 3×3. Select one for fullscreen.</p>
+            <p>Every camera at once, 1×1 / 2×2 / 3×3. Click one, it goes fullscreen.</p>
           </div>
           <div class="feature">
             <h3>Recorded playback</h3>
-            <p>Scrub a 24-hour timeline of the recorder's own archive to any moment.</p>
+            <p>Scrub a 24-hour timeline straight off the recorder's own archive. Any
+              moment, no export step.</p>
           </div>
           <div class="feature">
             <h3>Status</h3>
-            <p>Whether everything is actually recording, and which stream each camera is on.</p>
+            <p>Answers the only question that matters at 2am: is this thing actually
+              recording? Then the per-camera detail.</p>
           </div>
           <div class="feature">
             <h3>Channel up / down</h3>
-            <p>Changes camera. In playback it keeps the time, so 18:05 on camera 1 becomes 18:05 on camera 2.</p>
+            <p>Changes camera. In playback it holds the time, so 18:05 on camera 1 becomes
+              18:05 on camera 2 — which is exactly what you want when you're
+              following someone across a driveway.</p>
           </div>
           <div class="feature">
             <h3>Self-configuring</h3>
-            <p>Asks the recorder for its channels and uses its names. Nothing about the setup is compiled in.</p>
+            <p>Asks the recorder what channels it has and uses its names. Nothing about my
+              setup is baked into the app.</p>
           </div>
         </div>
       </section>
@@ -274,36 +277,39 @@
           </figure>
           <figure>
             <img src="images/03-playback.jpg" alt="Playback with a 24-hour timeline showing recorded segments" />
-            <figcaption>Scrub the day. Green is footage that exists.</figcaption>
+            <figcaption>Scrub the day. Green means footage exists.</figcaption>
           </figure>
           <figure>
             <img src="images/04-status.png" alt="Status screen reading Everything is recording" />
-            <figcaption>One sentence, then the detail.</figcaption>
+            <figcaption>The answer first, then the detail.</figcaption>
           </figure>
           <figure>
             <img src="images/05-settings.png" alt="Settings screen with wall layout and stream buffer options" />
-            <figcaption>Everything stays on the TV.</figcaption>
+            <figcaption>Everything stays on the TV. Nothing phones home.</figcaption>
           </figure>
         </div>
       </section>
 
       <section>
-        <div class="label">[ <b>03</b> — Why ]</div>
-        <h2>The hard part is the d-pad.</h2>
-        <div class="prose">
+        <div class="label">[ <b>03</b> — Why ]</div><h2>The hard part is the d-pad.</h2><div class="prose">
           <p>
-            Most camera apps on a television are phone apps with a TV manifest entry. Focus lands
-            nowhere, controls can't be reached, and text is sized for arm's length.
+            Almost every camera app on a television is a phone app with a TV manifest
+            entry bolted on. Focus lands nowhere, half the controls are unreachable,
+            and the text is sized for someone holding a phone rather than someone
+            three metres away on a sofa.
+          </p>
+          <p>So: <strong>every screen here names the control it opens on</strong>, and the
+            remote never goes dead. Press up out of a page and you land back on the
+            tab you came from. Anything sitting at a screen edge explicitly names its
+            vertical neighbour instead of trusting geometry — Android's focus search
+            only considers what falls inside its beam, so a right-aligned button with
+            nothing directly above it searches, finds nothing, and strands you.
           </p>
           <p>
-            <strong>Every screen here names the control it opens on</strong>, so the remote never goes
-            dead. Up out of a page returns to the tab you were on. Anything at a screen edge names its
-            vertical neighbour rather than trusting geometry — because focus search only considers what
-            sits inside its beam, and a right-aligned button with nothing above it finds nothing at all.
-          </p>
-          <p>
-            It also notices when a camera's sub-stream returns audio and no picture — a real fault on
-            real hardware — and quietly falls back to the main stream for that channel.
+            It also catches the case where a camera's sub-stream sends audio and no
+            picture — an actual fault on actual hardware, not a hypothetical — and
+            quietly falls back to the main stream for that channel instead of showing
+            you a black rectangle and hoping you don't notice.
           </p>
         </div>
       </section>
