@@ -148,14 +148,12 @@
 
       <h2>Where the numbers land</h2>
       <div class="note">
-        Events go to GA4 property <code>G-YEG239XM6X</code>:
-        <code>resume_view</code>, <code>resume_engaged</code>,
-        <code>resume_close</code>, <code>resume_download</code>. Each carries
-        <code>link_id</code>, <code>visit_number</code>, <code>returning</code>,
-        <code>source_ref</code> and <code>seconds</code>.
-        <b>Register those five as custom dimensions</b> in GA4 → Admin → Custom
-        definitions, or they will not appear in reports. Realtime works
-        immediately; standard reports lag up to 24h.
+        Opens are written straight into your Google Sheet — one row per open,
+        appearing within a second or two. Columns: <b>Opened</b>, <b>Link</b>,
+        <b>Seconds</b>, <b>Visit&nbsp;#</b>, <b>Returning</b>,
+        <b>Downloaded</b>, <b>Came from</b>, <b>Device</b>. The
+        <code>link_id</code> below is what lands in the Link column, so name
+        your links after the company and no lookup is needed.
       </div>
     </main>
 

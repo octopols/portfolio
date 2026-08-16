@@ -62,11 +62,43 @@ npm run photos        # writes thumbnails/, optimized/ and manifest.json
 Grid uses the 800px thumbnails and lazy-loads them; the lightbox loads the
 1920px version on open.
 
+## Résumé tracking
+
+`/resume/` is a viewer around `docs/hirnaymay_bhaskar_resume.pdf`. It logs one
+row per open into a Google Sheet — no analytics vendor. `/track/` generates a
+distinct link per application, so an open identifies itself by which link was
+used.
+
+**Setup**
+
+1. New Google Sheet → **Extensions → Apps Script**
+2. Delete the stub, paste `tools/resume-logger.gs`, save
+3. **Deploy → New deployment → Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone** ← required; visitors are not signed in
+4. Authorize (Google warns about an unverified app — it is your own script)
+5. Copy the `/exec` URL, paste it into `ENDPOINT` in `resume/index.html`
+
+Visiting the `/exec` URL in a browser should print `ok`.
+
+**Redeploying:** editing the script does not update the live web app. Use
+**Deploy → Manage deployments → edit → Version: New version**, or the URL keeps
+serving the old code.
+
+**Columns:** Opened · Link · Seconds · Visit # · Returning · Downloaded · Came
+from · Device. Seconds counts only focused time, and climbs while the page is
+open — a row that stops updating is someone who left.
+
+**Limits worth knowing.** It sees web opens, not PDFs sent as attachments.
+Anyone blocking scripts is invisible. It cannot identify a person: no browser
+API exposes that and no other origin's cookies are readable, which is why
+identity comes from the per-link mapping in `/track/` instead.
+
 ## Constraints worth keeping
 
-- **No third-party runtime dependencies.** No CDN scripts, no analytics beyond
-  GA4, no icon library. The lightbox animates with CSS transitions rather than
-  GSAP for this reason.
+- **No third-party runtime dependencies.** No CDN scripts, no analytics vendor,
+  no icon library. Only the font is external. The lightbox animates with CSS
+  transitions rather than GSAP for this reason.
 - **Progressive enhancement.** Every reveal animation is gated behind a `.js`
   class set in `<head>`. If a script fails the page is fully readable, not
   blank. The mobile nav panel degrades to a plain list of links.
