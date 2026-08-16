@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Résumé links</title>
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #82898f;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--accent); }
+      .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+      h1 { font-size: 30px; letter-spacing: -0.03em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 14.5px; margin: 0 0 36px; }
+      h2 { font-size: 17px; margin: 40px 0 14px; letter-spacing: -0.01em; }
+
+      label { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+      input, select {
+        width: 100%; padding: 10px 12px; font: inherit; font-size: 14.5px;
+        color: var(--text); background: var(--panel);
+        border: 1px solid var(--line); border-radius: 8px;
+      }
+      input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .row { display: grid; grid-template-columns: 1fr 200px; gap: 14px; }
+      @media (max-width: 620px) { .row { grid-template-columns: 1fr; } }
+
+      button {
+        font: inherit; font-size: 14px; cursor: pointer; border-radius: 999px;
+        padding: 10px 20px; border: 1px solid var(--line);
+        background: transparent; color: var(--text); transition: all .2s;
+      }
+      button:hover { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.05); }
+      button.primary { background: var(--accent); color: #0c2c1a; border-color: var(--accent); font-weight: 600; }
+      button.primary:hover { background: #fff; border-color: #fff; }
+      button.tiny { padding: 5px 12px; font-size: 12px; }
+
+      .out {
+        margin-top: 18px; padding: 14px 16px; border-radius: 10px;
+        border: 1px solid rgba(104,211,145,.4); background: rgba(104,211,145,.06);
+        font-family: var(--mono); font-size: 13px; word-break: break-all;
+        display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      }
+      .out span { color: #b9e6cb; }
+
+      table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+      th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td.mono { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+      .empty { color: var(--dim); font-size: 14px; padding: 22px 0; }
+
+      .note {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn);
+        border-radius: 8px; padding: 14px 16px; background: rgba(246,224,94,.03);
+        font-size: 13.5px; color: var(--muted); margin: 0 0 24px;
+      }
+      .note b { color: var(--text); }
+      .note.bad { border-left-color: var(--bad); background: rgba(252,129,129,.04); }
+
+      /* ---- gate ---- */
+      #gate { max-width: 340px; margin: 18vh auto; padding: 0 24px; text-align: center; }
+      #gate h1 { font-size: 20px; margin-bottom: 18px; }
+      #gate input { text-align: center; margin-bottom: 12px; }
+      #gate .err { color: var(--bad); font-size: 13px; min-height: 20px; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+
+  <body>
+    <!-- ============ gate ============ -->
+    <div id="gate">
+      <h1>Résumé links</h1>
+      <form id="gate-form">
+        <label for="pw">Password</label>
+        <input type="password" id="pw" autocomplete="current-password" autofocus />
+        <p class="err" id="gate-err"></p>
+        <button class="primary" type="submit">Unlock</button>
+      </form>
+    </div>
+
+    <!-- ============ tool ============ -->
+    <main class="wrap" id="tool" hidden>
+      <h1>Résumé links</h1>
+      <p class="sub">
+        One link per application. When it opens, you know who opened it — because
+        you know who you gave it to.
+      </p>
+
+      <div class="note bad">
+        <b>This gate is obfuscation, not security.</b> The check runs in your
+        browser and the hash is in this page's source. It keeps the tool out of
+        search results and away from casual visitors; it will not stop anyone who
+        reads the source. Nothing sensitive is stored here — the list below lives
+        only in this browser's localStorage. For real access control, put
+        Cloudflare Access in front of <code>/track/</code>.
+      </div>
+
+      <h2>Create a link</h2>
+      <div class="row">
+        <div>
+          <label for="who">Who is it for</label>
+          <input id="who" placeholder="Acme — backend role" />
+        </div>
+        <div>
+          <label for="chan">Channel</label>
+          <select id="chan">
+            <option value="email">Email</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="wellfound">Wellfound</option>
+            <option value="referral">Referral</option>
+            <option value="jobboard">Job board</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <p style="margin: 16px 0 0"><button class="primary" id="make">Generate</button></p>
+
+      <div class="out" id="out" hidden>
+        <span id="url"></span>
+        <button class="tiny" id="copy">Copy</button>
+      </div>
+
+      <h2>Your links</h2>
+      <div id="list"></div>
+      <p style="margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap">
+        <button class="tiny" id="export">Export CSV</button>
+        <button class="tiny" id="clear">Clear list</button>
+      </p>
+
+      <h2>Where the numbers land</h2>
+      <div class="note">
+        Events go to GA4 property <code>G-YEG239XM6X</code>:
+        <code>resume_view</code>, <code>resume_engaged</code>,
+        <code>resume_close</code>, <code>resume_download</code>. Each carries
+        <code>link_id</code>, <code>visit_number</code>, <code>returning</code>,
+        <code>source_ref</code> and <code>seconds</code>.
+        <b>Register those five as custom dimensions</b> in GA4 → Admin → Custom
+        definitions, or they will not appear in reports. Realtime works
+        immediately; standard reports lag up to 24h.
+      </div>
+    </main>
+
+    <script>
+      /**
+       * Link builder for /resume/.
+       *
+       * Everything here is client-side. The gate compares a SHA-256 of what you
+       * type against a constant below — see the warning in the page: it is a
+       * speed bump, not a lock. The link list is localStorage on this device
+       * only; it is deliberately not synced anywhere.
+       */
+      (function () {
+        "use strict";
+
+        // sha256("resume-2026") — change it with:
+        //   node -e "console.log(require('crypto').createHash('sha256').update('NEW').digest('hex'))"
+        var HASH = "1ad831dbfb41616ad627060f90fa122d49589ad2e17016e1497bf2c9111ab1cb";
+        var KEY = "rl_links";
+        var gate = document.getElementById("gate");
+        var tool = document.getElementById("tool");
+
+        async function sha256(text) {
+          var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+          return Array.from(new Uint8Array(buf))
+            .map(function (b) { return b.toString(16).padStart(2, "0"); })
+            .join("");
+        }
+
+        function unlock() {
+          gate.hidden = true;
+          tool.hidden = false;
+          render();
+        }
+
+        if (sessionStorage.getItem("rl_ok") === "1") unlock();
+
+        document.getElementById("gate-form").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          var err = document.getElementById("gate-err");
+          var got = await sha256(document.getElementById("pw").value);
+          if (got === HASH) {
+            sessionStorage.setItem("rl_ok", "1");
+            unlock();
+          } else {
+            err.textContent = "Nope.";
+            document.getElementById("pw").value = "";
+          }
+        });
+
+        /* ---------------- link building ---------------- */
+        function slug(s) {
+          return s.toLowerCase().trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 32);
+        }
+        function load() {
+          try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
+        }
+        function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+
+        function urlFor(id) { return "https://hirnaymay.com/resume/?s=" + id; }
+
+        document.getElementById("make").addEventListener("click", function () {
+          var who = document.getElementById("who").value;
+          var chan = document.getElementById("chan").value;
+          if (!who.trim()) { document.getElementById("who").focus(); return; }
+
+          var base = slug(chan + "-" + who) || "link";
+          var list = load();
+          var id = base, n = 2;
+          while (list.some(function (r) { return r.id === id; })) id = base + "-" + n++;
+
+          list.unshift({ id: id, who: who.trim(), chan: chan, at: new Date().toISOString() });
+          save(list);
+
+          var out = document.getElementById("out");
+          document.getElementById("url").textContent = urlFor(id);
+          out.hidden = false;
+          document.getElementById("who").value = "";
+          render();
+        });
+
+        document.getElementById("copy").addEventListener("click", function () {
+          var t = document.getElementById("url").textContent;
+          navigator.clipboard.writeText(t).then(function () {
+            var b = document.getElementById("copy");
+            b.textContent = "Copied";
+            setTimeout(function () { b.textContent = "Copy"; }, 1400);
+          });
+        });
+
+        function render() {
+          var list = load();
+          var el = document.getElementById("list");
+          if (!list.length) {
+            el.innerHTML = '<p class="empty">No links yet.</p>';
+            return;
+          }
+          var rows = list.map(function (r) {
+            return "<tr><td>" + esc(r.who) + "</td><td class='mono'>" + esc(r.chan) +
+              "</td><td class='mono'>" + esc(r.id) + "</td><td class='mono'>" +
+              r.at.slice(0, 10) + "</td><td><button class='tiny' data-c='" +
+              esc(r.id) + "'>Copy</button></td></tr>";
+          }).join("");
+          el.innerHTML = "<table><thead><tr><th>Who</th><th>Channel</th><th>link_id</th>" +
+            "<th>Created</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
+          el.querySelectorAll("button[data-c]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              navigator.clipboard.writeText(urlFor(b.dataset.c));
+              b.textContent = "Copied";
+              setTimeout(function () { b.textContent = "Copy"; }, 1400);
+            });
+          });
+        }
+
+        function esc(s) {
+          return String(s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+          });
+        }
+
+        document.getElementById("export").addEventListener("click", function () {
+          var list = load();
+          if (!list.length) return;
+          var csv = "who,channel,link_id,created,url\n" + list.map(function (r) {
+            return '"' + r.who.replace(/"/g, '""') + '",' + r.chan + "," + r.id + "," +
+              r.at + "," + urlFor(r.id);
+          }).join("\n");
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+          a.download = "resume-links.csv";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+
+        document.getElementById("clear").addEventListener("click", function () {
+          if (confirm("Clear the local link list? The links themselves keep working.")) {
+            localStorage.removeItem(KEY);
+            render();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

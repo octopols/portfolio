@@ -52,6 +52,8 @@ jobs:
           # so the directory structure has to survive the copy.
           cp -r projects dist/
           cp -r colophon dist/
+          cp -r resume dist/
+          cp -r track dist/
           cp robots.txt dist/
           cp sitemap.xml dist/
           cp site.webmanifest dist/

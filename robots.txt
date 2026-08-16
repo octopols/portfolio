@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://hirnaymay.com/sitemap.xml
+
+# Link builder — no reason for this to be indexed.
+Disallow: /track/

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Résumé — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="Résumé of Hirnaymay Bhaskar, backend engineer in Bengaluru — messaging, billing and event infrastructure."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/resume/" />
+    <meta property="og:title" content="Hirnaymay Bhaskar — Résumé" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:url" content="https://hirnaymay.com/resume/" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      :root {
+        --bg: #050505;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --accent: #68d391;
+      }
+      html, body { height: 100%; }
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        display: flex; flex-direction: column;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+
+      .bar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap;
+        padding: 14px 24px; border-bottom: 1px solid var(--line);
+        background: rgba(5, 5, 5, 0.9);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      }
+      .who { display: flex; align-items: baseline; gap: 12px; }
+      .who b { font-size: 15px; letter-spacing: -0.01em; }
+      .who span { font-size: 12.5px; color: var(--muted); }
+      .acts { display: flex; gap: 10px; }
+      .btn {
+        display: inline-block; text-decoration: none; white-space: nowrap;
+        padding: 8px 16px; border-radius: 999px; font-size: 13px;
+        border: 1px solid var(--line); transition: background .2s, border-color .2s, color .2s;
+      }
+      .btn:hover { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.05); }
+      .btn.primary { background: var(--accent); color: #0c2c1a; border-color: var(--accent); font-weight: 600; }
+      .btn.primary:hover { background: #fff; border-color: #fff; color: #0c2c1a; }
+
+      .doc { flex: 1 1 auto; min-height: 0; background: #1b1b1b; }
+      .doc object, .doc iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+      /* Shown only if the browser refuses to render a PDF inline. */
+      .fallback { padding: 56px 24px; text-align: center; color: var(--muted); }
+      .fallback a { color: var(--accent); }
+
+      @media (max-width: 640px) {
+        .bar { padding: 12px 16px; }
+        .who b { font-size: 14px; }
+      }
+    </style>
+
+    <!-- Analytics. Same property as the rest of the site. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YEG239XM6X"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-YEG239XM6X", { anonymize_ip: true, send_page_view: true });
+    </script>
+  </head>
+
+  <body>
+    <div class="bar">
+      <div class="who">
+        <b>Hirnaymay Bhaskar</b>
+        <span>Backend engineer &middot; Bengaluru</span>
+      </div>
+      <div class="acts">
+        <a class="btn" href="/">Portfolio</a>
+        <a class="btn" href="mailto:hirnaymay@gmail.com">Email me</a>
+        <a class="btn primary" id="dl" href="/docs/hirnaymay_bhaskar_resume.pdf" download>Download PDF</a>
+      </div>
+    </div>
+
+    <div class="doc">
+      <object data="/docs/hirnaymay_bhaskar_resume.pdf#view=FitH" type="application/pdf">
+        <div class="fallback">
+          <p>Your browser won't display PDFs inline.</p>
+          <p><a href="/docs/hirnaymay_bhaskar_resume.pdf">Download the résumé instead &rarr;</a></p>
+        </div>
+      </object>
+    </div>
+
+    <script>
+      /**
+       * Résumé view tracking.
+       *
+       * What this measures, honestly:
+       *   - which tracked link was used  (?s=, set by /track/)
+       *   - where the visit came from    (document.referrer)
+       *   - how long the tab was actually focused, not merely open
+       *   - whether this visitor has opened it before, and how many times
+       *
+       * What it cannot measure: who the person is. There is no browser API for
+       * that, and no cookie from another origin is readable here. Identity
+       * comes from knowing which ?s= link you gave to whom.
+       *
+       * The visitor id is a first-party random string in localStorage. It is
+       * not tied to a person and does not leave this domain except as an
+       * opaque value in the analytics event.
+       */
+      (function () {
+        "use strict";
+
+        var params = new URLSearchParams(location.search);
+        var link = (params.get("s") || params.get("src") || "direct")
+          .toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 40) || "direct";
+
+        // ---- first-party visitor id + visit count -----------------------
+        var vid, visits;
+        try {
+          vid = localStorage.getItem("rv_id");
+          if (!vid) {
+            vid = (Math.random().toString(36).slice(2) + Date.now().toString(36)).slice(0, 16);
+            localStorage.setItem("rv_id", vid);
+          }
+          visits = parseInt(localStorage.getItem("rv_n") || "0", 10) + 1;
+          localStorage.setItem("rv_n", String(visits));
+          localStorage.setItem("rv_last", new Date().toISOString());
+        } catch (e) {
+          vid = "nostore";
+          visits = 1;
+        }
+
+        var base = {
+          link_id: link,
+          visitor: vid,
+          visit_number: visits,
+          returning: visits > 1,
+          source_ref: document.referrer || "none",
+        };
+
+        gtag("event", "resume_view", base);
+
+        // ---- focused-time accounting ------------------------------------
+        // Only counts while the tab is visible, so a résumé left open in a
+        // background tab does not read as two hours of rapt attention.
+        var focused = 0;
+        var since = document.visibilityState === "visible" ? Date.now() : null;
+
+        function accrue() {
+          if (since !== null) {
+            focused += Date.now() - since;
+            since = null;
+          }
+        }
+        function resume() {
+          if (since === null) since = Date.now();
+        }
+        function seconds() {
+          var live = since !== null ? Date.now() - since : 0;
+          return Math.round((focused + live) / 1000);
+        }
+
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") resume();
+          else {
+            accrue();
+            report("resume_hidden");
+          }
+        });
+        window.addEventListener("blur", accrue);
+        window.addEventListener("focus", resume);
+
+        // ---- milestones --------------------------------------------------
+        // Thresholds rather than a timer stream: enough to tell a glance from
+        // a read, without spamming the property.
+        var marks = [10, 30, 60, 120, 300];
+        var hit = {};
+        var poll = setInterval(function () {
+          var s = seconds();
+          for (var i = 0; i < marks.length; i++) {
+            var m = marks[i];
+            if (s >= m && !hit[m]) {
+              hit[m] = true;
+              gtag("event", "resume_engaged", Object.assign({}, base, { seconds: m }));
+            }
+          }
+          if (s > 900) clearInterval(poll);
+        }, 5000);
+
+        // ---- final dwell ---------------------------------------------------
+        var sent = false;
+        function report(name) {
+          if (sent && name === "resume_close") return;
+          var s = seconds();
+          if (s < 2) return;
+          gtag("event", name, Object.assign({}, base, { seconds: s }));
+          if (name === "resume_close") sent = true;
+        }
+        // pagehide is the reliable one; beforeunload does not fire on mobile
+        // Safari when the tab is swiped away.
+        window.addEventListener("pagehide", function () { accrue(); report("resume_close"); });
+        window.addEventListener("beforeunload", function () { accrue(); report("resume_close"); });
+
+        // ---- download ------------------------------------------------------
+        var dl = document.getElementById("dl");
+        if (dl) {
+          dl.addEventListener("click", function () {
+            gtag("event", "resume_download", Object.assign({}, base, { seconds: seconds() }));
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
