@@ -87,6 +87,27 @@
   }
 
   /* ---------------------------------------------------------------
+     Portrait
+
+     Drops the whole figure if the image is missing, rather than leaving a
+     broken-image icon in the About column. Same reasoning as everything else
+     here: a missing asset should cost nothing visible.
+  --------------------------------------------------------------- */
+  var portrait = document.getElementById("portrait");
+  if (portrait) {
+    var portraitImg = portrait.querySelector("img");
+    if (portraitImg) {
+      if (portraitImg.complete && portraitImg.naturalWidth === 0) {
+        portrait.remove();
+      } else {
+        portraitImg.addEventListener("error", function () {
+          portrait.remove();
+        });
+      }
+    }
+  }
+
+  /* ---------------------------------------------------------------
      Footer year
   --------------------------------------------------------------- */
   var yearEl = document.getElementById("footer-year");
