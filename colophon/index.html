@@ -287,16 +287,37 @@
 
       <section>
         <div class="label">[ <b>04</b> — Third parties ]</div>
-        <h2>Three requests leave for somewhere else</h2>
+        <h2>Four requests leave for somewhere else</h2>
         <p>
           Two go to <code>fonts.googleapis.com</code> and
-          <code>fonts.gstatic.com</code> for Space Grotesk, the display face. That is
-          the whole list. There is no analytics vendor on this site — there was a
-          Google tag, inherited from a template and reporting into a property I could
-          not find, and it has been removed. The résumé viewer at
-          <code>/resume/</code> posts opens to a Google Sheet I own; nothing else
-          phones anywhere.
+          <code>fonts.gstatic.com</code> for Space Grotesk, the display face. The other
+          two are analytics — mine rather than a vendor's. Page and résumé activity is
+          beaconed to <code>script.google.com</code>, where a script I wrote appends it
+          to a spreadsheet I own, and one lookup per visit goes to
+          <code>ipwho.is</code> to turn an IP into a city and a network operator.
         </p>
+        <p>
+          There is no Google Analytics, no tag manager, no CDN script, no icon library,
+          no embedded widget. A Google tag did sit here for eight months, inherited
+          from a template and reporting into a property I could never find. It is gone.
+        </p>
+
+        <div class="callout good">
+          <span class="tag">What the analytics record</span>
+          <p>
+            Which pages, in what order, and how long each was actually focused.
+            Referrer or campaign tag. Device, browser, operating system, screen size.
+            City, country and network operator, from the IP lookup. Résumé opens also
+            record reading time and whether the PDF was downloaded. A random
+            first-party id tells a returning visitor from a new one.
+          </p>
+          <p>
+            <strong>No fingerprinting.</strong> No canvas, audio or font probing, no
+            keystroke capture, no mouse tracking, no session replay. Those techniques
+            exist to identify people who have chosen not to be identified. Nothing here
+            can name you — only the machine a particular link was opened on.
+          </p>
+        </div>
         <div class="callout good">
           <span class="tag">Where the images come from</span>
           <p>
@@ -329,12 +350,14 @@
             </div>
           </div>
           <div class="flaw">
-            <div class="flaw-t">There is a Google tracker on a site that otherwise phones nobody</div>
+            <div class="flaw-t">I removed one tracker and then wrote my own</div>
             <div class="flaw-d">
-              Every other third-party dependency has been removed, and then there is
-              analytics, loading from Google, on every page. IP anonymisation is on,
-              which is close to meaningless as a defence. I want the numbers, which is
-              exactly the reasoning everybody uses.
+              The Google tag is gone, which is an improvement. In its place is a script
+              that records your path through the site and asks a third party to turn
+              your IP into a city and an employer. It is first-party, the data lands in
+              a spreadsheet only I can open, and it is still tracking. Wanting to know
+              whether a particular company opened my résumé is a good reason to me and
+              no reason at all to you.
             </div>
           </div>
           <div class="flaw">
@@ -380,6 +403,7 @@
       </footer>
     </div>
 
+    <script src="/js/track.js"></script>
     <script src="/js/nav.js" defer></script>
     <script src="/js/cursor.js" defer></script>
   </body>

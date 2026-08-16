@@ -62,37 +62,52 @@ npm run photos        # writes thumbnails/, optimized/ and manifest.json
 Grid uses the 800px thumbnails and lazy-loads them; the lightbox loads the
 1920px version on open.
 
-## Résumé tracking
+## Analytics
 
-`/resume/` is a viewer around `docs/hirnaymay_bhaskar_resume.pdf`. It logs one
-row per open into a Google Sheet — no analytics vendor. `/track/` generates a
-distinct link per application, so an open identifies itself by which link was
-used.
+First-party, no vendor. `js/track.js` runs on every page and beacons to a Google
+Apps Script web app (`tools/resume-logger.gs`) which writes into a spreadsheet.
+
+Two tabs:
+
+- **Sessions** — one row per visit, upserted as it unfolds: source, journey
+  (pages in order), focused seconds, device/browser/OS/screen, city/country/org
+  from an IP lookup, and whether the visit reached the résumé.
+- **Opens** — one row per résumé open, with reading time and whether the PDF was
+  downloaded.
+
+`/track/` generates a distinct `?s=` link per application, so an open identifies
+itself by which link was used.
 
 **Setup**
 
-1. New Google Sheet → **Extensions → Apps Script**
-2. Delete the stub, paste `tools/resume-logger.gs`, save
-3. **Deploy → New deployment → Web app**
-   - Execute as: **Me**
-   - Who has access: **Anyone** ← required; visitors are not signed in
-4. Authorize (Google warns about an unverified app — it is your own script)
-5. Copy the `/exec` URL, paste it into `ENDPOINT` in `resume/index.html`
+1. New Google Sheet → **Extensions → Apps Script** (must be from inside the
+   Sheet — a standalone project cannot reach it)
+2. Paste `tools/resume-logger.gs`, save
+3. **Deploy → New deployment → Web app**, Execute as **Me**, access **Anyone**
+4. Copy the `/exec` URL into `ENDPOINT` in `js/track.js`
 
-Visiting the `/exec` URL in a browser should print `ok`.
+Open the `/exec` URL in a browser: it prints which spreadsheet it writes to,
+row counts, and recent visits. That is the first thing to check when something
+looks wrong.
 
-**Redeploying:** editing the script does not update the live web app. Use
-**Deploy → Manage deployments → edit → Version: New version**, or the URL keeps
-serving the old code.
+**Redeploying:** editing the script does not update the live URL. Use
+**Deploy → Manage deployments → pencil → Version: New version**, or the old code
+keeps serving.
 
-**Columns:** Opened · Link · Seconds · Visit # · Returning · Downloaded · Came
-from · Device. Seconds counts only focused time, and climbs while the page is
-open — a row that stops updating is someone who left.
+**Reliability.** Every payload goes through a localStorage queue and is sent as
+a batch. A beacon lost to a dead tab, a dropped network or a blocker stays
+queued and rides along with the next send — on this page or a later visit.
+Every event is an idempotent upsert keyed on session id, so a replayed batch
+cannot double-count; `seconds` only ever climbs.
 
-**Limits worth knowing.** It sees web opens, not PDFs sent as attachments.
+**Limits.** Web opens only — a PDF sent as an email attachment is invisible.
 Anyone blocking scripts is invisible. It cannot identify a person: no browser
-API exposes that and no other origin's cookies are readable, which is why
-identity comes from the per-link mapping in `/track/` instead.
+API exposes that and no other origin's cookies are readable. Identity comes from
+the per-link mapping in `/track/`.
+
+**Privacy.** Storing IPs makes this personal data under India's DPDP Act and the
+GDPR. What is collected is documented on `/colophon/`. Set `GEO = ""` in
+`js/track.js` to stop resolving IP entirely; everything else keeps working.
 
 ## Constraints worth keeping
 
