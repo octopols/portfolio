@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+
     <!-- Primary Meta Tags -->
     <title>Photography | Hirnaymay Bhaskar</title>
     <meta name="title" content="Photography | Hirnaymay Bhaskar" />
@@ -49,7 +53,6 @@
 
     <!-- Performance: DNS Prefetch & Preconnect -->
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
-    <link rel="dns-prefetch" href="https://unpkg.com" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,35 +63,56 @@
 
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pinned: see index.html — lucide@latest rolled to 1.x. -->
-    <script src="https://unpkg.com/lucide@1.28.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script>
+      // The lightbox is animated with GSAP. If the CDN is blocked, fall back
+      // to applying the end state immediately so the modal still works.
+      if (typeof gsap === "undefined") {
+        var apply = function (t, v) {
+          var els = typeof t === "string" ? document.querySelectorAll(t) : (t.length ? t : [t]);
+          for (var i = 0; i < els.length; i++) {
+            if (!els[i] || !els[i].style) continue;
+            for (var k in v) {
+              if (k === "opacity") els[i].style.opacity = v[k];
+              else if (k === "scale" || k === "x" || k === "y") els[i].style.transform = "";
+            }
+          }
+          if (v && typeof v.onComplete === "function") v.onComplete();
+        };
+        window.gsap = {
+          set: apply,
+          to: apply,
+          fromTo: function (t, f, to) { apply(t, to); },
+          killTweensOf: function () {},
+        };
+      }
+    </script>
 
     <!-- External Styles -->
     <link rel="stylesheet" href="css/styles.css" />
     
     <style>
       /* Animation CSS inline with !important to override Tailwind preflight */
-      .reveal-item {
+      .js .reveal-item {
         opacity: 0 !important;
         transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
       }
 
-      .reveal-item.fade-up {
+      .js .reveal-item.fade-up {
         transform: translateY(60px) !important;
       }
 
-      .reveal-item.fade-up.active {
+      .js .reveal-item.fade-up.active {
         opacity: 1 !important;
         transform: translateY(0) !important;
       }
 
-      .reveal-item.fade-scale {
+      .js .reveal-item.fade-scale {
         transform: scale(0.95) !important;
         filter: blur(10px) !important;
       }
 
-      .reveal-item.fade-scale.active {
+      .js .reveal-item.fade-scale.active {
         opacity: 1 !important;
         transform: scale(1) !important;
         filter: blur(0) !important;
@@ -103,70 +127,10 @@
         transform: scale(1.1) !important;
       }
 
-      /* Force cursor styles - override Tailwind */
-      body {
-        cursor: none !important;
-      }
-
-      * {
-        cursor: none !important;
-      }
-
-      .cursor-dot {
-        position: fixed !important;
-        width: 6px !important;
-        height: 6px !important;
-        background: white !important;
-        border-radius: 50% !important;
-        z-index: 10002 !important;
-        pointer-events: none !important;
-        transition: none !important;
-        margin-left: -3px !important;
-        margin-top: -3px !important;
-      }
-
-      .cursor-circle {
-        position: fixed !important;
-        width: 40px !important;
-        height: 40px !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        border-radius: 50% !important;
-        z-index: 10002 !important;
-        pointer-events: none !important;
-        transition-property: width, height, background-color, border-color !important;
-        transition-duration: 0.3s !important;
-        transition-timing-function: ease !important;
-        margin-left: -20px !important;
-        margin-top: -20px !important;
-      }
-
-      .cursor-circle.hovered {
-        width: 80px !important;
-        height: 80px !important;
-        margin-left: -40px !important;
-        margin-top: -40px !important;
-        background-color: rgba(255,255,255,0.05) !important;
-        border-color: transparent !important;
-        backdrop-filter: blur(2px) !important;
-        transition-property: width, height, margin-left, margin-top, background-color, border-color !important;
-        transition-duration: 0.3s !important;
-        transition-timing-function: ease !important;
-      }
       
       /* Mobile override */
       @media (max-width: 768px) {
-        body {
-          cursor: auto !important;
-        }
         
-        * {
-          cursor: auto !important;
-        }
-        
-        .cursor-dot,
-        .cursor-circle {
-          display: none !important;
-        }
       }
     </style>
   </head>
@@ -178,26 +142,9 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <!-- ===================================
-         PRELOADER
-    =================================== -->
-    <div id="preloader">
-      <div
-        class="text-6xl font-display font-bold mb-4 tracking-tighter"
-        id="loader-text"
-      >
-        0%
-      </div>
-      <div class="loader-bar">
-        <div class="loader-progress" id="loader-progress"></div>
-      </div>
-    </div>
-
-    <!-- ===================================
          UI OVERLAYS
     =================================== -->
     <div class="noise-overlay"></div>
-    <div class="cursor-dot"></div>
-    <div class="cursor-circle"></div>
     <div
       id="progress-bar"
       class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0 transition-all duration-100 ease-linear"
@@ -211,25 +158,25 @@
     >
       <a
         href="index.html"
-        class="font-display font-bold text-xl tracking-tighter hoverable"
+        class="font-display font-bold text-xl tracking-tighter"
       >
         OCTOPOLS
       </a>
       <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
         <a
           href="index.html#work"
-          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
+          class="opacity-60 hover:opacity-100 transition-opacity"
           >WORK</a
         >
         <a
           href="index.html#projects"
-          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
+          class="opacity-60 hover:opacity-100 transition-opacity"
           >PROJECTS</a
         >
       </div>
       <a
         href="index.html"
-        class="hoverable border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+        class="border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
       >
         Back
       </a>
@@ -302,10 +249,7 @@
 
           <!-- Empty State -->
           <div id="empty-state" class="text-center py-20 hidden">
-            <i
-              data-lucide="camera-off"
-              class="w-16 h-16 mx-auto mb-4 text-neutral-600"
-            ></i>
+            <svg class="w-16 h-16 mx-auto mb-4 text-neutral-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5"/><path d="M14.121 15.121A3 3 0 1 1 9.88 10.88"/></svg>
             <p class="text-neutral-500 text-lg">
               No photos yet. Add images to assets/photography/
             </p>
@@ -316,14 +260,14 @@
 
     <!-- Photo Modal -->
     <div id="photo-modal" class="photo-modal">
-      <button class="modal-close hoverable" id="modal-close">
-        <i data-lucide="x" class="w-6 h-6"></i>
+      <button class="modal-close" id="modal-close">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
-      <button class="modal-nav modal-prev hoverable" id="modal-prev">
-        <i data-lucide="chevron-left" class="w-8 h-8"></i>
+      <button class="modal-nav modal-prev" id="modal-prev">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
       </button>
-      <button class="modal-nav modal-next hoverable" id="modal-next">
-        <i data-lucide="chevron-right" class="w-8 h-8"></i>
+      <button class="modal-nav modal-next" id="modal-next">
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
       </button>
       <div class="modal-image-container">
         <img id="modal-image" class="modal-image" src="" alt="" />
@@ -345,7 +289,7 @@
           </h2>
           <a
             href="mailto:hirnaymay@gmail.com"
-            class="text-xl md:text-3xl font-display hover:text-neutral-400 transition-colors hoverable"
+            class="text-xl md:text-3xl font-display hover:text-neutral-400 transition-colors"
           >
             hirnaymay@gmail.com
           </a>
@@ -363,22 +307,22 @@
             <nav class="space-y-2">
               <a
                 href="index.html"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >Home</a
               >
               <a
                 href="index.html#work"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >Experience</a
               >
               <a
                 href="index.html#projects"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >Projects</a
               >
               <a
                 href="photography.html"
-                class="block text-white transition-colors hoverable text-sm"
+                class="block text-white transition-colors text-sm"
                 >Photography</a
               >
             </nav>
@@ -393,26 +337,26 @@
               <a
                 href="https://linkedin.com/in/hirnaymay"
                 target="_blank"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >LinkedIn</a
               >
               <a
                 href="https://github.com/octopols"
                 target="_blank"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >GitHub</a
               >
               <a
                 href="https://octopols.medium.com"
                 target="_blank"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >Medium</a
               >
               <a
                 href="https://instagram.com/hirnaymay"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="block text-neutral-400 hover:text-white transition-colors hoverable text-sm"
+                class="block text-neutral-400 hover:text-white transition-colors text-sm"
                 >Instagram</a
               >
             </nav>
@@ -465,42 +409,6 @@
     <script>
       // Photography-specific JavaScript
       document.addEventListener("DOMContentLoaded", () => {
-        // Initialize Lucide Icons
-        lucide.createIcons();
-
-        // Custom Cursor (same as index.html)
-        const cursorDot = document.querySelector('.cursor-dot');
-        const cursorCircle = document.querySelector('.cursor-circle');
-        let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0;
-
-        // Check if mobile device
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
-
-        if (!isMobile && cursorDot && cursorCircle) {
-          document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            cursorDot.style.left = mouseX + 'px';
-            cursorDot.style.top = mouseY + 'px';
-          });
-
-          // Smooth Cursor Follow Animation
-          function animateCursor() {
-            cursorX += (mouseX - cursorX) * 0.15;
-            cursorY += (mouseY - cursorY) * 0.15;
-            cursorCircle.style.left = cursorX + 'px';
-            cursorCircle.style.top = cursorY + 'px';
-            requestAnimationFrame(animateCursor);
-          }
-          animateCursor();
-
-          // Cursor Hover Effects
-          document.querySelectorAll('.hoverable').forEach(el => {
-            el.addEventListener('mouseenter', () => cursorCircle.classList.add('hovered'));
-            el.addEventListener('mouseleave', () => cursorCircle.classList.remove('hovered'));
-          });
-        }
-
         // Photography Grid Auto-Population
         const photoGrid = document.getElementById("photo-grid");
         const emptyState = document.getElementById("empty-state");
@@ -525,7 +433,7 @@
         function createPhotoCard(photo, index) {
           const card = document.createElement("div");
           card.className =
-            "group cursor-pointer hoverable relative overflow-hidden aspect-[3/5] reveal-item fade-scale";
+            "group cursor-pointer relative overflow-hidden aspect-[3/5] reveal-item fade-scale";
           card.style.transitionDelay = `${(index % 3) * 0.1}s`;
           card.dataset.photoIndex = index;
 
@@ -593,8 +501,6 @@
             document.querySelectorAll(".reveal-item").forEach((el) => {
               observer.observe(el);
             });
-
-            lucide.createIcons();
           } catch (error) {
             console.error("Error loading photos:", error);
             emptyState.classList.remove("hidden");

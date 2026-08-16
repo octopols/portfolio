@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>envswitch — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="A zsh plugin that switches shell environments with a single command. No binaries, no hooks to approve, no .env files in your repos. Auto-loads by directory and git branch, with production held back behind a confirmation."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/projects/envswitch/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hirnaymay.com/projects/envswitch/" />
+    <meta property="og:title" content="envswitch" />
+    <meta
+      property="og:description"
+      content="Switch shell environments with a single command. Auto-loads by directory and branch. Free and open source."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #737880;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+      /* ---- nav ---- */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 28px 0;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      /* ---- hero ---- */
+      header.hero { padding: 96px 0 64px; }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(52px, 11vw, 132px);
+        line-height: 0.92;
+        letter-spacing: -0.045em;
+        font-weight: 700;
+      }
+
+      .tagline {
+        margin: 28px 0 0;
+        max-width: 34ch;
+        font-size: clamp(19px, 2.4vw, 26px);
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .meta {
+        margin-top: 36px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .meta span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+
+      .actions { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 12px; }
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 13px 26px;
+        border-radius: 999px;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        border: 1px solid var(--line);
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+      }
+      .btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+      .btn.primary { background: var(--accent); color: #0c2c1a; border-color: var(--accent); font-weight: 600; }
+      .btn.primary:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+      /* ---- sections ---- */
+      section { padding: 80px 0; border-top: 1px solid var(--line); }
+
+      .label {
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 28px;
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+
+      h2 {
+        margin: 0 0 36px;
+        font-size: clamp(30px, 4.6vw, 46px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      /* ---- terminal ---- */
+      .term {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 22px 24px;
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1.75;
+        overflow-x: auto;
+        margin: 0;
+        color: #cbd5e0;
+      }
+      .term .p { color: var(--dim); }
+      .term .ok { color: var(--accent); }
+      .term .warn { color: var(--warn); }
+      .term .cmt { color: var(--dim); }
+      .term .arrow { color: #90cdf4; }
+
+      /* ---- feature list ---- */
+      .features { display: grid; gap: 0; }
+      .feature {
+        display: grid;
+        grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+        gap: 8px 40px;
+        padding: 22px 0;
+        border-top: 1px solid var(--line);
+      }
+      .feature:last-child { border-bottom: 1px solid var(--line); }
+      .feature h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+      .feature p { margin: 0; color: var(--muted); font-size: 16px; }
+
+      /* ---- prose ---- */
+      .prose { max-width: 62ch; color: var(--muted); }
+      .prose p { margin: 0 0 18px; }
+      .prose strong { color: var(--text); font-weight: 600; }
+      .prose code { font-family: var(--mono); font-size: 0.88em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+      .prose a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(104, 211, 145, 0.35); }
+      .prose a:hover { border-bottom-color: var(--accent); }
+
+      /* ---- comparison table ---- */
+      .tablescroll { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 620px; }
+      th, td { text-align: left; padding: 13px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+      th:first-child { width: 26%; }
+      td { color: var(--muted); }
+      td.mine { color: var(--text); background: rgba(104, 211, 145, 0.04); }
+      thead th.mine { color: var(--accent); background: rgba(104, 211, 145, 0.06); }
+
+      /* ---- callout ---- */
+      .callout {
+        border: 1px solid var(--line);
+        border-left: 2px solid var(--accent);
+        border-radius: 8px;
+        padding: 20px 22px;
+        background: rgba(104, 211, 145, 0.03);
+        max-width: 62ch;
+      }
+      .callout p { margin: 0; color: var(--muted); }
+      .callout strong { color: var(--text); }
+
+      /* ---- stack ---- */
+      .stack { display: flex; flex-wrap: wrap; gap: 10px; }
+      .stack span {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      /* ---- footer ---- */
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 36px 0 56px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 720px) {
+        .feature { grid-template-columns: 1fr; gap: 4px; }
+        header.hero { padding: 64px 0 48px; }
+        section { padding: 56px 0; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/#projects">← All projects</a>
+      </nav>
+
+      <header class="hero">
+        <h1>envswitch</h1>
+        <p class="tagline">
+          Switch shell environments with a single command. No binaries, no hooks to approve, no
+          <code style="font-size: 0.8em">.env</code> files in your repos.
+        </p>
+
+        <div class="meta">
+          <span>Zsh</span>
+          <span>Shell</span>
+          <span>Developer tooling</span>
+          <span>Open source</span>
+        </div>
+
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/octopols/envswitch">View on GitHub</a>
+          <a class="btn" href="https://github.com/octopols/envswitch#install">Install</a>
+        </div>
+      </header>
+
+      <section>
+        <div class="label">[ <b>01</b> — What it does ]</div>
+        <h2>Type the environment name. That's the whole interface.</h2>
+
+        <pre class="term"><span class="p">$</span> staging
+ <span class="ok">✓</span> Loaded staging  <span class="cmt">(5 vars)</span>
+
+<span class="p">$</span> production
+ <span class="warn">!</span> Load production env? (y/n): y
+ <span class="ok">✓</span> Loaded production  <span class="cmt">(12 vars)</span>
+
+<span class="p">$</span> unsetenv
+ <span class="ok">✓</span> Cleared production environment</pre>
+
+        <p class="prose" style="margin-top: 28px">
+          Env files live in <code>~/.envs/</code>, one file per environment, outside every repository.
+          Each file automatically becomes a shell command — drop in
+          <code>production.env</code> and <code>production</code> is now a command. There is no
+          registry to update and no config to edit, because the filename is the configuration.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — The monorepo problem ]</div>
+        <h2>One repo, many services, one shell.</h2>
+
+        <div class="prose">
+          <p>
+            The problem this was actually built for: a monorepo where the environment you need depends
+            on which part of the tree you're in <em>and</em> which branch you're on. Directory alone
+            isn't enough — <code>growth/feature-x</code> and <code>payments/new-api</code> live in the
+            same checkout and want different credentials.
+          </p>
+          <p>
+            So env files carry tags in their header, and the shell resolves them on
+            <code>cd</code> and on branch switch:
+          </p>
+        </div>
+
+        <pre class="term" style="margin-top: 26px"><span class="cmt"># ~/.envs/growth_staging.env</span>
+<span class="cmt"># dir: ~/monorepo</span>
+<span class="cmt"># branch: growth/*</span>
+API_KEY=sk-staging-123</pre>
+
+        <pre class="term" style="margin-top: 14px"><span class="p">$</span> cd ~/monorepo                    <span class="cmt"># on branch growth/feature-x</span>
+ <span class="ok">✓</span> Auto-loaded growth_staging  <span class="cmt">(dir:~/monorepo, branch:growth/feature-x)</span>
+
+<span class="p">$</span> production                       <span class="cmt"># context-aware: resolves to growth_production</span>
+ <span class="arrow">›</span> Context: growth
+ <span class="ok">✓</span> Loaded growth_production  <span class="cmt">(5 vars)</span>
+
+<span class="p">$</span> git switch payments/new-api
+ <span class="ok">✓</span> Auto-loaded payments_staging  <span class="cmt">(branch:payments/new-api)</span>
+
+<span class="p">$</span> cd ~/Desktop
+ <span class="ok">✓</span> Left mapped directory, clearing payments_staging</pre>
+
+        <p class="prose" style="margin-top: 26px">
+          The last line is the one that matters most. Leaving the directory
+          <strong>unloads</strong> the environment rather than leaving it resident — so a shell that
+          has wandered out of the monorepo is not still holding credentials for it.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — The design rule ]</div>
+        <h2>Only tag your safe defaults.</h2>
+
+        <div class="callout">
+          <p>
+            <strong>Tagged environments auto-load. Production is never tagged.</strong> It is reached
+            deliberately — by name, or through context resolution — and it can be marked
+            <code style="font-family: var(--mono); font-size: 0.85em">protected</code> so loading it
+            requires a typed confirmation.
+          </p>
+        </div>
+
+        <div class="prose" style="margin-top: 28px">
+          <p>
+            This is the whole safety model, and it is deliberately not clever. Anything that can
+            happen implicitly — on a <code>cd</code>, on a branch switch, without you asking — is
+            restricted to environments where being wrong is cheap. Everything expensive requires an
+            explicit act.
+          </p>
+          <p>
+            The alternative designs all fail the same way: if production can auto-load, then some
+            sequence of <code>git switch</code> and <code>cd</code> silently arms a shell with
+            production credentials, and you will find out which sequence at the worst possible moment.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — Cost ]</div>
+        <h2>It runs on every prompt, so it has to be free.</h2>
+
+        <div class="prose">
+          <p>
+            Auto-loading means hooking directory and branch changes, which means this code runs
+            constantly. The resolution is tiered so the common cases cost nothing:
+          </p>
+        </div>
+
+        <div class="features" style="margin-top: 30px">
+          <div class="feature">
+            <h3>No directory tags</h3>
+            <p>Zero overhead. Nothing to match, nothing to check.</p>
+          </div>
+          <div class="feature">
+            <h3>Directory match, no branch tags</h3>
+            <p>Resolved without invoking git at all.</p>
+          </div>
+          <div class="feature">
+            <h3>Branch disambiguation needed</h3>
+            <p>Git is read once (~1ms), and the result is cached.</p>
+          </div>
+        </div>
+
+        <p class="prose" style="margin-top: 30px">
+          Shelling out to <code>git rev-parse</code> on every prompt is the standard way tools like
+          this become the reason your terminal feels slow. Reading git only when the answer actually
+          depends on the branch keeps it off the hot path for everyone who isn't using that feature.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — Against the alternatives ]</div>
+        <h2>Why not direnv.</h2>
+
+        <div class="tablescroll">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th class="mine">envswitch</th>
+                <th>direnv</th>
+                <th>dotenv</th>
+                <th>aws-vault</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Scope</strong></td>
+                <td class="mine">Whole shell</td>
+                <td>Per directory</td>
+                <td>Per app (runtime)</td>
+                <td>AWS creds only</td>
+              </tr>
+              <tr>
+                <td><strong>staging → prod</strong></td>
+                <td class="mine"><code style="font-family: var(--mono); font-size: 0.85em">production</code></td>
+                <td>Edit <code style="font-family: var(--mono); font-size: 0.85em">.envrc</code> + reload</td>
+                <td>Restart app</td>
+                <td><code style="font-family: var(--mono); font-size: 0.85em">aws-vault exec prod</code></td>
+              </tr>
+              <tr>
+                <td><strong>Monorepo + branches</strong></td>
+                <td class="mine">Auto-load by dir + branch pattern</td>
+                <td>One file per dir, no branch awareness</td>
+                <td>N/A</td>
+                <td>N/A</td>
+              </tr>
+              <tr>
+                <td><strong>Files in repo</strong></td>
+                <td class="mine">No — everything in <code style="font-family: var(--mono); font-size: 0.85em">~/.envs</code></td>
+                <td>Yes — <code style="font-family: var(--mono); font-size: 0.85em">.envrc</code> in each project</td>
+                <td>Yes — <code style="font-family: var(--mono); font-size: 0.85em">.env</code> in project root</td>
+                <td>No</td>
+              </tr>
+              <tr>
+                <td><strong>Install</strong></td>
+                <td class="mine">Source one file</td>
+                <td>Binary + shell hook + allow per dir</td>
+                <td>Language-specific package</td>
+                <td>Binary + keychain setup</td>
+              </tr>
+              <tr>
+                <td><strong>Prod protection</strong></td>
+                <td class="mine">Built-in confirmation</td>
+                <td>None</td>
+                <td>None</td>
+                <td>Session-based</td>
+              </tr>
+              <tr>
+                <td><strong>Config to add one</strong></td>
+                <td class="mine">None — add a file, get a command</td>
+                <td>Edit + <code style="font-family: var(--mono); font-size: 0.85em">direnv allow</code></td>
+                <td>Edit app config</td>
+                <td>Edit <code style="font-family: var(--mono); font-size: 0.85em">~/.aws/config</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="prose" style="margin-top: 30px">
+          direnv is the closest tool and it is a good one — but it is directory-scoped and
+          repo-resident by design. It answers "what does this folder need", and it puts a file in the
+          folder to say so. In a monorepo those are the two properties you don't want: one folder,
+          many answers, and no secrets checked in.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>06</b> — Built with ]</div>
+        <div class="stack">
+          <span>Zsh</span>
+          <span>~1,000 lines of shell</span>
+          <span>No runtime dependencies</span>
+          <span>No compiled binary</span>
+        </div>
+      </section>
+
+      <footer>
+        <div>envswitch — free and open source.</div>
+        <div class="links">
+          <a href="https://github.com/octopols/envswitch">Repository</a>
+          <a href="/#projects">Projects</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

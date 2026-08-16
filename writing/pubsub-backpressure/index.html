@@ -1,377 +1,534 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary Meta Tags -->
-    <title>What 38 nodes were hiding | Hirnaymay Bhaskar</title>
-    <meta
-      name="title"
-      content="What 38 nodes were hiding | Hirnaymay Bhaskar"
-    />
+    <title>What 38 nodes were hiding — Hirnaymay Bhaskar</title>
     <meta
       name="description"
-      content="A Pub/Sub delivery backlog the team had been absorbing with a 38-node scale-out, and what actually fixed it: consumer flow control, ack-deadline handling and backpressure."
+      content="A Pub/Sub backlog of 1.26M messages that a 38-node fleet had been absorbing for months. The fleet was not undersized — it was feeding the backlog. Redelivery amplification, autoscaler feedback loops, and the three changes that took worst-case delivery from 2.4 hours to 94 seconds."
     />
-    <meta
-      name="keywords"
-      content="Pub/Sub, Backpressure, Ack Deadline, Flow Control, Message Queues, Distributed Systems, Consumer Lag, Hirnaymay Bhaskar"
-    />
-    <meta name="author" content="Hirnaymay Bhaskar" />
-    <meta name="robots" content="index, follow" />
-    <link
-      rel="canonical"
-      href="https://hirnaymay.com/writing/pubsub-backpressure/"
-    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/pubsub-backpressure/" />
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article" />
-    <meta
-      property="og:url"
-      content="https://hirnaymay.com/writing/pubsub-backpressure/"
-    />
+    <meta property="og:url" content="https://hirnaymay.com/writing/pubsub-backpressure/" />
     <meta property="og:title" content="What 38 nodes were hiding" />
     <meta
       property="og:description"
-      content="A Pub/Sub delivery backlog the team had been absorbing with a 38-node scale-out, and what actually fixed it: consumer flow control, ack-deadline handling and backpressure."
+      content="A queue that grows while you add consumers is not telling you about capacity. It is telling you that some of your capacity is being spent twice."
     />
-    <meta property="og:site_name" content="Hirnaymay Bhaskar Portfolio" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="article:author" content="Hirnaymay Bhaskar" />
-    <meta property="article:section" content="Distributed Systems" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:url"
-      content="https://hirnaymay.com/writing/pubsub-backpressure/"
-    />
-    <meta name="twitter:title" content="What 38 nodes were hiding" />
-    <meta
-      name="twitter:description"
-      content="A Pub/Sub delivery backlog the team had been absorbing with a 38-node scale-out, and what actually fixed it: consumer flow control, ack-deadline handling and backpressure."
-    />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:creator" content="@octopols" />
 
-    <!-- Favicons -->
     <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
-    <link rel="apple-touch-icon" href="/assets/logos/favicon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#050505" />
 
-    <!-- Performance: DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
-    <link rel="dns-prefetch" href="https://unpkg.com" />
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
-    <link rel="preconnect" href="https://unpkg.com" crossorigin />
-
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="/css/styles.css" as="style" />
-
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        "headline": "What 38 nodes were hiding",
-        "description": "A Pub/Sub delivery backlog the team had been absorbing with a 38-node scale-out, and what actually fixed it: consumer flow control, ack-deadline handling and backpressure.",
-        "url": "https://hirnaymay.com/writing/pubsub-backpressure/",
-        "author": {
-          "@type": "Person",
-          "name": "Hirnaymay Bhaskar",
-          "url": "https://hirnaymay.com"
-        },
-        "publisher": {
-          "@type": "Person",
-          "name": "Hirnaymay Bhaskar"
-        },
-        "articleSection": "Distributed Systems",
-        "keywords": [
-          "Pub/Sub",
-          "Backpressure",
-          "Ack Deadline",
-          "Flow Control",
-          "Distributed Systems"
-        ]
-      }
-    </script>
-
-    <!-- Dependencies -->
-    <script>
-      window.process = { env: { NODE_ENV: "production" } };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pinned: see index.html — lucide 1.x dropped brand icons. -->
-    <script src="https://unpkg.com/lucide@1.28.0/dist/umd/lucide.min.js"></script>
-
-    <!-- External Styles -->
-    <link rel="stylesheet" href="/css/styles.css" />
-
     <style>
-      /* Animation CSS inline with !important to override Tailwind preflight */
-      .reveal-item {
-        opacity: 0 !important;
-        transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1) !important;
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       }
 
-      .reveal-item.fade-up {
-        transform: translateY(60px) !important;
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      section { padding: 56px 0 0; }
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+
+      pre {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+        color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
+      }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+      .tok-c { color: #6b7178; }
+      .tok-k { color: #b794f4; }
+      .tok-s { color: #f6ad55; }
+
+      blockquote {
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; }
+      td strong { color: var(--text); }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      /* ============ shared figure chrome ============ */
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* ============ amplification bars ============ */
+      .amp { min-width: 520px; }
+      .amp-row { display: grid; grid-template-columns: 96px 1fr 116px; gap: 14px; align-items: center; margin-bottom: 9px; }
+      .amp-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
+      .amp-track { display: flex; height: 26px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+      .amp-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; white-space: nowrap; }
+      .amp-seg.useful { background: rgba(104,211,145,.28); color: #b9e6cb; }
+      .amp-seg.dup { background: rgba(252,129,129,.22); color: #ffc9c9; border-left: 1px solid rgba(252,129,129,.4); }
+      .amp-val { font-size: 12.5px; color: #c8cdd4; font-family: var(--mono); }
+      .amp-legend { display: flex; gap: 20px; font-size: 11.5px; color: var(--dim); margin-top: 12px; }
+      .amp-legend span { display: flex; align-items: center; gap: 7px; }
+      .amp-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+      /* ============ feedback loop ============ */
+      .loop { min-width: 540px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; align-items: stretch; }
+      .loop-node {
+        border: 1px solid var(--line); border-radius: 9px; padding: 14px 12px; background: var(--panel);
+        text-align: center; position: relative;
+      }
+      .loop-node .ln-n { font-size: 10px; font-family: var(--mono); color: var(--dim); margin-bottom: 7px; }
+      .loop-node .ln-t { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+      .loop-node.bad { border-color: rgba(252,129,129,.35); background: rgba(252,129,129,.05); }
+      .loop-node.bad .ln-t { color: #ffc9c9; }
+      .loop-arrow { display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 15px; font-family: var(--mono); padding: 0 6px; }
+      .loop-back {
+        margin-top: 10px; border-top: 1px dashed rgba(252,129,129,.4); position: relative;
+        height: 26px; min-width: 540px;
+      }
+      .loop-back span {
+        position: absolute; left: 50%; transform: translateX(-50%); top: 6px;
+        font-size: 11.5px; color: var(--bad); background: var(--bg); padding: 0 10px;
       }
 
-      .reveal-item.fade-up.active {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
+      /* ============ lease timeline ============ */
+      .lease { min-width: 560px; }
+      .lease-row { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: center; margin-bottom: 14px; }
+      .lease-name { font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.35; }
+      .lease-track { position: relative; height: 30px; border-radius: 4px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+      .lease-span { position: absolute; top: 4px; height: 20px; border-radius: 3px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; white-space: nowrap; }
+      .lease-span.work { background: rgba(104,211,145,.22); color: #b9e6cb; border: 1px solid rgba(104,211,145,.35); }
+      .lease-span.over { background: rgba(252,129,129,.2); color: #ffc9c9; border: 1px solid rgba(252,129,129,.4); }
+      .lease-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--warn); }
+      .lease-mark span { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--warn); white-space: nowrap; font-family: var(--mono); }
+
+      /* ============ outcome ============ */
+      .outcome { border: 1px solid var(--line); border-radius: 12px; padding: 28px 26px; background: rgba(104,211,145,.03); margin: 8px 0 0; }
+      .outcome-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+      .oc-k { font-size: 10.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); margin-bottom: 9px; }
+      .oc-v { font-size: clamp(19px, 2.6vw, 25px); font-weight: 700; letter-spacing: -.02em; color: var(--accent); line-height: 1.15; }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+        .outcome-grid { grid-template-columns: 1fr; gap: 20px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
       }
     </style>
   </head>
 
-  <body class="antialiased selection:bg-white selection:text-black">
-    <!-- ===================================
-         ACCESSIBILITY: SKIP LINKS
-    =================================== -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/writing/">← All writing</a>
+      </nav>
 
-    <!-- ===================================
-         UI OVERLAYS
-    =================================== -->
-    <div class="noise-overlay"></div>
-    <div class="cursor-dot"></div>
-    <div class="cursor-circle"></div>
-    <div
-      id="reading-progress"
-      class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0"
-      aria-hidden="true"
-    ></div>
+      <header class="hero">
+        <div class="kicker">Distributed systems · Field notes</div>
+        <h1>What 38 nodes were hiding</h1>
+        <p class="standfirst">
+          Two subscriptions carrying 1.26M messages of backlog, a worst-case delivery delay of 2.4
+          hours, and a fleet that had been sized to absorb it. The fleet was not undersized. It was
+          feeding the backlog.
+        </p>
+      </header>
 
-    <!-- ===================================
-         NAVIGATION
-    =================================== -->
-    <nav
-      class="fixed w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference text-white"
-    >
-      <a
-        href="/"
-        class="font-display font-bold text-xl tracking-tighter hoverable"
-      >
-        OCTOPOLS
-      </a>
-      <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
-        <a
-          href="/#work"
-          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
-          >WORK</a
-        >
-        <a
-          href="/#projects"
-          class="hoverable opacity-60 hover:opacity-100 transition-opacity"
-          >PROJECTS</a
-        >
-      </div>
-      <a
-        href="/writing/"
-        class="hoverable border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-      >
-        Writing
-      </a>
-    </nav>
+      <section>
+        <div class="label">[ <b>01</b> — The symptom ]</div>
+        <h2>A queue that would not drain, and a fleet that would not shrink</h2>
+        <p>
+          Two Pub/Sub subscriptions on the delivery path. Combined backlog sat at
+          <strong>1.26M messages</strong>. Worst-case delivery delay — the age of the oldest unacked
+          message — reached <strong>2.4 hours</strong>.
+        </p>
+        <p>
+          The response, over time, had been consumers. The fleet had grown to
+          <strong>38 nodes</strong>, autoscaled on backlog depth, and it frequently never scaled back
+          down. That last detail is the interesting one, and it took me a while to see why.
+        </p>
+        <p>
+          The system was not alerting on anything except the backlog itself. Nothing was crashing,
+          error rates were normal, and every individual node looked healthy. It read as a capacity
+          problem, and it had been treated as one for months.
+        </p>
+      </section>
 
-    <!-- ===================================
-         MAIN CONTENT WRAPPER
-    =================================== -->
-    <main id="main-content" class="main-content">
-      <article class="relative bg-[#050505]">
-        <div class="section-label">[ ARTICLE ]</div>
+      <section>
+        <div class="label">[ <b>02</b> — The tell ]</div>
+        <h2>Throughput per node fell as nodes were added</h2>
+        <p>
+          Adding consumers did something. Each scale-out event produced a visible dip in backlog,
+          which is exactly what you would expect if the fleet were undersized — and exactly why the
+          approach kept getting repeated.
+        </p>
+        <p>
+          But the dip never held, and the number that mattered was moving the wrong way:
+          <strong>messages successfully acked per node per minute was falling</strong> as the fleet
+          grew.
+        </p>
+        <p>
+          That is not a capacity curve. A fleet that is genuinely too small shows roughly flat
+          per-node throughput as you add nodes — you get more total work done and the per-node rate
+          stays put. Per-node throughput that <em>degrades</em> with fleet size means the nodes are
+          interfering with each other, or they are doing work that does not count.
+        </p>
+        <p>They were doing work that did not count.</p>
+      </section>
 
-        <!-- ===================================
-               ARTICLE HEADER
-          =================================== -->
-        <header class="pt-40 pb-12 px-6 md:px-12">
-          <div class="max-w-3xl mx-auto">
-            <a
-              href="/writing/"
-              class="inline-flex items-center gap-2 article-meta hoverable hover:text-white transition-colors mb-8"
-            >
-              <i data-lucide="arrow-left" class="w-3 h-3"></i>
-              <span>All writing</span>
-            </a>
+      <section>
+        <div class="label">[ <b>03</b> — The mechanism ]</div>
+        <h2>Redelivery amplification</h2>
+        <p>
+          Pub/Sub is at-least-once. Every message you pull comes with an ack deadline — a lease. Ack
+          within the deadline and the message is done. Miss it, and Pub/Sub assumes the consumer died
+          and redelivers the message to someone else.
+        </p>
+        <p>
+          The client library tries to protect you from this: a lease-management thread extends the
+          deadline in the background with <code>modifyAckDeadline</code> while your handler is still
+          running. That works right up until the process has leased more messages than it can
+          actually work through — at which point messages sit in the client's internal buffer,
+          holding leases, waiting for a worker slot that is not coming fast enough.
+        </p>
 
-            <div class="flex items-center gap-3 mb-6 flex-wrap">
-              <span class="article-meta">Draft</span>
-              <span class="article-meta">·</span>
-              <span class="article-meta">Distributed Systems</span>
-              <span class="article-meta">·</span>
-              <span class="article-meta">6 min read</span>
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="lease">
+              <div class="lease-row">
+                <div class="lease-name">Handler finishes<br />inside the lease</div>
+                <div class="lease-track">
+                  <div class="lease-span work" style="left: 2%; width: 44%">process → ack</div>
+                  <div class="lease-mark" style="left: 60%"><span>deadline</span></div>
+                </div>
+              </div>
+              <div class="lease-row">
+                <div class="lease-name">Handler still<br />queued at deadline</div>
+                <div class="lease-track">
+                  <div class="lease-span over" style="left: 2%; width: 58%">buffered — waiting for a worker slot</div>
+                  <div class="lease-mark" style="left: 60%"><span>deadline</span></div>
+                  <div class="lease-span over" style="left: 62%; width: 36%">redelivered elsewhere</div>
+                </div>
+              </div>
             </div>
-
-            <h1
-              class="font-display text-4xl md:text-6xl font-bold leading-[0.95] tracking-tighter text-white"
-            >
-              What 38 nodes were hiding
-            </h1>
-
-            <p class="mt-6 text-lg md:text-xl text-neutral-400 leading-relaxed">
-              A Pub/Sub delivery backlog the team had been absorbing with
-              hardware, and what actually fixed it.
-            </p>
           </div>
-        </header>
+          <p class="cap">
+            <b>A lease you cannot service is worse than a message you never pulled.</b> The second
+            row still consumes a worker eventually — it just does so after another node has already
+            started the same work.
+          </p>
+        </div>
 
-        <!-- ===================================
-               ARTICLE BODY
-          =================================== -->
-        <div class="px-6 md:px-12 pb-24">
-          <div class="max-w-3xl mx-auto">
-            <!-- =========================================================
-                 CONTENT STUB — replace everything inside .article-prose.
-                 The elements below exist to show the available styling:
-                 h2, h3, paragraphs, lists, inline code, code blocks,
-                 blockquote and figure captions.
-            ========================================================== -->
-            <div class="article-prose reveal-item fade-up">
-              <p>
-                <em class="text-neutral-500"
-                  >Draft — the writeup below is a placeholder. The numbers in
-                  the summary box are the real ones; the prose is not written
-                  yet.</em
-                >
-              </p>
+        <p>
+          Redelivered work is indistinguishable from new work. It consumes a pull slot, a worker, a
+          database round-trip and a downstream call, and at the end of it the message may well be
+          redundant. So the useful throughput of the fleet is not the raw throughput:
+        </p>
 
-              <h2>The symptom</h2>
-              <p>
-                Placeholder. Describe what the backlog looked like from the
-                outside — the delivery delay, the alerting, and the fact that
-                the team had been scaling out to absorb it.
-              </p>
+        <pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
 
-              <h2>What the 38 nodes were actually doing</h2>
-              <p>
-                Placeholder. Explain why adding consumers appeared to help and
-                why it could not converge.
-              </p>
+        <p>
+          And here is the part that makes the scale-out futile:
+          <strong>adding nodes scales both terms</strong>. More consumers pull more messages, lease
+          more than they can finish, and miss more deadlines — in proportion. The redelivery rate is
+          roughly invariant to fleet size, because it is set by the relationship between handler
+          latency and lease capacity per process, not by how many processes there are.
+        </p>
 
-              <h3>Ack deadlines</h3>
-              <p>
-                Placeholder. Inline code renders like
-                <code>ackDeadlineSeconds</code> and
-                <code>maxOutstandingMessages</code>.
-              </p>
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="amp">
+              <div class="amp-row">
+                <div class="amp-key">10 nodes</div>
+                <div class="amp-track" style="width: 26%">
+                  <div class="amp-seg useful" style="width: 55%"></div>
+                  <div class="amp-seg dup" style="width: 45%"></div>
+                </div>
+                <div class="amp-val">1.0× useful</div>
+              </div>
+              <div class="amp-row">
+                <div class="amp-key">20 nodes</div>
+                <div class="amp-track" style="width: 52%">
+                  <div class="amp-seg useful" style="width: 55%"></div>
+                  <div class="amp-seg dup" style="width: 45%"></div>
+                </div>
+                <div class="amp-val">2.0× useful</div>
+              </div>
+              <div class="amp-row">
+                <div class="amp-key">38 nodes</div>
+                <div class="amp-track" style="width: 100%">
+                  <div class="amp-seg useful" style="width: 55%">useful</div>
+                  <div class="amp-seg dup" style="width: 45%">duplicate</div>
+                </div>
+                <div class="amp-val">3.8× useful</div>
+              </div>
+            </div>
+          </div>
+          <div class="amp-legend">
+            <span><i class="amp-swatch" style="background: rgba(104,211,145,.5)"></i> work that acks</span>
+            <span><i class="amp-swatch" style="background: rgba(252,129,129,.45)"></i> work that is redelivered and repeated</span>
+          </div>
+          <p class="cap">
+            <b>The ratio never improves.</b> You are buying capacity and duplicate work in a fixed
+            proportion. Tripling the fleet triples both — which is why the backlog kept re-converging
+            after every scale-out.
+          </p>
+        </div>
+      </section>
 
-              <pre><code><span class="tok-c">// Placeholder — replace with the real consumer configuration.</span>
+      <section>
+        <div class="label">[ <b>04</b> — Why it never scaled down ]</div>
+        <h2>The autoscaler was closing the loop</h2>
+        <p>
+          The fleet scaled on <code>num_undelivered_messages</code> — backlog depth. That metric is
+          the standard choice and it is fine when the backlog is exogenous. Here it was not.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="loop">
+              <div class="loop-node">
+                <div class="ln-n">01</div>
+                <div class="ln-t">Backlog rises</div>
+              </div>
+              <div class="loop-arrow">→</div>
+              <div class="loop-node">
+                <div class="ln-n">02</div>
+                <div class="ln-t">Autoscaler adds consumers</div>
+              </div>
+              <div class="loop-arrow">→</div>
+              <div class="loop-node bad">
+                <div class="ln-n">03</div>
+                <div class="ln-t">More leases than can be serviced</div>
+              </div>
+              <div class="loop-arrow">→</div>
+              <div class="loop-node bad">
+                <div class="ln-n">04</div>
+                <div class="ln-t">Deadlines missed, messages redelivered</div>
+              </div>
+            </div>
+            <div class="loop-back"><span>↑ redelivered messages re-enter the backlog the autoscaler is reading</span></div>
+          </div>
+          <p class="cap">
+            <b>The 38 nodes were not responding to load. They were responding to themselves.</b>
+            Every node added made the signal it was scaling on slightly worse, which is why the fleet
+            ratcheted up and stayed there.
+          </p>
+        </div>
+
+        <div class="callout">
+          <span class="tag">Worth knowing</span>
+          <p>
+            <code>num_undelivered_messages</code> counts redeliveries. <code>oldest_unacked_message_age</code>
+            is the better autoscaling signal for exactly this reason — it tracks whether you are
+            actually falling behind, not how much traffic is circulating. A control loop whose input
+            is polluted by its own output is not a control loop.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — The fix ]</div>
+        <h2>Three changes, all of them about admitting less work</h2>
+        <p>
+          None of this was solved by making the handler faster. It was solved by making each process
+          honest about how much work it could hold.
+        </p>
+
+        <h3>1. Flow control sized to what one process can finish</h3>
+        <p>
+          <code>maxOutstandingMessages</code> and <code>maxOutstandingBytes</code> cap how much the
+          client leases at once. The defaults are generous — they assume your handler is fast. Sized
+          correctly, they mean a process never holds a lease it cannot service inside the deadline.
+        </p>
+        <p>
+          <code>allowExcessMessages: false</code> matters here. Left at the default, the client will
+          accept a delivery that pushes it past the limit rather than deferring it, which quietly
+          reintroduces the problem you just configured away.
+        </p>
+
+        <h3>2. An ack deadline derived from measured latency</h3>
+        <p>
+          The deadline should come from the handler's actual p99, with headroom — not from a default,
+          and not from a guess. Too short and you manufacture redeliveries for work that was going to
+          succeed. Too long and genuine failures sit undetected for the full deadline before anyone
+          retries them.
+        </p>
+
+        <h3>3. Backpressure from the real bottleneck</h3>
+        <p>
+          The constraint was never the puller. It was what the handler called downstream. Without a
+          bound on in-flight handler work, the puller cheerfully accepts messages the downstream
+          cannot absorb, and the lease clock starts on all of them at once.
+        </p>
+        <p>
+          Bounding concurrency inside the handler lets the slowest dependency set the pace of the
+          whole consumer. The queue is then allowed to do the job a queue is for — holding work — with
+          the depth of it as a signal rather than a symptom.
+        </p>
+
+        <pre><code><span class="tok-c">// Lease only what this process can finish inside the deadline.</span>
 <span class="tok-k">const</span> subscription = pubsub.subscription(name, {
   flowControl: {
-    maxOutstandingMessages: <span class="tok-s">1000</span>,
-    maxOutstandingBytes: <span class="tok-s">100</span> * <span class="tok-s">1024</span> * <span class="tok-s">1024</span>,
-    allowExcessMessages: <span class="tok-s">false</span>,
+    maxOutstandingMessages: <span class="tok-c">/* sized from p99 handler latency × worker count */</span>,
+    maxOutstandingBytes:    <span class="tok-c">/* sized from payload profile, not left at default */</span>,
+    allowExcessMessages:    <span class="tok-s">false</span>,   <span class="tok-c">// defer, don't over-accept</span>
   },
-  ackDeadline: <span class="tok-s">60</span>,
-});</code></pre>
+  ackDeadline: <span class="tok-c">/* measured p99 + headroom */</span>,
+});
 
-              <h2>The fix</h2>
-              <p>Placeholder. Walk through the three changes:</p>
-              <ul>
-                <li>Consumer flow control</li>
-                <li>Ack-deadline handling</li>
-                <li>Backpressure</li>
-              </ul>
+<span class="tok-c">// The downstream sets the pace, not the puller.</span>
+<span class="tok-k">const</span> limit = pLimit(<span class="tok-c">/* what the slowest dependency sustains */</span>);
+subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt; limit(() =&gt; handle(msg)));</code></pre>
 
-              <h2>Result</h2>
-              <p>
-                Placeholder. Close with what changed and what was retired.
-              </p>
+        <div class="callout good">
+          <span class="tag">The general shape</span>
+          <p>
+            All three changes reduce how much work the system accepts at once. None of them increase
+            how much work it can do. The throughput went up anyway — because the capacity had been
+            there the whole time, spent twice.
+          </p>
+        </div>
+      </section>
 
-              <blockquote>
-                Placeholder for a pull-quote or a caveat worth calling out.
-              </blockquote>
+      <section>
+        <div class="label">[ <b>06</b> — Result ]</div>
+        <h2>The scale-out came off</h2>
+
+        <div class="outcome">
+          <div class="outcome-grid">
+            <div>
+              <div class="oc-k">Combined backlog</div>
+              <div class="oc-v">1.26M → &lt;4K</div>
             </div>
-
-            <!-- ===================================
-                   RESULT SUMMARY
-              =================================== -->
-            <div
-              class="mt-16 border border-white/10 bg-white/5 rounded-lg p-6 md:p-8 reveal-item fade-up"
-            >
-              <h2
-                class="text-xs uppercase tracking-widest text-neutral-500 mb-6"
-              >
-                Outcome
-              </h2>
-              <dl class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <dt class="article-meta mb-2">Delivery delay</dt>
-                  <dd class="font-display text-2xl font-bold text-white">
-                    2.4 h → 94 s
-                  </dd>
-                </div>
-                <div>
-                  <dt class="article-meta mb-2">Steady-state backlog</dt>
-                  <dd class="font-display text-2xl font-bold text-white">
-                    236K → ~100
-                  </dd>
-                </div>
-                <div>
-                  <dt class="article-meta mb-2">Nodes retired</dt>
-                  <dd class="font-display text-2xl font-bold text-white">
-                    38 → 0
-                  </dd>
-                </div>
-              </dl>
+            <div>
+              <div class="oc-k">Worst-case delay</div>
+              <div class="oc-v">2.4 h → 94 s</div>
             </div>
-
-            <!-- ===================================
-                   FOOTER NAV
-              =================================== -->
-            <div class="mt-16 pt-8 border-t border-white/10">
-              <a
-                href="/writing/"
-                class="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors hoverable"
-              >
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                <span>All writing</span>
-              </a>
+            <div>
+              <div class="oc-k">Fleet</div>
+              <div class="oc-v">38 → 0 extra nodes</div>
             </div>
           </div>
         </div>
-      </article>
-    </main>
 
-    <!-- ===================================
-         FOOTER
-    =================================== -->
-    <footer class="bg-black text-white border-t border-white/5">
-      <div
-        class="max-w-3xl mx-auto px-6 md:px-12 py-12 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
-      >
-        <div>
-          <span class="font-display font-bold text-white mr-4"
-            >HIRNAYMAY BHASKAR</span
-          >
-          © <span id="footer-year">2026</span> All rights reserved.
-        </div>
-        <div class="flex gap-4">
-          <a
-            href="https://github.com/octopols"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-white transition-colors hoverable"
-            >GitHub</a
-          >
-          <a
-            href="https://linkedin.com/in/hirnaymay"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-white transition-colors hoverable"
-            >LinkedIn</a
-          >
-          <a
-            href="mailto:hirnaymay@gmail.com"
-            class="hover:text-white transition-colors hoverable"
-            >Email</a
-          >
-        </div>
-      </div>
-    </footer>
+        <p style="margin-top: 28px">
+          The 38 nodes were retired. Not reduced — retired. The original fleet handled the same
+          traffic once it stopped competing with itself, which is the clearest evidence available
+          that the extra capacity had never been doing anything except generating the load that
+          justified it.
+        </p>
+      </section>
 
-    <script src="/js/writing.js"></script>
+      <section>
+        <div class="label">[ <b>07</b> — What generalises ]</div>
+        <h2>Scale-out is a valid answer to the wrong question</h2>
+        <p>
+          The uncomfortable part of this one is that adding nodes <em>worked</em>, briefly, every
+          single time. There was always a dip. The feedback was positive, immediate, and completely
+          misleading, and it is why the workaround survived long enough to become the architecture.
+        </p>
+
+        <blockquote>
+          <p>
+            A queue that grows while you add consumers is not telling you about capacity. It is
+            telling you that some of your capacity is being spent twice.
+          </p>
+        </blockquote>
+
+        <p>
+          The diagnostic that would have caught this in an afternoon is one ratio: acked messages per
+          node, plotted against fleet size. If it slopes down, stop provisioning and go find the
+          duplicate work. Total throughput hides this completely — it goes up either way.
+        </p>
+        <p>
+          Related, and the same disease in a different organ:
+          <a href="/writing/billing-unit-mismatch/" style="color: var(--accent)">how to bill AI usage</a>,
+          where the number that governed what customers were charged existed only inside a nightly
+          job that printed nothing.
+        </p>
+      </section>
+
+      <footer>
+        <div>Hirnaymay Bhaskar — backend engineer, Bengaluru.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="https://github.com/octopols">GitHub</a>
+          <a href="https://linkedin.com/in/hirnaymay">LinkedIn</a>
+        </div>
+      </footer>
+    </div>
   </body>
 </html>

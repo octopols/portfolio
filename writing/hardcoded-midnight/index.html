@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>18:30 UTC is not midnight — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="A WhatsApp credit runner had midnight hardcoded as 18:30 UTC — correct in India, wrong everywhere else — repeated across five call sites. How a constant ends up standing in for a concept, and why the duplication is the real bug."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/hardcoded-midnight/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://hirnaymay.com/writing/hardcoded-midnight/" />
+    <meta property="og:title" content="18:30 UTC is not midnight" />
+    <meta
+      property="og:description"
+      content="The constant was right once, in one place, for one market. Then it was copied."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #6b7178;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      section { padding: 56px 0 0; }
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+
+      pre {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+        color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
+      }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+      .tok-c { color: #6b7178; }
+      .tok-k { color: #b794f4; }
+      .tok-s { color: #f6ad55; }
+      .tok-bad { color: #fc8181; }
+
+      blockquote {
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; }
+      td strong { color: var(--text); }
+      td.mono { font-family: var(--mono); font-size: 13px; }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* ============ day-boundary diagram ============ */
+      .days { min-width: 580px; }
+      .day-row { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: center; margin-bottom: 12px; }
+      .day-name { font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.35; }
+      .day-track { position: relative; height: 32px; border-radius: 4px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+      .day-fill { position: absolute; top: 3px; bottom: 3px; border-radius: 3px; display: flex; align-items: center; padding: 0 9px; font-size: 11px; white-space: nowrap; }
+      .day-fill.ok { background: rgba(104,211,145,.2); color: #b9e6cb; border: 1px solid rgba(104,211,145,.35); }
+      .day-fill.gap { background: rgba(252,129,129,.18); color: #ffc9c9; border: 1px solid rgba(252,129,129,.38); }
+      .day-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--warn); }
+      .day-tick span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--warn); white-space: nowrap; font-family: var(--mono); }
+      .day-axis { position: relative; height: 24px; margin-left: 136px; }
+      .day-axis::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--line); }
+      .day-t { position: absolute; top: 6px; transform: translateX(-50%); font-size: 10px; color: var(--dim); font-family: var(--mono); }
+
+      /* ============ call sites ============ */
+      .sites { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 480px; }
+      .sites-head { background: rgba(255,255,255,.03); padding: 10px 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line); }
+      .site-row { display: grid; grid-template-columns: 220px 1fr; gap: 16px; padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13.5px; }
+      .site-row:last-child { border-bottom: 0; }
+      .site-f { font-family: var(--mono); font-size: 12.5px; color: #ffc9c9; }
+      .site-w { color: var(--dim); }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/writing/">← All writing</a>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Billing systems · Field notes</div>
+        <h1>18:30 UTC is not midnight</h1>
+        <p class="standfirst">
+          A WhatsApp credit runner had the start of the billing day hardcoded as 18:30 UTC. That is
+          exactly midnight in India and exactly wrong everywhere else — and it had been copied to five
+          call sites.
+        </p>
+      </header>
+
+      <section>
+        <div class="label">[ <b>01</b> — The constant ]</div>
+        <h2>A number that was right once, in one place</h2>
+        <p>
+          India Standard Time is UTC+5:30. Midnight in Kolkata is 18:30 UTC the previous day. If every
+          customer you have is Indian, and someone needs the start of the current billing day, then
+          <code>18:30</code> is a correct answer to the question being asked. It ships. It works. It
+          is tested against reality every day by the only market that exists.
+        </p>
+        <p>
+          Then the platform sells into markets that are not India, and the constant does not follow,
+          because a constant has no idea what it was standing in for.
+        </p>
+
+        <div class="callout">
+          <span class="tag">The specific failure</span>
+          <p>
+            The credit runner treated <code>18:30 UTC</code> as the day boundary for every account.
+            For non-IST markets the runner's day and the merchant's day were offset by the difference
+            between their local midnight and 18:30 UTC — so the window used to grant, count and reset
+            WhatsApp credits was not the window the merchant was actually being billed for. In the
+            worst-affected markets this cost up to <strong>21 of 24 billable hours</strong> per day.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — What the offset does ]</div>
+        <h2>Two days that do not line up</h2>
+        <p>
+          The mechanism is not subtle once you draw it. There is a window the system believes is
+          "today", and a window the merchant is contractually being billed for. In India they are the
+          same window. Everywhere else they slide apart by the local UTC offset, and the two shoulders
+          where they fail to overlap are where the accounting goes.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="days">
+              <div class="day-row">
+                <div class="day-name">Runner's "day"<br />(hardcoded)</div>
+                <div class="day-track">
+                  <div class="day-fill ok" style="left: 2%; right: 2%">18:30 UTC → 18:30 UTC</div>
+                  <div class="day-tick" style="left: 2%"><span>18:30 UTC</span></div>
+                </div>
+              </div>
+              <div class="day-row">
+                <div class="day-name">IST merchant<br />(UTC+5:30)</div>
+                <div class="day-track">
+                  <div class="day-fill ok" style="left: 2%; right: 2%">00:00 → 24:00 local · aligned</div>
+                </div>
+              </div>
+              <div class="day-row">
+                <div class="day-name">Non-IST merchant<br />(any other offset)</div>
+                <div class="day-track">
+                  <div class="day-fill gap" style="left: 2%; width: 34%">counted against yesterday</div>
+                  <div class="day-fill ok" style="left: 37%; width: 42%">overlap</div>
+                  <div class="day-fill gap" style="left: 80%; right: 2%">falls outside</div>
+                </div>
+              </div>
+            </div>
+            <div class="day-axis">
+              <div class="day-t" style="left: 2%">00:00</div>
+              <div class="day-t" style="left: 50%">12:00 local</div>
+              <div class="day-t" style="left: 98%">24:00</div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Only the middle band is billed correctly.</b> The two red shoulders are usage attributed
+            to the wrong day — and usage attributed to a day that has already been invoiced is usage
+            nobody ever charges for.
+          </p>
+        </div>
+
+        <p>
+          Note what this does <em>not</em> look like from the outside. Nothing errors. No request
+          fails. Credits are granted, usage is counted, invoices are generated, and every number is
+          internally consistent with every other number. The system is confidently wrong, which is the
+          only kind of wrong that survives in a billing system for any length of time.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — The real bug ]</div>
+        <h2>Five call sites, one assumption</h2>
+        <p>
+          The constant appearing once is a bug. The constant appearing five times is the thing worth
+          writing about, because it tells you the concept never had a home.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="sites">
+              <div class="sites-head">The same assumption, restated five times</div>
+              <div class="site-row">
+                <div class="site-f">grant</div>
+                <div class="site-w">Decides when a new day's credits are issued.</div>
+              </div>
+              <div class="site-row">
+                <div class="site-f">reset</div>
+                <div class="site-w">Decides when the previous day's unused allocation lapses.</div>
+              </div>
+              <div class="site-row">
+                <div class="site-f">usage window</div>
+                <div class="site-w">Decides which events count toward today's consumption.</div>
+              </div>
+              <div class="site-row">
+                <div class="site-f">threshold checks</div>
+                <div class="site-w">Decides when a merchant is warned or cut off.</div>
+              </div>
+              <div class="site-row">
+                <div class="site-f">reporting</div>
+                <div class="site-w">Decides what the merchant sees, which is how the mismatch stayed invisible.</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Five places that each need to know when the day starts.</b> Not one of them asked
+            anything; each of them decided.
+          </p>
+        </div>
+
+        <p>
+          Duplication like this is not laziness. It is what happens when there is no function to call.
+          The first engineer needed a day boundary and there wasn't one, so they wrote the number. The
+          second engineer needed a day boundary, found the number in the first place, and copied it —
+          which is the correct instinct given the options. By the fifth copy the number looks like a
+          convention, and conventions do not get questioned during code review.
+        </p>
+
+        <pre><code><span class="tok-c">// What five call sites each contained, in one shape or another:</span>
+<span class="tok-k">const</span> dayStart = startOfDayUtc().setHours(<span class="tok-bad">18</span>, <span class="tok-bad">30</span>);
+
+<span class="tok-c">// What replaced them: one function, one argument, no default.</span>
+<span class="tok-k">const</span> dayStart = billingDayStart(account.timezone, at);</code></pre>
+
+        <p>
+          The important property of the replacement is not that it handles timezones. It is that
+          <strong>it cannot be called without stating whose day you mean</strong>. There is no default
+          parameter, because a default would have been IST, and a default that is right for your
+          largest market is how you get here in the first place.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — Why nobody caught it ]</div>
+        <h2>Every test was written from inside the timezone</h2>
+        <p>
+          The tests were correct. They asserted that credits reset at midnight and that usage landed
+          in the right day, and they passed, because they ran on machines in IST against fixtures
+          authored in IST by people in IST. The assertion and the bug shared an assumption, so the
+          assertion could never fail on it.
+        </p>
+
+        <div class="callout good">
+          <span class="tag">What actually catches this</span>
+          <p>
+            Run the billing suite under at least one timezone that is not your own and not UTC — and
+            pick one with a fractional offset or a DST transition, because those break the arithmetic
+            that a whole-hour offset lets you get away with. A test that only ever runs in one
+            timezone is testing your machine, not your logic.
+          </p>
+        </div>
+
+        <p>
+          The other reason it survived: the merchants who were losing hours had no way to see it. What
+          the reporting showed was computed by the fifth call site, using the same constant as the
+          other four. The interface agreed with the runner because it was asking the runner. Nobody
+          ignored a discrepancy — the system was structurally incapable of displaying one.
+        </p>
+        <p>
+          That is the same failure I wrote about in
+          <a href="/writing/billing-unit-mismatch/" style="color: var(--accent)">how to bill AI usage</a>:
+          a value that decides what someone is charged, and no screen anywhere that shows it.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — What generalises ]</div>
+        <h2>Constants are concepts that never got named</h2>
+
+        <blockquote>
+          <p>
+            <code>18:30</code> was never a time. It was the sentence "the billing day starts at local
+            midnight, and our customers are in India" — with the second clause dropped, because at the
+            time it went without saying.
+          </p>
+        </blockquote>
+
+        <p>
+          Every literal in a codebase is a compressed assumption. Most of them are fine. The dangerous
+          ones share three properties, and this one had all three:
+        </p>
+        <ul>
+          <li>
+            <strong>It was true when written.</strong> So it has no bug history, no comment, and no
+            reason for anyone to look at it.
+          </li>
+          <li>
+            <strong>It encodes something about the business, not the machine.</strong> Buffer sizes get
+            revisited when they hurt. Market assumptions get revisited when someone notices, and
+            noticing requires already knowing.
+          </li>
+          <li>
+            <strong>It is duplicated.</strong> Which means fixing it requires finding all of it, and
+            means nobody could have changed the behaviour in one place even if they'd wanted to.
+          </li>
+        </ul>
+
+        <p>
+          The cheap version of this discipline: grep your codebase for timezone offsets and currency
+          symbols, and for each one ask whose. If the answer is "well, ours", you have found the same
+          bug at a different address.
+        </p>
+      </section>
+
+      <footer>
+        <div>Hirnaymay Bhaskar — backend engineer, Bengaluru.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="https://github.com/octopols">GitHub</a>
+          <a href="https://linkedin.com/in/hirnaymay">LinkedIn</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
