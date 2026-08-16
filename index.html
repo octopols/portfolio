@@ -18,7 +18,7 @@
     />
     <meta
       name="description"
-      content="Backend engineer owning messaging, billing and event infrastructure at BIK.AI. Distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. 2x Google Summer of Code (VLC, MuseScore)."
+      content="Backend engineer working on messaging, billing and event infrastructure — distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. Currently at BIK.AI. 2x Google Summer of Code (VLC, MuseScore)."
     />
     <meta name="author" content="Hirnaymay Bhaskar" />
     <meta name="robots" content="index, follow" />
@@ -36,7 +36,7 @@
     />
     <meta
       property="og:description"
-      content="Backend engineer owning messaging, billing and event infrastructure at BIK.AI. Distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. 2x Google Summer of Code (VLC, MuseScore)."
+      content="Backend engineer working on messaging, billing and event infrastructure — distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. Currently at BIK.AI. 2x Google Summer of Code (VLC, MuseScore)."
     />
     <meta property="og:site_name" content="Hirnaymay Bhaskar" />
     <meta property="og:locale" content="en_US" />
@@ -50,7 +50,7 @@
     />
     <meta
       name="twitter:description"
-      content="Backend engineer owning messaging, billing and event infrastructure at BIK.AI. Distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. 2x Google Summer of Code (VLC, MuseScore)."
+      content="Backend engineer working on messaging, billing and event infrastructure — distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. Currently at BIK.AI. 2x Google Summer of Code (VLC, MuseScore)."
     />
     <meta name="twitter:creator" content="@octopols" />
 
@@ -111,7 +111,6 @@
           "PostgreSQL",
           "Redis",
           "Elasticsearch",
-          "Kubernetes",
           "C++",
           "Open Source"
         ],
@@ -271,49 +270,43 @@
         </div>
 
         <div class="shell relative z-10 pt-32 pb-24">
-          <p class="eyebrow reveal">Backend engineer · Bengaluru</p>
+          <p class="eyebrow reveal">Hirnaymay Bhaskar · Backend engineer · Bengaluru</p>
 
           <h1
             class="font-display font-bold tracking-tighter leading-[0.9] mt-6 text-[clamp(2.75rem,9vw,6rem)] reveal"
             style="transition-delay: 0.05s"
           >
-            Hirnaymay Bhaskar
+            Messaging, billing and event infrastructure.
           </h1>
 
           <p
             class="mt-8 text-lg md:text-xl text-neutral-300 leading-relaxed measure reveal"
             style="transition-delay: 0.12s"
           >
-            I own messaging, billing and event infrastructure at
+            Mostly: something at scale is slow, wrong, or quietly setting money on
+            fire, and I go find out why.
+          </p>
+
+          <p
+            class="mt-6 text-sm text-dim leading-relaxed measure reveal"
+            style="transition-delay: 0.16s"
+          >
+            Currently at
             <a
               href="https://bik.ai"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-white border-b border-white/40 hover:border-white transition-colors"
-              >BIK.AI</a>, a YC + Sequoia-backed commerce platform — 2.5M messages a month for
-            50+ enterprise clients. The job, mostly: something at scale is slow,
-            wrong, or quietly setting money on fire, and I go find out why. Last
-            time it was a queue that got slower every time we added a consumer.
-            The obvious answer is usually the wrong one.
+              class="text-neutral-300 border-b border-white/25 hover:border-white hover:text-white transition-colors"
+              >BIK.AI</a>
+            (YC + Sequoia). Before that, two Google Summer of Code cycles — VideoLAN
+            and MuseScore.
           </p>
 
-          <div
-            class="mt-10 flex flex-wrap items-center gap-3 reveal"
-            style="transition-delay: 0.2s"
-          >
+          <div class="mt-10 reveal" style="transition-delay: 0.2s">
             <a
               href="/writing/pubsub-backpressure/"
-              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read: why adding consumers made the queue slower</a
-            >
-            <a
-              href="docs/hirnaymay_bhaskar_resume.pdf"
-              class="border border-white/20 px-6 py-3 rounded-full text-sm hover:bg-white/5 hover:border-white/40 transition-colors"
-              >Résumé (PDF)</a
-            >
-            <a
-              href="mailto:hirnaymay@gmail.com"
-              class="text-sm text-neutral-400 hover:text-white transition-colors px-2"
-              >hirnaymay@gmail.com</a
+              class="inline-block bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors"
+              >Read: the queue that got slower as we grew it</a
             >
           </div>
         </div>
@@ -329,47 +322,39 @@
             <p class="eyebrow">Selected work</p>
             <h2>Three problems that break in non-obvious ways</h2>
             <p class="lede measure">
-              Each of these is a general class of problem before it is anything I did.
-              I hit a fairly ugly version of all three at BIK.AI, which is where the
-              numbers come from. Short version below; each one has a full writeup.
+              Each is a general class of problem before it is anything I did. What
+              broke and what changed is below; the why is in the writeup.
             </p>
           </div>
 
           <!-- Case 01 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>01</b> — Queues &amp; throughput</p>
+              <p class="case-n"><b>01</b> — Queues &amp; throughput <span class="case-at">BIK.AI</span></p>
               <h3>When adding consumers makes a queue slower</h3>
               <p>
-                More workers should mean more throughput. We scaled the fleet to 38
-                nodes, the backlog dipped, and then it came back. Consumers were
-                leasing more than they could finish inside the ack deadline, so the
-                broker redelivered — and <strong>the autoscaler read those
-                redeliveries as demand and ordered more of the thing causing
-                them</strong>.
+                1.26M messages backed up across two Pub/Sub subscriptions. Worst case,
+                a message took 2.4 hours to arrive. The standing answer had been more
+                consumers — 38 of them, on an autoscaler that had stopped scaling back
+                down.
               </p>
-              <p>
-                Nearly 4× the consumers were returning well under 2× the useful work.
-                Rebuilding flow control and backpressure took all 38 nodes off. No
-                capacity was added — it had been there the whole time, being spent
-                twice.
-              </p>
+              <p><strong>The fleet wasn't too small. It was feeding the backlog.</strong></p>
               <a class="case-link" href="/writing/pubsub-backpressure/"
-                >The full guide: leases, flow control, backpressure, dead letters →</a
+                >Why, and how to size it properly →</a
               >
             </div>
             <dl class="rail">
               <div>
                 <dt>Worst-case delay</dt>
-                <dd>2.4 h → 94 s</dd>
+                <dd>2.4 h &rarr; 94 s</dd>
               </div>
               <div>
                 <dt>Combined backlog</dt>
-                <dd>1.26M → &lt;4K</dd>
+                <dd>1.26M &rarr; &lt;4K</dd>
               </div>
               <div>
                 <dt>Scale-out</dt>
-                <dd>38 → 0 extra</dd>
+                <dd>38 &rarr; 0 extra</dd>
               </div>
             </dl>
           </article>
@@ -377,31 +362,19 @@
           <!-- Case 02 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>02</b> — Usage billing</p>
+              <p class="case-n"><b>02</b> — Usage billing <span class="case-at">BIK.AI</span></p>
               <h3>Why usage billing fails quietly instead of loudly</h3>
               <p>
-                Usage billing has a property ordinary bugs don't: it fails without
-                erroring. Nothing 500s. Credits get granted, invoices generate, and
-                every number is internally consistent with every other number — which
-                is the only kind of wrong that survives in a billing system for long.
+                Some accounts were drawing 2&ndash;10&times; the usage they had paid
+                for. Nothing had errored. Credits were granted, invoices generated, and
+                every number agreed with every other number.
               </p>
               <p>
-                Ours was a per-operation rate typed into a free-text field on an
-                internal form. <strong>The field was labelled like a price and behaved
-                like a divisor</strong>: enter 0.1 where 1 was meant and the account
-                silently gets ten times its allocation. Nobody ever typed "give this
-                customer 10×" — they typed a price. Some accounts were drawing 2–10×
-                what they'd paid for, and no screen anywhere rendered the number that
-                decided it.
-              </p>
-              <p>
-                Two more in the same system: a 3-hour daily cutoff quietly dropping
-                12.5% of email billing revenue, and 18:30 UTC hardcoded as midnight
-                across five call sites — correct in India, wrong in every other market
-                it served.
+                <strong>A rate field was labelled like a price and behaved like a
+                divisor</strong> — and no screen anywhere rendered it.
               </p>
               <a class="case-link" href="/writing/billing-unit-mismatch/"
-                >The full guide: units, clocks, rate cards, credits →</a
+                >Units, clocks, rate cards, credits →</a
               >
               <a
                 class="case-link"
@@ -417,7 +390,7 @@
               </div>
               <div>
                 <dt>Silent overdraw</dt>
-                <dd>2–10×</dd>
+                <dd>2&ndash;10&times;</dd>
               </div>
               <div>
                 <dt>Hardcoded midnight</dt>
@@ -429,24 +402,19 @@
           <!-- Case 03 -->
           <article class="case reveal">
             <div>
-              <p class="case-n"><b>03</b> — Architecture</p>
+              <p class="case-n"><b>03</b> — Architecture <span class="case-at">BIK.AI</span></p>
               <h3>How to add a fourth channel without building a fourth pipeline</h3>
               <p>
-                Multi-channel messaging systems reliably grow one pipeline per channel.
-                Not by decision — because what differs between providers is concrete
-                and sitting in the API docs, while what they share is abstract and only
-                obvious on the third one. So the boundary gets drawn around the channel
-                instead of around the concern.
+                WhatsApp, email, RCS and SMS had grown four separate delivery
+                pipelines — four schedulers, four retry policies, four meanings of
+                "delivered". A fifth channel was quoted at the price of the fourth.
               </p>
               <p>
-                We had the four-pipeline version across WhatsApp, email, RCS and SMS,
-                and consolidated it onto shared Step Functions orchestration.
-                <strong>The proof it worked wasn't the migration — it was RCS</strong>,
-                which launched on that infrastructure needing an adapter and nothing
-                else. No scheduler, no retry policy, no status pipeline.
+                <strong>The proof the rebuild worked wasn't the migration — it was
+                RCS</strong>, which launched needing an adapter and nothing else.
               </p>
               <a class="case-link" href="/writing/one-pipeline-not-four/"
-                >The full guide, with the before/after architecture →</a
+                >Where to draw the boundary →</a
               >
             </div>
             <dl class="rail">
@@ -460,11 +428,10 @@
               </div>
               <div>
                 <dt>Delivery paths</dt>
-                <dd>4 → 1</dd>
+                <dd>4 &rarr; 1</dd>
               </div>
             </dl>
           </article>
-
         </div>
       </section>
 
@@ -475,7 +442,7 @@
       <section id="experience" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Experience</p><h2>The rest of the CV</h2></div>
+            <p class="eyebrow">Experience</p><h2>Where I've worked</h2></div>
 
           <!-- BIK.AI -->
           <div class="reveal mb-20">
@@ -506,60 +473,44 @@
               </div>
             </div>
 
-            <p class="text-neutral-400 measure leading-relaxed mb-8">
-              Same job, same team of 25 — the work that didn't get its own section above:
-            </p>
-
             <div class="rowlist">
               <div>
                 <div class="k">Shopify sync</div>
                 <div class="v">
-                  The codebase's #1 acknowledged tech debt — everyone knew, nobody wanted it.
-                  Replaced with a resumable orchestrator/executor state machine:
-                  run-scoped checkpointing, idempotent retries, paced execution under
-                  GraphQL rate limits.
-                  <strong>250+ stores, 2M+ records reprocessed, zero duplicates</strong>,
-                  all of it flag-gated behind the legacy path in case I was wrong about
-                  that.
+                  Replaced the codebase's #1 acknowledged tech debt with a resumable
+                  orchestrator/executor state machine.
+                  <strong>250+ stores, 2M+ records, zero duplicates.</strong>
                 </div>
               </div>
               <div>
                 <div class="k">Campaign analytics</div>
                 <div class="v">
-                  A 20-second page load is long enough to alt-tab and forget why you opened
-                  it. Rebuilt on a Postgres-first data layer with on-demand
-                  Elasticsearch refresh and age-tiered caching:
-                  <strong>200ms, at double the page size</strong>.
+                  Rebuilt on a Postgres-first data layer with on-demand Elasticsearch
+                  refresh and age-tiered caching.
+                  <strong>20s &rarr; 200ms, at double the page size.</strong>
                 </div>
               </div>
               <div>
                 <div class="k">External webhooks</div>
                 <div class="v">
-                  Built the system that forwards platform events to merchant endpoints. Then
-                  merchants started seeing duplicates, which traced back to
-                  ack-deadline overruns, so delivery got isolated per store on Cloud
-                  Tasks — 30s attempt timeout, three bounded retries, and a 24-hour
-                  health evaluator that cuts off any endpoint failing more than half
-                  the time. One broken endpoint stops being everyone's problem.
+                  Per-store delivery isolation on Cloud Tasks, with a health evaluator
+                  that cuts off any endpoint failing more than half the time.
                 </div>
               </div>
               <div>
                 <div class="k">Alerting platform</div>
                 <div class="v">
-                  Merchants got email, and that was it. Built multi-channel alerting with
-                  role-based routing, per-instance delivery tracking, rate limiting and
-                  an admin console.
-                  <strong>The other three engineering pods now ship every alert type on
-                  it</strong>, which was not the plan but is a good outcome.
+                  Multi-channel alerting with role-based routing.
+                  <strong>The other three engineering pods ship every alert type on
+                  it.</strong>
                 </div>
               </div>
               <div>
                 <div class="k">Operations</div>
                 <div class="v">
-                  On-call for everything above. Drove
-                  <strong>SOC 2 Type 2 and ISO 27001</strong> to certification alongside
-                  the CTO, and I am the company-wide AWS/GCP administrator with
-                  org-level IAM ownership.
+                  On-call for all of the above. Drove
+                  <strong>SOC 2 Type 2 and ISO 27001</strong> to certification;
+                  company-wide AWS/GCP administrator.
                 </div>
               </div>
             </div>
@@ -655,157 +606,11 @@
             </div>
           </div>
 
-          <div class="mt-16 pt-10 border-t border-white/5 reveal">
-            <p class="eyebrow mb-5">Stack</p>
-              <dl class="rowlist">
-                <div>
-                  <dt>Languages</dt>
-                  <dd>TypeScript · JavaScript · Python · SQL · C++/Qt</dd>
-                </div>
-                <div>
-                  <dt>Data</dt>
-                  <dd>PostgreSQL · Elasticsearch · Redis · Firestore</dd>
-                </div>
-                <div>
-                  <dt>Backend</dt>
-                  <dd>
-                    Node.js · Express · REST · GraphQL · microservices ·
-                    event-driven architecture · message queues
-                  </dd>
-                </div>
-                <div>
-                  <dt>Cloud</dt>
-                  <dd>
-                    GCP (Pub/Sub, Cloud Tasks, Cloud Functions, GKE) · AWS (Step
-                    Functions, Lambda, IAM) · Docker · CI/CD
-                  </dd>
-                </div>
-                <div>
-                  <dt>Also</dt>
-                  <dd class="text-dim">
-                    React · Redux — internal dashboards fronting the systems above.
-                  </dd>
-                </div>
-              </dl>
-          </div>
         </div>
       </section>
 
-      <!-- ============================================================
-           PROJECTS
-      ============================================================ -->
-      <section id="projects" class="py-24 md:py-32 rule">
-        <div class="shell">
-          <div class="section-head reveal">
-            <p class="eyebrow">Projects</p><h2>Open source, built for myself</h2><p class="lede measure">
-              Nobody asked for either of these. One I use daily, one my team does.
-            </p>
-          </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
-            <a
-              href="/projects/homecam-tv/"
-              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
-            >
-              <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
-                <img
-                  src="assets/projects/homecam-tv.webp"
-                  alt="HomeCam TV camera wall on a television"
-                  width="1920"
-                  height="1080"
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
-                />
-              </div>
-              <div class="p-6">
-                <p class="text-xs uppercase tracking-widest text-dim mb-3">
-                  Android TV · Kotlin · Compose
-                </p>
-                <h3 class="text-xl font-display font-bold mb-2">HomeCam TV</h3>
-                <p class="text-neutral-400 text-[15px] leading-relaxed">
-                  My CCTV recorder, on the TV, driven entirely by the remote. The hard part
-                  isn't the video — it's the d-pad. Most TV camera apps are phone apps
-                  with a TV manifest entry, so focus lands nowhere and you end up
-                  pressing right into the void.
-                </p>
-              </div>
-            </a>
 
-            <a
-              href="/projects/envswitch/"
-              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
-            >
-              <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
-                <img
-                  src="assets/projects/envswitch.svg"
-                  alt="envswitch terminal session"
-                  width="1920"
-                  height="1080"
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
-                />
-              </div>
-              <div class="p-6">
-                <p class="text-xs uppercase tracking-widest text-dim mb-3">
-                  Zsh · Shell · Dev tooling
-                </p>
-                <h3 class="text-xl font-display font-bold mb-2">envswitch</h3>
-                <p class="text-neutral-400 text-[15px] leading-relaxed">
-                  Type <code>staging</code>, get staging. No binaries, no hooks to approve, no
-                  .env files rotting in your repos. Auto-loads by directory and git
-                  branch — and never auto-loads production, because a
-                  <code>cd</code> should not be able to quietly arm your shell with
-                  prod credentials.
-                </p>
-              </div>
-            </a>
-          </div>
-
-          <div class="mt-10 pt-8 border-t border-white/5 reveal">
-            <p class="eyebrow mb-4">Earlier repositories</p>
-            <ul class="repolist">
-              <li>
-                <a
-                  href="https://github.com/octopols/Quack"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Quack</a
-                >
-                <span
-                  >Searches YouTube comments with an inverted index, because the
-                  native search doesn't exist.</span
-                >
-              </li>
-              <li>
-                <a
-                  href="https://github.com/octopols/google-trends-api-toolkit"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >google-trends-api-toolkit</a
-                >
-                <span
-                  >Python wrapper over Google Trends' undocumented endpoints, worked
-                  out by staring at network traffic until it made sense.</span
-                >
-              </li>
-              <li>
-                <a
-                  href="https://github.com/octopols/coloc_mobile"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Coloc</a
-                >
-                <span
-                  >Roommate matching via Gale-Shapley and Elo ratings. Yes,
-                  really.</span
-                >
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
 
       <!-- ============================================================
            WRITING
@@ -814,9 +619,9 @@
         <div class="shell">
           <div class="section-head reveal">
             <p class="eyebrow">Writing</p><h2>Guides</h2><p class="lede measure">
-              Five reference pieces on systems I've had to get right. Titles here;
-              the <a href="/writing/" class="text-white border-b border-white/30 hover:border-white transition-colors">writing index</a>
-              has what each one covers.
+              Five reference pieces. The
+              <a href="/writing/" class="text-white border-b border-white/30 hover:border-white transition-colors">index</a>
+              says what each one covers.
             </p>
           </div>
 
@@ -893,7 +698,118 @@
           </p>
         </div>
       </section>
+      <!-- ============================================================
+           PROJECTS
+      ============================================================ -->
+      <section id="projects" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Projects</p><h2>Open source, built for myself</h2><p class="lede measure">
+              Nobody asked for either of these. One I use daily, one my team does.
+            </p>
+          </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
+            <a
+              href="/projects/homecam-tv/"
+              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
+            >
+              <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
+                <img
+                  src="assets/projects/homecam-tv.webp"
+                  alt="HomeCam TV camera wall on a television"
+                  width="1920"
+                  height="1080"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
+                />
+              </div>
+              <div class="p-6">
+                <p class="text-xs uppercase tracking-widest text-dim mb-3">
+                  Android TV · Kotlin · Compose
+                </p>
+                <h3 class="text-xl font-display font-bold mb-2">HomeCam TV</h3>
+                <p class="text-neutral-400 text-[15px] leading-relaxed">
+                  My CCTV recorder on the TV, driven entirely by the remote. The hard
+                  part isn't the video — it's the d-pad.
+                </p>
+              </div>
+            </a>
+
+            <a
+              href="/projects/envswitch/"
+              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
+            >
+              <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
+                <img
+                  src="assets/projects/envswitch.svg"
+                  alt="envswitch terminal session"
+                  width="1920"
+                  height="1080"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
+                />
+              </div>
+              <div class="p-6">
+                <p class="text-xs uppercase tracking-widest text-dim mb-3">
+                  Zsh · Shell · Dev tooling
+                </p>
+                <h3 class="text-xl font-display font-bold mb-2">envswitch</h3>
+                <p class="text-neutral-400 text-[15px] leading-relaxed">
+                  Type <code>staging</code>, get staging. Auto-loads by directory and
+                  git branch — and never auto-loads production, because a
+                  <code>cd</code> should not quietly arm your shell with prod
+                  credentials.
+                </p>
+              </div>
+            </a>
+          </div>
+
+          <div class="mt-10 pt-8 border-t border-white/5 reveal">
+            <p class="eyebrow mb-4">Earlier repositories</p>
+            <ul class="repolist">
+              <li>
+                <a
+                  href="https://github.com/octopols/Quack"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Quack</a
+                >
+                <span
+                  >Searches YouTube comments with an inverted index, because the
+                  native search doesn't exist.</span
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/octopols/google-trends-api-toolkit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >google-trends-api-toolkit</a
+                >
+                <span
+                  >Python wrapper over Google Trends' undocumented endpoints, worked
+                  out by staring at network traffic until it made sense.</span
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/octopols/coloc_mobile"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Coloc</a
+                >
+                <span
+                  >Roommate matching via Gale-Shapley and Elo ratings. Yes,
+                  really.</span
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
       <!-- ============================================================
            ABOUT — prose, stack, photography. Last content section.
       ============================================================ -->
@@ -913,13 +829,6 @@
                   part is working out which of five plausible explanations is the
                   actual one.
                 </p>
-                <p>
-                  The bugs I've enjoyed most are the ones where the obvious answer was
-                  backwards. A queue that got worse the more consumers we threw at it.
-                  A number that decided every invoice and appeared on exactly zero
-                  screens. A timezone constant that was right in one country and wrong
-                  in every other one.
-                </p>
               </div>
 
               <blockquote class="pullquote">
@@ -928,28 +837,14 @@
 
               <div class="space-y-5 text-neutral-300 leading-relaxed measure">
                 <p>
-                  Idempotency, backpressure and blast-radius isolation have fixed more
-                  incidents for me than adding capacity ever has — partly because
-                  adding capacity is sometimes <em>how you get</em> the incident.
+                  I learned that the unflattering way. The webhook system shipped
+                  before I had thought about ack deadlines at all, and merchants found
+                  the duplicates for me — the worst possible way to find them. The
+                  per-store isolation and the health evaluator both came
+                  <em>after</em> that call, and both are things I would now build
+                  first.
                 </p>
-                <p>
-                  I learned most of that the unflattering way. The webhook system
-                  shipped before I had thought about ack deadlines at all, and
-                  merchants found the duplicates for me, which is the worst
-                  possible way to find them. The per-store isolation and the
-                  health evaluator are both things I built <em>after</em> that
-                  call, and both are things I would now build first.
-                </p>
-                <p>
-                  Before this, two Google Summer of Code cycles in C++/Qt — which is how you
-                  learn to work in a codebase far older and larger than your
-                  understanding of it, mostly by breaking it and then reading a great
-                  deal of git blame.
-                </p>
-                <p>
-                  Away from a terminal I shoot film and digital. Mostly street, mostly
-                  badly, occasionally something worth keeping.
-                </p>
+
               </div>
 
 
@@ -972,10 +867,58 @@
                   Photography →
                 </p>
               </a>
+              <p class="mt-3 text-sm text-dim leading-relaxed">
+                Film and digital. Mostly street, mostly badly, occasionally something
+                worth keeping.
+              </p>
               <p class="mt-6 text-sm text-dim leading-relaxed">
                 Bengaluru, India.<br />Open to hybrid and remote.
               </p>
             </aside>
+          </div>
+        </div>
+      </section>
+      <!-- ============================================================
+           STACK — its own block. It used to be a tail on Experience,
+           where nobody scrolled to it.
+      ============================================================ -->
+      <section id="stack" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Stack</p><h2>What I reach for</h2>
+          </div>
+          <div class="reveal">
+
+              <dl class="rowlist">
+                <div>
+                  <dt>Languages</dt>
+                  <dd>TypeScript · JavaScript · Python · SQL · C++/Qt</dd>
+                </div>
+                <div>
+                  <dt>Data</dt>
+                  <dd>PostgreSQL · Elasticsearch · Redis · Firestore</dd>
+                </div>
+                <div>
+                  <dt>Backend</dt>
+                  <dd>
+                    Node.js · Express · REST · GraphQL · microservices ·
+                    event-driven architecture · message queues
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cloud</dt>
+                  <dd>
+                    GCP (Pub/Sub, Cloud Tasks, Cloud Functions) · AWS (Step
+                    Functions, Lambda, IAM) · Docker · CI/CD
+                  </dd>
+                </div>
+                <div>
+                  <dt>Also</dt>
+                  <dd class="text-dim">
+                    React · Redux — internal dashboards fronting the systems above.
+                  </dd>
+                </div>
+              </dl>
           </div>
         </div>
       </section>
@@ -1044,6 +987,9 @@
             >Open source</a
           >
           <a href="/writing/" class="hover:text-white transition-colors">Writing</a>
+          <a href="mailto:hirnaymay@gmail.com" class="hover:text-white transition-colors"
+            >hirnaymay@gmail.com</a
+          >
           <a href="#about" class="hover:text-white transition-colors">About</a>
           <a href="photography.html" class="hover:text-white transition-colors"
             >Photography</a

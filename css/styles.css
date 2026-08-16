@@ -186,6 +186,15 @@ body {
   font-weight: 500;
 }
 
+/* Provenance credit beside the case number — the story is a class of problem,
+   the employer is just where I met it. */
+.case-at {
+  margin-left: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--secondary);
+}
+
 .case h3 {
   font-family: var(--font-display);
   font-size: clamp(1.45rem, 2.8vw, 2rem);

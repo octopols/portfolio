@@ -272,7 +272,7 @@
           contract or the customer will not believe you.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="units">
               <div class="unit-box solid">
@@ -294,11 +294,11 @@
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>Money in the middle, counts on both ends.</b> The two conversions are where every
             problem in this article lives. Both use a rate — and a rate is a number that changes.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           Store money. A currency balance stays correct when rates change, when a model gets cheaper,
@@ -325,7 +325,7 @@
           labelled like a price, and it behaved like a divisor.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="bars">
               <div class="bar-row">
@@ -345,11 +345,11 @@
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>Operations actually available on a 10,000-operation contract.</b> Nobody typed a
             number meaning "give this account ten times its allocation". They typed a price.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           The same field failed the other way for customers billed in dollars. A rate of
@@ -382,7 +382,7 @@
           because nothing downstream can reconstruct what was never recorded.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="anat">
               <div class="anat-head">Usage event · one per AI call</div>
@@ -412,11 +412,11 @@
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>The three highlighted fields are load-bearing.</b> Anything missing one cannot be
             priced — and usage that cannot be priced is revenue you never see again.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           Voice is why <code>usageType</code> has to exist from day one. A voice vendor bills per
@@ -443,7 +443,7 @@
           sets a price — there is no per-customer rate field, because that is the bug in section two.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="chain">
               <div class="chain-step hit">
@@ -469,8 +469,8 @@
               </div>
             </div>
           </div>
-          <p class="cap"><b>Resolution order.</b> Two fallbacks and a refusal.</p>
-        </div>
+          <figcaption class="cap"><b>Resolution order.</b> Two fallbacks and a refusal.</figcaption>
+        </figure>
 
         <p>
           Keep every version and the timestamp it became active. You will be asked what something
@@ -502,7 +502,7 @@ finalRateLocal = finalRate × conversionRate</code></pre>
           remainder reaches the wallet.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="wf">
               <div class="wf-bar">
@@ -512,12 +512,12 @@ finalRateLocal = finalRate × conversionRate</code></pre>
               <div class="wf-scale"><span>0</span><span>free balance exhausted →</span><span>day's total cost</span></div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>One day, one customer, one category.</b> The split is computed, not chosen:
             <code>fromFree = min(cost, balance)</code>. Voice and non-voice run separately, against
             separate balances.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           Run the waterfall independently per category. Voice and messages have different balances
@@ -539,7 +539,7 @@ finalRateLocal = finalRate × conversionRate</code></pre>
           volume by traffic and buys you nothing a daily aggregate does not.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="pipe">
               <div class="pipe-step key">
@@ -593,11 +593,11 @@ finalRateLocal = finalRate × conversionRate</code></pre>
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>Batch it.</b> Small groups with a pause between them — a nightly job that stampedes
             your datastore is a nightly outage on a schedule.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <div class="callout good">
           <span class="tag">Design for the retry</span>
@@ -736,7 +736,7 @@ finalRateLocal = finalRate × conversionRate</code></pre>
           way, when a balance has to be rendered as the count on the contract.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="bars">
               <div class="bar-row">
@@ -761,11 +761,11 @@ finalRateLocal = finalRate × conversionRate</code></pre>
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>The same untouched balance, four exchange rates.</b> Nothing was spent between these
             rows. A customer sold 50,000 operations watches the number fall through the month.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           The billing stays correct throughout. The <em>display</em> cannot be, because the contract
@@ -793,7 +793,7 @@ finalRateLocal = finalRate × conversionRate</code></pre>
           disagreement is the finding.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="bars">
               <div class="bar-row">
@@ -813,12 +813,12 @@ finalRateLocal = finalRate × conversionRate</code></pre>
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>Give the third bar a name and a column.</b> Usage that arrived without the fields
             needed to price it is revenue leaving quietly. It should be as visible as the revenue
             that arrived.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           Every metric we exposed generated questions. Why is that account's voice spend triple last

@@ -282,7 +282,7 @@
           </li>
         </ul>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
               <svg
                 class="arch-svg"
@@ -419,13 +419,13 @@
                 </text>
               </svg>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>Four per-channel pipelines collapse into one orchestration plus a thin
             adapter per channel.</b> The dashed RCS row is the whole argument: on the
             left, a fourth channel means building schedule, retry and status a fourth
             time. On the right it means writing an adapter.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
       </section>
 
       <section id="boundary">
@@ -438,7 +438,7 @@
           <em>talking to one specific provider</em>?
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="split">
               <div class="split-col core">
@@ -468,12 +468,12 @@
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>The left column is the system. The right column is a translation layer.</b>
             Almost every mistake in this design is something from the left column
             leaking into the right — where it immediately becomes four things again.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           Notice what is <em>not</em> in the right-hand column. Retry is not there.

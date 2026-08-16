@@ -161,7 +161,11 @@
       .amp { min-width: 520px; }
       .amp-row { display: grid; grid-template-columns: 96px 1fr 116px; gap: 14px; align-items: center; margin-bottom: 9px; }
       .amp-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
-      .amp-track { display: flex; height: 26px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+      .amp-track { position: relative; display: flex; height: 26px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+      .amp-arrival { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px dashed rgba(246,224,94,.8); z-index: 2; }
+      .amp-axis { display: grid; grid-template-columns: 96px 1fr 116px; gap: 14px; }
+      .amp-axis-in { position: relative; height: 15px; }
+      .amp-axis-in span { position: absolute; transform: translateX(-50%); font-size: 10.5px; color: var(--warn); white-space: nowrap; }
       .amp-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; white-space: nowrap; }
       .amp-seg.useful { background: rgba(104,211,145,.28); color: #b9e6cb; }
       .amp-seg.dup { background: rgba(252,129,129,.22); color: #ffc9c9; border-left: 1px solid rgba(252,129,129,.4); }
@@ -282,7 +286,7 @@
           can burn its entire lease without your code ever seeing it.
         </p>
 
-        <div class="fig">
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="lease">
               <div class="lease-row">
@@ -302,12 +306,12 @@
               </div>
             </div>
           </div>
-          <p class="cap">
+          <figcaption class="cap">
             <b>A lease you cannot service is worse than a message you never pulled.</b>
             The second row still consumes a worker eventually — just after another
             consumer has already started the same work.
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <p>
           So derive the deadline from measurement, not taste. Take the p99 of your
@@ -406,71 +410,101 @@ subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt;
           throughput you are paying for:
         </p>
 
-        <pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
+        <pre><code>useful_throughput = completed_work / (1 + redelivery_rate)</code></pre>
 
         <p>
           Be precise about what this does and does not explain, because the obvious
-          reading is wrong. If the redelivery rate <code>r</code> were a constant — a
-          fixed tax per message, independent of fleet size — then useful throughput
-          would be <code>n · k / (1 + r)</code>, which still grows linearly in
-          <code>n</code>. <strong>A constant redelivery rate is not futility. It is a
-          discount.</strong> Scale-out would be wasteful, and it would still work.
+          reading of that formula is wrong. Read <code>completed_work</code> as
+          <code>n · k</code> — nodes times per-node rate — and the whole argument
+          collapses. Even with a redelivery rate <code>r</code> that climbs with
+          <code>n</code>, <code>n · k / (1 + r)</code> keeps rising as long as
+          <code>n</code> rises faster than <code>1 + r</code>. <strong>That is
+          diminishing returns, not regression.</strong> Scale-out would be wasteful and
+          it would still drain the queue. Nobody should call that "worse."
         </p>
         <p>
-          The failure case is when <code>r</code> rises with <code>n</code>, and in a
-          microservice system there is an obvious reason it would: every consumer calls
-          the same downstream. Add consumers, concurrency against that shared dependency
-          rises, its latency rises with it, and handler time rises in turn. Handler time
-          is exactly what the ack deadline is racing. <strong>Each node you add pushes a
-          few more messages on every other node past their deadline.</strong>
+          The reason it genuinely gets worse is the premise from the previous section:
+          <strong>your consumer is a thin thing in front of a shared downstream, and
+          that downstream has a finite capacity <code>C</code></strong>. Once the fleet
+          is big enough to saturate it, <code>C</code> — not <code>n · k</code> — is
+          what completes work. The numerator stops growing. Adding nodes cannot move it.
+        </p>
+        <p>
+          What adding nodes <em>can</em> still do is raise concurrency against that
+          dependency. Latency rises, handler time rises with it, and handler time is
+          exactly what the ack deadline is racing. Messages start crossing it, the
+          broker redelivers, and those redeliveries are served out of the same fixed
+          <code>C</code>. So the ceiling holds still while a larger and larger share of
+          it is spent doing work that has already been done:
         </p>
 
-        <div class="fig">
+        <pre><code>useful_throughput = C / (1 + r(n))     — C fixed, r rising</code></pre>
+
+        <p>
+          <strong>That expression falls monotonically in <code>n</code>.</strong> Every
+          node you add past saturation buys nothing and costs first-pass throughput. Add
+          enough of them and useful throughput drops below the arrival rate, at which
+          point the backlog is growing on more hardware than it was draining on. That is
+          the version of this that deserves the word "worse", and it is the version we
+          hit.
+        </p>
+
+        <figure class="fig">
           <div class="fig-scroll">
             <div class="amp">
               <div class="amp-row">
                 <div class="amp-key">10 nodes</div>
-                <div class="amp-track" style="width: 26%">
-                  <div class="amp-seg useful" style="width: 70%"></div>
-                  <div class="amp-seg dup" style="width: 30%"></div>
+                <div class="amp-track">
+                  <div class="amp-seg useful" style="width: 78%">first pass</div>
+                  <div class="amp-seg dup" style="width: 22%"></div>
+                  <div class="amp-arrival" style="left: 60%"></div>
                 </div>
-                <div class="amp-val">1.0× useful</div>
+                <div class="amp-val">1.00× · draining</div>
               </div>
               <div class="amp-row">
                 <div class="amp-key">20 nodes</div>
-                <div class="amp-track" style="width: 53%">
-                  <div class="amp-seg useful" style="width: 52%"></div>
-                  <div class="amp-seg dup" style="width: 48%"></div>
+                <div class="amp-track">
+                  <div class="amp-seg useful" style="width: 55%"></div>
+                  <div class="amp-seg dup" style="width: 45%"></div>
+                  <div class="amp-arrival" style="left: 60%"></div>
                 </div>
-                <div class="amp-val">1.5× useful</div>
+                <div class="amp-val">0.71× · growing</div>
               </div>
               <div class="amp-row">
                 <div class="amp-key">38 nodes</div>
-                <div class="amp-track" style="width: 100%">
-                  <div class="amp-seg useful" style="width: 34%">useful</div>
-                  <div class="amp-seg dup" style="width: 66%">duplicate</div>
+                <div class="amp-track">
+                  <div class="amp-seg useful" style="width: 34%"></div>
+                  <div class="amp-seg dup" style="width: 66%">redelivered</div>
+                  <div class="amp-arrival" style="left: 60%"></div>
                 </div>
-                <div class="amp-val">1.9× useful</div>
+                <div class="amp-val">0.44× · growing</div>
+              </div>
+              <div class="amp-axis">
+                <div></div>
+                <div class="amp-axis-in"><span style="left: 60%">↑ arrival rate</span></div>
+                <div></div>
               </div>
             </div>
           </div>
           <div class="amp-legend">
-            <span><i class="amp-swatch" style="background: rgba(104,211,145,.5)"></i> work that acks</span>
-            <span><i class="amp-swatch" style="background: rgba(252,129,129,.45)"></i> work that is redelivered and repeated</span>
+            <span><i class="amp-swatch" style="background: rgba(104,211,145,.5)"></i> first-pass work that acks</span>
+            <span><i class="amp-swatch" style="background: rgba(252,129,129,.45)"></i> capacity spent re-doing work</span>
           </div>
-          <p class="cap">
-            <b>Bar length is raw throughput; only the green part is progress.</b> Nearly
-            four times the fleet buys under twice the useful work once the duplicate
-            share grows with the fleet. Had <code>r</code> held at its 10-node value, 38
-            nodes would have returned 3.8×.
-            <em>Illustrative shape, not measured data.</em>
-          </p>
-        </div>
+          <figcaption class="cap">
+            <b>Every bar is the same length, because every bar is the same
+            downstream.</b> That is the whole point: past saturation the fleet cannot
+            widen the bar, only change how it is divided. Cross the arrival line and the
+            backlog stops draining and starts growing — on nearly four times the
+            hardware. <em>Illustrative shape, not measured data.</em>
+          </figcaption>
+        </figure>
 
         <h3>The diagnostic</h3>
         <p>
-          One ratio separates the two cases, and total throughput hides it completely,
-          because total throughput goes up either way:
+          One ratio separates the two cases, and the dashboard everyone watches hides it
+          completely. Messages processed per minute keeps climbing as you add nodes —
+          the fleet really is pulling and handling more — because that number counts
+          the repeats too:
         </p>
 
         <div class="callout good">
