@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import shutil; print\\('chrome:', shutil.which\\('google-chrome'\\) or shutil.which\\('chromium'\\) or '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'\\)\")"
     ]
   }
 }
