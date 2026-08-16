@@ -1,114 +1,91 @@
-# Portfolio
+# hirnaymay.com
 
-Professional portfolio website showcasing software engineering experience, open-source contributions, and technical projects.
+Source for my portfolio. Static HTML, no framework, no client-side router.
 
-## Overview
+**Live**: [hirnaymay.com](https://hirnaymay.com)
 
-A modern, high-performance portfolio built with vanilla JavaScript and advanced CSS animations. Features comprehensive SEO optimization, accessibility compliance, and production-ready security configurations.
+## What's here
 
-**Live Site**: [hirnaymay.com](https://hirnaymay.com)
+| Path | What it is |
+| --- | --- |
+| `index.html` | Home. Three case studies, the CV, projects, writing index, about, contact. |
+| `writing/index.html` | Writing index. |
+| `writing/<slug>/index.html` | One long-form piece each. Self-contained: own `<style>`, no shared CSS. |
+| `projects/<slug>/index.html` | One project page each. Same self-contained pattern. |
+| `photography.html` | Gallery, driven by `assets/photography/manifest.json`. |
+| `css/styles.css` | Type scale, section chrome, article cards, lightbox, nav. Hand-written. |
+| `css/tailwind.css` | **Build output — do not edit.** See below. |
+| `js/nav.js` | Mobile nav panel. Loaded by every page. |
+| `js/main.js` | Home + photography: scroll progress, reveal-on-scroll, footer year. |
+| `js/writing.js` | Writing pages: reading progress, reveals. |
 
-## Features
+Home, the writing index and photography share `css/styles.css` and Tailwind
+utilities. Article and project pages are deliberately standalone — each one
+carries its own CSS so a page can be rewritten without regression-testing the
+rest of the site.
 
-- Custom cursor with hover interactions
-- Percentage-based preloader animation
-- Intersection Observer scroll reveals
-- Horizontal scroll sections
-- Multi-layer parallax effects
-- 3D mouse-tracking card interactions
-- Canvas-based particle network
-- Full-screen animated navigation
-- Photography showcase page
+## Build
 
-## Technical Stack
-
-- HTML5
-- CSS3 (Custom Properties, Grid, Flexbox)
-- Vanilla JavaScript
-- Tailwind CSS
-- Lucide Icons
-
-## Project Structure
-
-```
-portfolio/
-├── index.html           # Main portfolio page
-├── photography.html     # Photography showcase
-├── css/
-│   └── styles.css      # Styles and animations
-├── js/
-│   └── main.js         # Interactive functionality
-├── assets/
-│   ├── images/         # Image assets
-│   ├── logos/          # Logo files
-│   ├── photography/    # Photography collection
-│   └── projects/       # Project screenshots
-├── docs/               # Documentation and resources
-└── .github/
-    └── workflows/
-        └── deploy.yml  # Automated deployment
-```
-
-## Local Development
+Tailwind is compiled to a static stylesheet. The site previously loaded the
+Play CDN from `<head>`, which is ~120KB gzipped of JavaScript that has to
+execute and generate the stylesheet before the first styled paint — Tailwind
+documents that build as development-only.
 
 ```bash
-git clone https://github.com/octopols/portfolio.git
-cd portfolio
+npm install
+npm run build:css     # css/tailwind.src.css -> css/tailwind.css (~4KB gzipped)
+```
+
+Run it after adding or changing a utility class in `index.html`,
+`photography.html` or `writing/index.html`. CI runs the same command on every
+deploy, so a forgotten local rebuild can't ship stale CSS.
+
+## Local development
+
+```bash
 python3 -m http.server 8000
 ```
 
-Visit `http://localhost:8000` in your browser.
+Then open `http://localhost:8000`. Root-absolute paths (`/writing/`,
+`/css/tailwind.css`) mean you have to serve the directory — opening
+`index.html` off the filesystem will not resolve them.
+
+## Photography
+
+`assets/photography/manifest.json` is generated, not hand-edited. Drop images
+into `assets/photography/` and run:
+
+```bash
+npm run photos        # writes thumbnails/, optimized/ and manifest.json
+```
+
+Grid uses the 800px thumbnails and lazy-loads them; the lightbox loads the
+1920px version on open.
+
+## Constraints worth keeping
+
+- **No third-party runtime dependencies.** No CDN scripts, no analytics beyond
+  GA4, no icon library. The lightbox animates with CSS transitions rather than
+  GSAP for this reason.
+- **Progressive enhancement.** Every reveal animation is gated behind a `.js`
+  class set in `<head>`. If a script fails the page is fully readable, not
+  blank. The mobile nav panel degrades to a plain list of links.
+- **Contrast floor.** `--label` (5.4:1) and `--secondary` (6.4:1) in
+  `css/styles.css` are the dimmest greys allowed on `--bg-color`. Both clear
+  WCAG AA at normal size. Don't introduce a dimmer one.
+- **One nav.** The same block appears on all ten pages, with absolute links, so
+  an article reached from search can get back to the work, the writing or the
+  résumé without going home first.
 
 ## Deployment
 
-The site automatically deploys to GitHub Pages on push to main branch. Custom domain configured via CNAME file.
-
-## Performance
-
-- Lighthouse Performance: 90+
-- First Contentful Paint: < 1.5s
-- Time to Interactive: < 3.5s
-- SEO Score: 95+
-
-## SEO & Optimization
-
-- Open Graph and Twitter Card metadata
-- Structured data (JSON-LD)
-- XML sitemap and robots.txt
-- Resource preloading and DNS prefetching
-- Deferred script loading
-
-## Security
-
-- Content Security Policy headers
-- XSS protection
-- Clickjacking prevention
-- HTTPS enforcement
-
-## Browser Support
-
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Accessibility
-
-- WCAG 2.1 Level AA compliant
-- Keyboard navigation support
-- Skip links for screen readers
-- Reduced motion support
-- Semantic HTML structure
-
-## License
-
-See LICENSE file for details.
+Pushes to `main` build and deploy to GitHub Pages via
+`.github/workflows/deploy.yml`. Custom domain via `CNAME`.
 
 ## Contact
 
-**Hirnaymay Bhaskar**
+**Hirnaymay Bhaskar** — Bengaluru
 
-- Website: [hirnaymay.com](https://hirnaymay.com)
-- GitHub: [@octopols](https://github.com/octopols)
-- LinkedIn: [hirnaymay](https://linkedin.com/in/hirnaymay)
-- Email: hirnaymay@gmail.com
+- [hirnaymay.com](https://hirnaymay.com)
+- [@octopols](https://github.com/octopols) · [LinkedIn](https://linkedin.com/in/hirnaymay)
+- hirnaymay@gmail.com

@@ -119,25 +119,4 @@
     setInterval(renderTime, 30000);
   }
 
-  /* ---------------------------------------------------------------
-     GitHub contribution graph
-
-     Third-party image. Revealed only once it has actually decoded, so a
-     blocked or rate-limited request leaves no broken panel on the page.
-  --------------------------------------------------------------- */
-  var graphWrap = document.getElementById("gh-graph");
-  var graphImg = document.getElementById("gh-graph-img");
-  if (graphWrap && graphImg) {
-    var showGraph = function () {
-      graphWrap.classList.remove("hidden");
-    };
-    if (graphImg.complete && graphImg.naturalWidth > 0) {
-      showGraph();
-    } else {
-      graphImg.addEventListener("load", showGraph);
-      graphImg.addEventListener("error", function () {
-        graphWrap.remove();
-      });
-    }
-  }
 })();

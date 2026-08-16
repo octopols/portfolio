@@ -40,7 +40,7 @@
         --line: rgba(255, 255, 255, 0.08);
         --text: #f7fafc;
         --muted: #737880;
-        --dim: #6b7178;
+        --dim: #82898f;
         --accent: #68d391;
         --warn: #f6e05e;
         --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -64,6 +64,15 @@
       .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
       /* ---- nav ---- */
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
       nav {
         display: flex;
         justify-content: space-between;
@@ -250,8 +259,14 @@
   <body>
     <div class="wrap">
       <nav>
-        <a href="/" class="mark">OCTOPOLS</a>
-        <a href="/#projects">← All projects</a>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <div class="navlinks">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé</a>
+        </div>
       </nav>
 
       <header class="hero">

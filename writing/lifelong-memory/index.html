@@ -38,7 +38,7 @@
         --line: rgba(255, 255, 255, 0.08);
         --text: #f7fafc;
         --muted: #8b9199;
-        --dim: #6b7178;
+        --dim: #82898f;
         --accent: #68d391;
         --warn: #f6e05e;
         --bad: #fc8181;
@@ -53,6 +53,16 @@
       }
       a { color: inherit; }
       .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
 
       nav {
         display: flex; justify-content: space-between; align-items: center;
@@ -227,12 +237,18 @@
   <body>
     <div class="wrap">
       <nav>
-        <a href="/" class="mark">OCTOPOLS</a>
-        <a href="/writing/">← All writing</a>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <div class="navlinks">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé</a>
+        </div>
       </nav>
 
       <header class="hero">
-        <div class="kicker">Lifelong memory · Roadmap</div>
+        <div class="kicker">Lifelong memory · Roadmap · <time datetime="2026-08">August 2026</time></div>
         <h1>The model is rented.<br />The memory is yours.</h1>
         <p class="standfirst">
           The destination is not a new LLM. It is an assistant that remembers you and gets better at
@@ -520,6 +536,17 @@
       <section>
         <div class="label">[ <b>05</b> — Inventory ]</div>
         <h2>Most of the engine exists. The proof does not.</h2>
+
+        <div class="callout">
+          <span class="tag">Before you read the word "built"</span>
+          <p>
+            "Built" here means running on my machine and doing what the row says —
+            not published, not packaged, and not something you can go and check. The
+            repository stays closed until Phase 1 either passes or kills it, because
+            an unevaluated memory engine is a claim, and I would rather publish the
+            number than the code that is hoping for one.
+          </p>
+        </div>
 
         <div class="fig">
           <div class="fig-scroll">

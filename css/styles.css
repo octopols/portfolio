@@ -1,19 +1,29 @@
 /* ===================================
    hirnaymay.com — site styles
 
-   Tailwind (CDN) handles layout utilities. This file holds the few things
-   Tailwind doesn't: the type scale, the section chrome, the article cards,
-   and accessibility defaults.
+   Tailwind handles layout utilities, compiled to css/tailwind.css by
+   `npm run build:css`. This file holds the few things Tailwind doesn't: the
+   type scale, the section chrome, the article cards, the photography
+   lightbox, and accessibility defaults.
 =================================== */
 
-/* Space Grotesk is the display face. Loaded with display=swap so a failed or
-   slow font request falls back rather than blocking text. */
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap");
+/* Space Grotesk is the display face. It is requested from a <link> in each
+   page's <head>, not with an @import here — an @import inside a stylesheet
+   serialises a second round-trip before the font request can even start. */
 
 :root {
   --bg-color: #050505;
   --text-main: #f0f0f0;
   --text-muted: #888888;
+
+  /* Two greys, both measured against --bg-color. Nothing on the site should
+     use a dimmer grey than these: --label is 5.4:1 and --secondary is 6.4:1,
+     so every piece of text clears WCAG AA at normal size. Section labels and
+     metric captions used to sit at 3.5:1 and article dates at 2.7:1, which is
+     below the floor for large text, let alone 11px caps. */
+  --label: #7d848e;
+  --secondary: #8b9199;
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
@@ -103,6 +113,12 @@ body {
   max-width: 64ch;
 }
 
+/* Secondary text. Replaces Tailwind's neutral-500/600 in body copy, which
+   land at 4.3:1 and 2.6:1 on this background — both under AA. */
+.text-dim {
+  color: var(--secondary);
+}
+
 /* ===================================
    SECTION CHROME
 =================================== */
@@ -112,7 +128,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #5f6672;
+  color: var(--label);
 }
 
 .section-head {
@@ -161,7 +177,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #5f6672;
+  color: var(--label);
   margin-bottom: 0.9rem;
 }
 
@@ -230,7 +246,7 @@ body {
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #5f6672;
+  color: var(--label);
   margin-bottom: 0.4rem;
 }
 
@@ -269,7 +285,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: #5f6672;
+  color: var(--label);
   padding-top: 0.15rem;
 }
 
@@ -283,22 +299,6 @@ body {
 .rowlist .v strong {
   color: #f0f0f0;
   font-weight: 600;
-}
-
-/* Subtle film grain over the whole page. Decorative only. */
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 90;
-  opacity: 0.028;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .noise-overlay {
-    display: none;
-  }
 }
 
 .main-content {
@@ -330,7 +330,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6b7178;
+  color: var(--secondary);
 }
 
 @media (max-width: 640px) {
@@ -357,7 +357,7 @@ img {
   margin-top: 1rem;
   font-size: 13.5px;
   line-height: 1.6;
-  color: #6b7178;
+  color: var(--secondary);
   max-width: 62ch;
 }
 
@@ -397,7 +397,7 @@ img {
 }
 
 .repolist span {
-  color: #6b7178;
+  color: var(--secondary);
 }
 
 /* Date under a rowlist key */
@@ -405,7 +405,7 @@ img {
   display: inline-block;
   margin-top: 0.25rem;
   letter-spacing: 0.08em;
-  color: #4f555f;
+  color: var(--secondary);
   text-transform: none;
   font-size: 11px;
 }
@@ -425,3 +425,258 @@ img {
   color: #fff;
   max-width: 30ch;
 }
+
+/* ===================================
+   MOBILE NAV
+
+   The desktop links are hidden below 768px. Without this the only navigation
+   on a phone was the résumé pill, so an article reached from search had no
+   way back into the site.
+=================================== */
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: -8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .nav-toggle {
+    display: none;
+  }
+}
+
+.nav-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-toggle .icon-close,
+.nav-toggle[aria-expanded="true"] .icon-open {
+  display: none;
+}
+
+.nav-toggle[aria-expanded="true"] .icon-close {
+  display: block;
+}
+
+/* The panel is a plain block when scripting is off, so the links stay
+   reachable if main.js never runs. */
+.js .nav-panel[hidden] {
+  display: none;
+}
+
+.nav-panel {
+  background: #0a0a0a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nav-panel a {
+  display: block;
+  padding: 0.9rem 0;
+  font-size: 0.95rem;
+  color: #d4d4d4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-panel a:last-child {
+  border-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .nav-panel {
+    display: none;
+  }
+}
+
+/* ===================================
+   PHOTOGRAPHY: SECTION LABEL + FIXED FOOTER
+
+   Restored. A stylesheet rewrite dropped these while photography.html kept
+   using the classes, which left the lightbox as an unstyled block at the
+   bottom of the page — clicking a photo locked body scroll and showed
+   nothing.
+=================================== */
+.section-label {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 20;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--label);
+  border: 1px solid #222;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.footer-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  max-height: 100vh;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.footer-fixed > div {
+  width: 100%;
+  padding-bottom: 2rem;
+}
+
+/* ===================================
+   PHOTOGRAPHY: LIGHTBOX
+=================================== */
+.photo-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo-modal * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.photo-modal.active {
+  display: flex;
+  opacity: 1;
+}
+
+.modal-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+}
+
+.modal-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  display: block;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+.modal-close,
+.modal-nav {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.3s ease, transform 0.3s ease;
+  z-index: 10001;
+}
+
+.modal-close {
+  top: 2rem;
+  right: 2rem;
+  width: 50px;
+  height: 50px;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.modal-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+}
+
+.modal-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.modal-nav[disabled] {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.modal-nav[disabled]:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%);
+}
+
+.modal-prev {
+  left: 2rem;
+}
+
+.modal-next {
+  right: 2rem;
+}
+
+.modal-counter {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  .modal-nav {
+    width: 50px;
+    height: 50px;
+  }
+
+  .modal-prev {
+    left: 1rem;
+  }
+
+  .modal-next {
+    right: 1rem;
+  }
+
+  .modal-close {
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+/* .img-zoom-bw lives in photography.html — the grid deliberately keeps the
+   photos in colour, so it is not defined here. */

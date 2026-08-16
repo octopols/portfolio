@@ -60,8 +60,12 @@
     <meta name="msapplication-TileColor" content="#050505" />
     <meta name="theme-color" content="#050505" />
 
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
-    <link rel="preload" href="css/styles.css" as="style" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap"
+    />
     <link
       rel="preload"
       as="image"
@@ -115,17 +119,6 @@
       }
     </script>
 
-    <script>
-      window.process = { env: { NODE_ENV: "production" } };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: { extend: {} },
-        corePlugins: { preflight: true },
-      };
-    </script>
-
     <style>
       /* Reveals are opt-in via .js. Without scripting, content is visible. */
       .js .reveal {
@@ -158,13 +151,13 @@
       }
     </style>
 
+    <link rel="stylesheet" href="/css/tailwind.css" />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
 
   <body class="antialiased selection:bg-white selection:text-black">
     <a href="#main" class="skip-link">Skip to main content</a>
 
-    <div class="noise-overlay"></div>
     <div
       id="progress-bar"
       class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0"
@@ -173,39 +166,94 @@
     <!-- ============================================================
          NAV
     ============================================================ -->
-    <nav class="fixed inset-x-0 top-0 z-50 mix-blend-difference text-white">
-      <div class="shell flex items-center justify-between py-5">
-        <a href="#top" class="font-display font-bold text-lg tracking-tight"
-          >Hirnaymay Bhaskar</a
-        >
-        <div class="hidden md:flex items-center gap-7 text-[13px] tracking-wide">
-          <a href="#work" class="opacity-60 hover:opacity-100 transition-opacity"
-            >Work</a
+    <!-- Site nav. Identical markup on every page — see the comment in
+         js/main.js. Links are absolute so the same block works from an
+         article three directories deep. -->
+    <nav class="fixed inset-x-0 top-0 z-50">
+      <div class="mix-blend-difference text-white">
+        <div class="shell flex items-center justify-between py-5">
+          <a href="/" class="font-display font-bold text-lg tracking-tight"
+            >Hirnaymay Bhaskar</a
           >
-          <a
-            href="#experience"
-            class="opacity-60 hover:opacity-100 transition-opacity"
-            >CV</a
+          <div
+            class="hidden md:flex items-center gap-7 text-[13px] tracking-wide"
           >
-          <a
-            href="#projects"
-            class="opacity-60 hover:opacity-100 transition-opacity"
-            >Open source</a
-          >
-          <a
-            href="/writing/"
-            class="opacity-60 hover:opacity-100 transition-opacity"
-            >Writing</a
-          >
-          <a href="#about" class="opacity-60 hover:opacity-100 transition-opacity"
-            >About</a
-          >
+            <a
+              href="/#work"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Work</a
+            >
+            <a
+              href="/#experience"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >CV</a
+            >
+            <a
+              href="/#projects"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Open source</a
+            >
+            <a
+              href="/writing/"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Writing</a
+            >
+            <a
+              href="/#about"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >About</a
+            >
+          </div>
+          <div class="flex items-center gap-1">
+            <a
+              href="/docs/hirnaymay_bhaskar_resume.pdf"
+              class="border border-white/25 px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+              >Résumé</a
+            >
+            <button
+              type="button"
+              class="nav-toggle"
+              id="nav-toggle"
+              aria-controls="nav-panel"
+              aria-expanded="false"
+              aria-label="Menu"
+            >
+              <svg
+                class="icon-open"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+              <svg
+                class="icon-close"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <a
-          href="docs/hirnaymay_bhaskar_resume.pdf"
-          class="border border-white/25 px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-          >Résumé</a
-        >
+      </div>
+      <div class="nav-panel" id="nav-panel" hidden>
+        <div class="shell">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/#about">About</a>
+          <a href="/photography.html">Photography</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé (PDF)</a>
+        </div>
       </div>
     </nav>
 
@@ -252,10 +300,11 @@
               target="_blank"
               rel="noopener noreferrer"
               class="text-white border-b border-white/40 hover:border-white transition-colors"
-              >BIK.AI</a>, a YC + Sequoia-backed commerce platform. The job, mostly: something at
-            scale is slow, wrong, or quietly setting money on fire, and I go find
-            out why. The obvious answer is usually the wrong one. That's the fun
-            part.
+              >BIK.AI</a>, a YC + Sequoia-backed commerce platform — 2.5M messages a month for
+            50+ enterprise clients. The job, mostly: something at scale is slow,
+            wrong, or quietly setting money on fire, and I go find out why. Last
+            time it was a queue that got slower every time we added a consumer.
+            The obvious answer is usually the wrong one.
           </p>
 
           <div
@@ -263,8 +312,8 @@
             style="transition-delay: 0.2s"
           >
             <a
-              href="#work"
-              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read: Pub/Sub for microservices</a
+              href="/writing/pubsub-backpressure/"
+              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read: why adding consumers made the queue slower</a
             >
             <a
               href="docs/hirnaymay_bhaskar_resume.pdf"
@@ -627,16 +676,16 @@
               <div>
                 <h3 class="text-xl font-display font-bold">
                   BIK.AI
-                  <span class="text-sm font-sans font-normal text-neutral-500"
+                  <span class="text-sm font-sans font-normal text-dim"
                     >· YC + Sequoia · Bengaluru</span
                   >
                 </h3>
                 <p class="text-sm text-neutral-400 mt-1">
                   Software Engineer II
-                  <span class="text-neutral-600">Apr 2026 – Present</span>
-                  <span class="text-neutral-700 mx-1">·</span>
+                  <span class="text-dim">Apr 2026 – Present</span>
+                  <span class="text-dim mx-1">·</span>
                   Software Engineer
-                  <span class="text-neutral-600">Dec 2024 – Mar 2026</span>
+                  <span class="text-dim">Dec 2024 – Mar 2026</span>
                 </p>
               </div>
             </div>
@@ -705,7 +754,7 @@
             <div class="flex items-baseline justify-between gap-4 mb-7 flex-wrap">
               <h3 class="text-xl font-display font-bold">
                 Google Summer of Code
-                <span class="text-sm font-sans font-normal text-neutral-500"
+                <span class="text-sm font-sans font-normal text-dim"
                   >· 2023 &amp; 2024, both C++/Qt</span
                 >
               </h3>
@@ -713,7 +762,7 @@
                 href="https://github.com/octopols"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-sm text-neutral-500 hover:text-white transition-colors"
+                class="text-sm text-dim hover:text-white transition-colors"
                 >github.com/octopols →</a
               >
             </div>
@@ -735,7 +784,7 @@
                   class="w-full aspect-video object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                 />
                 <div class="p-5">
-                  <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
+                  <p class="text-xs uppercase tracking-widest text-dim mb-2">
                     VideoLAN · 2024
                   </p>
                   <p class="text-[15px] text-neutral-300 leading-relaxed">
@@ -764,7 +813,7 @@
                   class="w-full aspect-video object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                 />
                 <div class="p-5">
-                  <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
+                  <p class="text-xs uppercase tracking-widest text-dim mb-2">
                     MuseScore · 2023
                   </p>
                   <p class="text-[15px] text-neutral-300 leading-relaxed">
@@ -806,7 +855,7 @@
                 </div>
                 <div>
                   <dt>Also</dt>
-                  <dd class="text-neutral-500">
+                  <dd class="text-dim">
                     React · Redux — internal dashboards fronting the systems above.
                   </dd>
                 </div>
@@ -843,7 +892,7 @@
                 />
               </div>
               <div class="p-6">
-                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-3">
+                <p class="text-xs uppercase tracking-widest text-dim mb-3">
                   Android TV · Kotlin · Compose
                 </p>
                 <h3 class="text-xl font-display font-bold mb-2">HomeCam TV</h3>
@@ -872,7 +921,7 @@
                 />
               </div>
               <div class="p-6">
-                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-3">
+                <p class="text-xs uppercase tracking-widest text-dim mb-3">
                   Zsh · Shell · Dev tooling
                 </p>
                 <h3 class="text-xl font-display font-bold mb-2">envswitch</h3>
@@ -938,69 +987,66 @@
         <div class="shell">
           <div class="section-head reveal">
             <p class="eyebrow">Writing</p><h2>Guides</h2><p class="lede measure">
-              Reference writing on systems I've had to get right — the design decisions and
-              the failure modes that shaped them, written so they're useful on a system
-              that isn't mine.
+              Five reference pieces on systems I've had to get right. Titles here;
+              the <a href="/writing/" class="text-white border-b border-white/30 hover:border-white transition-colors">writing index</a>
+              has what each one covers.
             </p>
           </div>
 
           <div class="rowlist reveal">
             <a href="/writing/pubsub-backpressure/" class="group">
-              <div class="k">Distributed systems<br /><span class="rowdate">August 2026</span></div>
-              <div class="v"><span
-                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+              <div class="k">Distributed systems</div>
+              <div class="v flex flex-wrap items-baseline gap-x-3">
+                <span
+                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
                   >Running Pub/Sub in a microservice system</span
                 >
-                The lease model, flow control, backpressure, idempotency and
-                dead-letter policy — and why adding consumers sometimes makes a backlog
-                worse.
+                <span class="rowdate">August 2026 · 12 min</span>
               </div>
             </a>
             <a href="/writing/billing-unit-mismatch/" class="group">
-              <div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
-              <div class="v">
+              <div class="k">Billing systems</div>
+              <div class="v flex flex-wrap items-baseline gap-x-3">
                 <span
-                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
                   >How to bill AI usage</span
                 >
-                Metering AI is easy. Billing it correctly is a unit problem, a clock
-                problem and a visibility problem.
-              </div>
-            </a><a href="/writing/one-pipeline-not-four/" class="group">
-              <div class="k">Architecture<br /><span class="rowdate">August 2026</span></div>
-              <div class="v">
-                <span
-                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
-                  >How to add a fourth channel without building a fourth pipeline</span
-                >
-                Provider differences are loud and visible. The shared concerns are quiet
-                and abstract — which is why the boundary ends up in the wrong place.
+                <span class="rowdate">August 2026 · 12 min</span>
               </div>
             </a>
-            <a href="/writing/hardcoded-midnight/" class="group"><div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
-              <div class="v">
+            <a href="/writing/one-pipeline-not-four/" class="group">
+              <div class="k">Architecture</div>
+              <div class="v flex flex-wrap items-baseline gap-x-3">
                 <span
-                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
+                  >How to add a fourth channel without building a fourth pipeline</span
+                >
+                <span class="rowdate">August 2026 · 10 min</span>
+              </div>
+            </a>
+            <a href="/writing/hardcoded-midnight/" class="group">
+              <div class="k">Billing systems</div>
+              <div class="v flex flex-wrap items-baseline gap-x-3">
+                <span
+                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
                   >18:30 UTC is not midnight</span
                 >
-                A constant that was right once, in one place, for one market — then
-                copied to five call sites.
+                <span class="rowdate">August 2026 · 7 min</span>
               </div>
             </a>
             <a href="/writing/lifelong-memory/" class="group">
-              <div class="k">Machine learning<br /><span class="rowdate">August 2026</span></div>
-              <div class="v">
+              <div class="k">Machine learning</div>
+              <div class="v flex flex-wrap items-baseline gap-x-3">
                 <span
-                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
                   >The model is rented. The memory is yours.</span
                 >
-                A roadmap written as gates rather than milestones — each phase has one
-                number you must hit before you earn the next.
+                <span class="rowdate">August 2026 · 8 min</span>
               </div>
             </a>
           </div>
 
-          <p class="mt-8 text-sm text-neutral-500 reveal">
+          <p class="mt-8 text-sm text-neutral-400 reveal">
             Earlier writing on
             <a
               href="https://octopols.medium.com"
@@ -1060,6 +1106,14 @@
                   adding capacity is sometimes <em>how you get</em> the incident.
                 </p>
                 <p>
+                  I learned most of that the unflattering way. The webhook system
+                  shipped before I had thought about ack deadlines at all, and
+                  merchants found the duplicates for me, which is the worst
+                  possible way to find them. The per-store isolation and the
+                  health evaluator are both things I built <em>after</em> that
+                  call, and both are things I would now build first.
+                </p>
+                <p>
                   Before this, two Google Summer of Code cycles in C++/Qt — which is how you
                   learn to work in a codebase far older and larger than your
                   understanding of it, mostly by breaking it and then reading a great
@@ -1086,12 +1140,12 @@
                   class="w-full rounded-xl border border-white/10 grayscale group-hover:grayscale-0 transition-all duration-700"
                 />
                 <p
-                  class="mt-3 text-sm text-neutral-500 group-hover:text-white transition-colors"
+                  class="mt-3 text-sm text-dim group-hover:text-white transition-colors"
                 >
                   Photography →
                 </p>
               </a>
-              <p class="mt-6 text-sm text-neutral-500 leading-relaxed">
+              <p class="mt-6 text-sm text-dim leading-relaxed">
                 Bengaluru, India.<br />Open to hybrid and remote.
               </p>
             </aside>
@@ -1147,7 +1201,7 @@
 
     <footer class="rule py-10">
       <div
-        class="shell flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
+        class="shell flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-dim"
       >
         <p>
           <span class="font-display font-bold text-neutral-400 mr-2"
@@ -1192,6 +1246,7 @@
       });
     </script>
 
+    <script src="/js/nav.js" defer></script>
     <script src="js/main.js" defer></script>
   </body>
 </html>

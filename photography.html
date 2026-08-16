@@ -13,11 +13,7 @@
     <meta name="title" content="Photography | Hirnaymay Bhaskar" />
     <meta
       name="description"
-      content="Explore the photography portfolio of Hirnaymay Bhaskar - capturing moments through a unique lens."
-    />
-    <meta
-      name="keywords"
-      content="Photography, Portfolio, Hirnaymay Bhaskar, Photos, Visual Art"
+      content="Street photography by Hirnaymay Bhaskar — film and digital, shot around Bengaluru and wherever else the camera came along."
     />
     <meta name="author" content="Hirnaymay Bhaskar" />
     <meta name="robots" content="index, follow" />
@@ -33,7 +29,7 @@
     <meta property="og:title" content="Photography | Hirnaymay Bhaskar" />
     <meta
       property="og:description"
-      content="Explore the photography portfolio of Hirnaymay Bhaskar - capturing moments through a unique lens."
+      content="Street photography — film and digital. Mostly street, mostly badly, occasionally something worth keeping."
     />
     <meta property="og:site_name" content="Hirnaymay Bhaskar Portfolio" />
 
@@ -44,7 +40,7 @@
     <meta name="twitter:title" content="Photography | Hirnaymay Bhaskar" />
     <meta
       name="twitter:description"
-      content="Explore the photography portfolio of Hirnaymay Bhaskar - capturing moments through a unique lens."
+      content="Street photography — film and digital. Mostly street, mostly badly, occasionally something worth keeping."
     />
     <meta name="twitter:creator" content="@octopols" />
 
@@ -54,46 +50,20 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#050505" />
 
-    <!-- Performance: DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com" />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap"
+    />
 
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="css/styles.css" as="style" />
-
-    <!-- Dependencies -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script>
-      // The lightbox is animated with GSAP. If the CDN is blocked, fall back
-      // to applying the end state immediately so the modal still works.
-      if (typeof gsap === "undefined") {
-        var apply = function (t, v) {
-          var els = typeof t === "string" ? document.querySelectorAll(t) : (t.length ? t : [t]);
-          for (var i = 0; i < els.length; i++) {
-            if (!els[i] || !els[i].style) continue;
-            for (var k in v) {
-              if (k === "opacity") els[i].style.opacity = v[k];
-              else if (k === "scale" || k === "x" || k === "y") els[i].style.transform = "";
-            }
-          }
-          if (v && typeof v.onComplete === "function") v.onComplete();
-        };
-        window.gsap = {
-          set: apply,
-          to: apply,
-          fromTo: function (t, f, to) { apply(t, to); },
-          killTweensOf: function () {},
-        };
-      }
-    </script>
-
-    <!-- External Styles -->
+    <!-- Styles. Tailwind is compiled at build time; see tailwind.config.js.
+         The lightbox used to animate with GSAP from a CDN — it is CSS
+         transitions now, so the gallery has no third-party dependency. -->
+    <link rel="stylesheet" href="/css/tailwind.css" />
     <link rel="stylesheet" href="css/styles.css" />
-    
+
     <style>
       /* Animation CSS inline with !important to override Tailwind preflight */
       .js .reveal-item {
@@ -129,12 +99,6 @@
       .group:hover .img-zoom-bw {
         transform: scale(1.1) !important;
       }
-
-      
-      /* Mobile override */
-      @media (max-width: 768px) {
-        
-      }
     </style>
   </head>
 
@@ -144,45 +108,100 @@
     =================================== -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- ===================================
-         UI OVERLAYS
-    =================================== -->
-    <div class="noise-overlay"></div>
     <div
       id="progress-bar"
       class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0 transition-all duration-100 ease-linear"
     ></div>
 
     <!-- ===================================
-         NAVIGATION
+         NAVIGATION — identical block on every page. See js/nav.js.
     =================================== -->
-    <nav
-      class="fixed w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference text-white"
-    >
-      <a
-        href="index.html"
-        class="font-display font-bold text-xl tracking-tighter"
-      >
-        Hirnaymay Bhaskar
-      </a>
-      <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
-        <a
-          href="index.html#work"
-          class="opacity-60 hover:opacity-100 transition-opacity"
-          >Work</a
-        >
-        <a
-          href="index.html#projects"
-          class="opacity-60 hover:opacity-100 transition-opacity"
-          >Open source</a
-        >
+    <nav class="fixed inset-x-0 top-0 z-50">
+      <div class="mix-blend-difference text-white">
+        <div class="shell flex items-center justify-between py-5">
+          <a href="/" class="font-display font-bold text-lg tracking-tight"
+            >Hirnaymay Bhaskar</a
+          >
+          <div
+            class="hidden md:flex items-center gap-7 text-[13px] tracking-wide"
+          >
+            <a
+              href="/#work"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Work</a
+            >
+            <a
+              href="/#experience"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >CV</a
+            >
+            <a
+              href="/#projects"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Open source</a
+            >
+            <a
+              href="/writing/"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >Writing</a
+            >
+            <a
+              href="/#about"
+              class="opacity-60 hover:opacity-100 transition-opacity"
+              >About</a
+            >
+          </div>
+          <div class="flex items-center gap-1">
+            <a
+              href="/docs/hirnaymay_bhaskar_resume.pdf"
+              class="border border-white/25 px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+              >Résumé</a
+            >
+            <button
+              type="button"
+              class="nav-toggle"
+              id="nav-toggle"
+              aria-controls="nav-panel"
+              aria-expanded="false"
+              aria-label="Menu"
+            >
+              <svg
+                class="icon-open"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+              <svg
+                class="icon-close"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <a
-        href="index.html"
-        class="border border-white/20 px-6 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-      >
-        Back
-      </a>
+      <div class="nav-panel" id="nav-panel" hidden>
+        <div class="shell">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/#about">About</a>
+          <a href="/photography.html">Photography</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé (PDF)</a>
+        </div>
+      </div>
     </nav>
 
     <!-- ===================================
@@ -195,8 +214,7 @@
       <header
         class="relative h-screen w-full flex items-center justify-center overflow-hidden"
       >
-        <!-- Background with parallax effect -->
-        <div class="absolute inset-0 z-0 parallax-bg" data-speed="0.4">
+        <div class="absolute inset-0 z-0">
           <img
             src="assets/photography/DSC00608.jpg"
             class="w-full h-full object-cover opacity-40 grayscale contrast-125 scale-110"
@@ -213,7 +231,7 @@
             <div
               class="reveal-item fade-scale border border-white/10 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] uppercase tracking-[0.2em] text-neutral-400"
             >
-              Visual Stories
+              Film &amp; digital · Bengaluru
             </div>
           </div>
 
@@ -227,10 +245,11 @@
           </h1>
 
           <p
-            class="mt-8 text-lg md:text-xl text-neutral-400 max-w-xl mx-auto reveal-item fade-up"
+            class="mt-8 text-lg md:text-xl text-neutral-300 max-w-xl mx-auto reveal-item fade-up"
             style="transition-delay: 0.3s"
           >
-            Capturing moments through the lens
+            Mostly street, mostly badly, occasionally something worth keeping.
+            The only thing on this site with no numbers attached to it.
           </p>
         </div>
       </header>
@@ -252,8 +271,8 @@
 
           <!-- Empty State -->
           <div id="empty-state" class="text-center py-20 hidden">
-            <svg class="w-16 h-16 mx-auto mb-4 text-neutral-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5"/><path d="M14.121 15.121A3 3 0 1 1 9.88 10.88"/></svg>
-            <p class="text-neutral-500 text-lg">
+            <svg class="w-16 h-16 mx-auto mb-4 text-dim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5"/><path d="M14.121 15.121A3 3 0 1 1 9.88 10.88"/></svg>
+            <p class="text-dim text-lg">
               No photos yet. Add images to assets/photography/
             </p>
           </div>
@@ -304,7 +323,7 @@
         >
           <!-- Column 1: Navigation -->
           <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
+            <h3 class="text-xs uppercase tracking-widest text-dim mb-4">
               Navigate
             </h3>
             <nav class="space-y-2">
@@ -333,7 +352,7 @@
 
           <!-- Column 2: Social -->
           <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
+            <h3 class="text-xs uppercase tracking-widest text-dim mb-4">
               Connect
             </h3>
             <nav class="space-y-2">
@@ -367,7 +386,7 @@
 
           <!-- Column 3: Info -->
           <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
+            <h3 class="text-xs uppercase tracking-widest text-dim mb-4">
               About
             </h3>
             <p class="text-neutral-400 text-sm leading-relaxed mb-4">
@@ -376,7 +395,7 @@
             </p>
             <div data-local-time-block>
               <h3
-                class="text-xs uppercase tracking-widest text-neutral-600 mb-3"
+                class="text-xs uppercase tracking-widest text-dim mb-3"
               >
                 Local Time
               </h3>
@@ -389,7 +408,7 @@
 
         <!-- Bottom Bar -->
         <div
-          class="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 pb-4 text-xs text-neutral-600"
+          class="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 pb-4 text-xs text-dim"
         >
           <div class="mb-3 md:mb-0">
             <span class="font-display font-bold text-white mr-4"
@@ -398,8 +417,8 @@
             © <span id="footer-year">2026</span> All rights reserved.
           </div>
           <div class="flex gap-4 flex-wrap justify-center">
-            <span class="text-neutral-600">Backend Engineer</span>
-            <span class="text-neutral-600">Photographer</span>
+            <span class="text-dim">Backend Engineer</span>
+            <span class="text-dim">Photographer</span>
           </div>
         </div>
       </div>
@@ -408,6 +427,7 @@
     <!-- ===================================
          JAVASCRIPT LOGIC SYSTEM
     =================================== -->
+    <script src="/js/nav.js" defer></script>
     <script src="js/main.js"></script>
     <script>
       // Photography-specific JavaScript
@@ -510,116 +530,107 @@
           }
         }
 
+        // The lightbox animates with CSS transitions. It used to pull GSAP
+        // from a CDN — 70KB for four tweens, on a page that is already the
+        // heaviest on the site.
+        const SLIDE = 80;
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        function setImageState(opacity, translateX, scale) {
+          modalImage.style.opacity = String(opacity);
+          modalImage.style.transform = `translateX(${translateX}px) scale(${scale})`;
+        }
+
         function openPhotoModal(index) {
           currentPhotoIndex = index;
-          
-          // Set initial state
+
           photoModal.classList.add('active');
           document.body.style.overflow = 'hidden';
-          
-          // Load image first
+
           const photo = allPhotos[index];
-          const modalSrc = photo.optimized || photo.path || photo.original;
-          modalImage.src = modalSrc;
+          modalImage.src = photo.optimized || photo.path || photo.original;
           modalImage.alt = photo.name;
-          modalCounter.textContent = `${currentPhotoIndex + 1} / ${allPhotos.length}`;
-          
-          // Update button states
-          modalPrev.style.opacity = currentPhotoIndex === 0 ? '0.3' : '1';
-          modalNext.style.opacity = currentPhotoIndex === allPhotos.length - 1 ? '0.3' : '1';
-          
-          // GSAP animation for modal open - no transforms, only opacity and scale
-          gsap.set(modalImage, { opacity: 0, scale: 0.85, x: 0, y: 0 });
-          gsap.fromTo(photoModal, 
-            { opacity: 0 },
-            { opacity: 1, duration: 0.4, ease: 'power2.out' }
-          );
-          gsap.to(modalImage, {
-            scale: 1,
-            opacity: 1,
-            duration: 0.6,
-            ease: 'expo.out',
-            delay: 0.1
+          updateModalChrome();
+
+          // Start small and transparent, then let the transition run on the
+          // next frame — setting both states in one frame is a no-op.
+          modalImage.style.transition = 'none';
+          setImageState(0, 0, 0.85);
+          requestAnimationFrame(() => {
+            modalImage.style.transition = reduceMotion
+              ? 'none'
+              : 'opacity .4s ease-out, transform .5s cubic-bezier(.16,1,.3,1)';
+            setImageState(1, 0, 1);
           });
+
+          modalClose.focus();
         }
 
         function closePhotoModal() {
-          // GSAP animation for modal close
-          gsap.to(modalImage, {
-            scale: 0.85,
-            opacity: 0,
-            duration: 0.4,
-            ease: 'expo.in'
-          });
-          gsap.to(photoModal, {
-            opacity: 0,
-            duration: 0.4,
-            ease: 'power2.in',
-            onComplete: () => {
-              photoModal.classList.remove('active');
-              document.body.style.overflow = '';
-            }
-          });
+          setImageState(0, 0, 0.85);
+          photoModal.classList.remove('active');
+          document.body.style.overflow = '';
         }
 
-        function updateModalImage(animate = true, direction = 0) {
+        function updateModalChrome() {
+          modalCounter.textContent = `${currentPhotoIndex + 1} / ${allPhotos.length}`;
+          // Disabled rather than dimmed: at the ends these buttons did nothing
+          // but still took focus and still looked pressable.
+          modalPrev.disabled = currentPhotoIndex === 0;
+          modalNext.disabled = currentPhotoIndex === allPhotos.length - 1;
+        }
+
+        function updateModalImage(direction = 0) {
           if (allPhotos.length === 0) return;
-          
+
           const photo = allPhotos[currentPhotoIndex];
           const modalSrc = photo.optimized || photo.path || photo.original;
-          
-          if (animate && direction !== 0) {
-            // Kill any existing animations
-            gsap.killTweensOf(modalImage);
-            
-            // Preload next image
-            const img = new Image();
-            img.onload = () => {
-              // Slide animation with direction
-              const slideDistance = 80;
-              gsap.to(modalImage, {
-                x: -slideDistance * direction,
-                opacity: 0,
-                duration: 0.35,
-                ease: 'power2.inOut',
-                onComplete: () => {
-                  modalImage.src = modalSrc;
-                  modalImage.alt = photo.name;
-                  gsap.set(modalImage, { x: slideDistance * direction });
-                  gsap.to(modalImage, {
-                    x: 0,
-                    opacity: 1,
-                    duration: 0.35,
-                    ease: 'power2.out'
-                  });
-                }
-              });
-            };
-            img.src = modalSrc;
-          } else {
-            gsap.set(modalImage, { x: 0, y: 0 });
+          updateModalChrome();
+
+          if (!direction || reduceMotion) {
             modalImage.src = modalSrc;
             modalImage.alt = photo.name;
+            setImageState(1, 0, 1);
+            return;
           }
-          
-          modalCounter.textContent = `${currentPhotoIndex + 1} / ${allPhotos.length}`;
-          
-          // Update button states
-          modalPrev.style.opacity = currentPhotoIndex === 0 ? '0.3' : '1';
-          modalNext.style.opacity = currentPhotoIndex === allPhotos.length - 1 ? '0.3' : '1';
+
+          // Slide the current frame out, swap the source once the replacement
+          // has decoded, then slide the new one in from the other side.
+          const swap = () => {
+            modalImage.src = modalSrc;
+            modalImage.alt = photo.name;
+            modalImage.style.transition = 'none';
+            setImageState(0, SLIDE * direction, 1);
+            requestAnimationFrame(() => {
+              modalImage.style.transition =
+                'opacity .35s ease-out, transform .35s ease-out';
+              setImageState(1, 0, 1);
+            });
+          };
+
+          const preload = new Image();
+          preload.onload = swap;
+          preload.onerror = swap;
+          preload.src = modalSrc;
+
+          modalImage.style.transition =
+            'opacity .35s ease-in-out, transform .35s ease-in-out';
+          setImageState(0, -SLIDE * direction, 1);
         }
 
         function showNextPhoto() {
           if (currentPhotoIndex < allPhotos.length - 1) {
             currentPhotoIndex++;
-            updateModalImage(true, 1); // Slide left (next)
+            updateModalImage(1);
           }
         }
 
         function showPrevPhoto() {
           if (currentPhotoIndex > 0) {
             currentPhotoIndex--;
-            updateModalImage(true, -1); // Slide right (prev)
+            updateModalImage(-1);
           }
         }
 

@@ -38,7 +38,7 @@
         --line: rgba(255, 255, 255, 0.08);
         --text: #f7fafc;
         --muted: #8b9199;
-        --dim: #6b7178;
+        --dim: #82898f;
         --accent: #68d391;
         --warn: #f6e05e;
         --bad: #fc8181;
@@ -56,6 +56,16 @@
       }
       a { color: inherit; }
       .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
 
       nav {
         display: flex; justify-content: space-between; align-items: center;
@@ -98,7 +108,7 @@
       }
       code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
       pre code { background: none; padding: 0; font-size: inherit; }
-      .tok-c { color: #6b7178; }
+      .tok-c { color: #82898f; }
       .tok-k { color: #b794f4; }
       .tok-s { color: #f6ad55; }
       .tok-t { color: #90cdf4; }
@@ -170,11 +180,17 @@
     <div class="wrap">
       <nav>
         <a href="/" class="mark">Hirnaymay Bhaskar</a>
-        <a href="/writing/">← All writing</a>
+        <div class="navlinks">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé</a>
+        </div>
       </nav>
 
       <header class="hero">
-        <div class="kicker">Architecture · Guide</div>
+        <div class="kicker">Architecture · Guide · <time datetime="2026-08">August 2026</time></div>
         <h1>How to add a fourth channel without building a fourth pipeline</h1>
         <p class="standfirst">
           Multi-channel messaging systems reliably grow one pipeline per channel. Not

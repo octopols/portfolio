@@ -24,6 +24,22 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Tailwind is compiled here rather than trusted to whatever is committed.
+      # The utilities depend on the class names in the HTML, so a build that
+      # only ever runs on someone's laptop drifts the first time a class is
+      # added and nobody remembers to rebuild.
+      - name: Build stylesheet
+        run: |
+          npm install --no-audit --no-fund tailwindcss@3.4.17
+          npx tailwindcss -c tailwind.config.js \
+            -i css/tailwind.src.css -o css/tailwind.css --minify
+          test -s css/tailwind.css
+
       - name: Build
         run: |
           mkdir -p dist
@@ -41,6 +57,7 @@ jobs:
           cp CNAME dist/
           cp -r assets dist/ 2>/dev/null || true
           cp -r css dist/
+          rm -f dist/css/tailwind.src.css
           cp -r js dist/
           cp -r docs dist/ 2>/dev/null || true
           cp favicon*.png dist/ 2>/dev/null || true

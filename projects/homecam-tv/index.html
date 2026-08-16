@@ -57,6 +57,15 @@
       .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
       /* ---- nav ---- */
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
       nav {
         display: flex;
         justify-content: space-between;
@@ -210,8 +219,14 @@
   <body>
     <div class="wrap">
       <nav>
-        <a href="/" class="mark">OCTOPOLS</a>
-        <a href="/#projects">← All projects</a>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <div class="navlinks">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé</a>
+        </div>
       </nav>
 
       <header class="hero">
@@ -298,18 +313,53 @@
             and the text is sized for someone holding a phone rather than someone
             three metres away on a sofa.
           </p>
-          <p>So: <strong>every screen here names the control it opens on</strong>, and the
-            remote never goes dead. Press up out of a page and you land back on the
-            tab you came from. Anything sitting at a screen edge explicitly names its
-            vertical neighbour instead of trusting geometry — Android's focus search
-            only considers what falls inside its beam, so a right-aligned button with
-            nothing directly above it searches, finds nothing, and strands you.
+          <p>
+            A remote has five buttons that move you and no cursor. That sounds like a
+            restriction and is really a specification: at every instant, for each of
+            four directions, there is exactly one correct next control — and if the
+            framework can't work out what it is, the remote goes dead and the viewer
+            has no recourse. <strong>Android's default answer is geometry</strong>, and
+            geometry is wrong often enough to matter.
+          </p>
+        </div>
+
+        <div class="features" style="margin-top: 34px">
+          <div class="feature">
+            <h3>The beam finds nothing</h3>
+            <p>Focus search only considers views inside a beam projected from the
+              focused one. A right-aligned action with empty space above it searches,
+              finds no candidate, and strands you. Anything at a screen edge names its
+              vertical neighbour explicitly instead of trusting the geometry.</p>
+          </div>
+          <div class="feature">
+            <h3>The beam finds the wrong thing</h3>
+            <p>Pressing up out of the page body landed on whichever tab happened to sit
+              above the control you left from — so leaving Recordings could put you on
+              Camera wall. Crossing that boundary is overridden to always return to the
+              tab you are actually on. Movement inside the page is untouched.</p>
+          </div>
+          <div class="feature">
+            <h3>The beam finds something off-screen</h3>
+            <p>Destinations that aren't the current one stay in the tree but are marked
+              unfocusable, so a d-pad press can't wander into a page the viewer can't
+              see.</p>
+          </div>
+        </div>
+
+        <div class="prose" style="margin-top: 34px">
+          <p>
+            None of that is visible when it works. It is only ever visible when it
+            doesn't, which is the whole reason it's the part of this app that took the
+            longest.
           </p>
           <p>
-            It also catches the case where a camera's sub-stream sends audio and no
-            picture — an actual fault on actual hardware, not a hypothetical — and
-            quietly falls back to the main stream for that channel instead of showing
-            you a black rectangle and hoping you don't notice.
+            The same principle covers the hardware. One of my cameras publishes a
+            sub-stream that carries audio and no picture — an actual fault on actual
+            hardware, not a hypothetical. The app probes each channel once, stores the
+            verdict per channel, and falls back to that camera's main stream instead of
+            showing a black rectangle and hoping nobody notices. The verdict is cached
+            because the probe costs a connection, and reset whenever you put that
+            channel back on automatic.
           </p>
         </div>
       </section>
@@ -323,6 +373,8 @@
           <span>libVLC</span>
           <span>Dahua CGI over HTTP Digest</span>
           <span>RTSP</span>
+          <span>~8,200 lines across 45 files</span>
+          <span>No cloud, no account, no telemetry</span>
         </div>
       </section>
 
