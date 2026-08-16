@@ -264,7 +264,7 @@
           >
             <a
               href="#work"
-              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read the Pub/Sub writeup</a
+              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read: Pub/Sub for microservices</a
             >
             <a
               href="docs/hirnaymay_bhaskar_resume.pdf"
@@ -318,11 +318,9 @@
               <p>
                 Rebuilt flow control, ack-deadline handling and backpressure. All 38
                 nodes came off.
-              </p>
-              <a class="case-link" href="/writing/pubsub-backpressure/"
-                >Read the writeup →</a
-              >
-            </div>
+              </p><a class="case-link" href="/writing/pubsub-backpressure/"
+                >Running Pub/Sub in a microservice system →</a
+              ></div>
             <dl class="rail">
               <div>
                 <dt>Worst-case delay</dt>
@@ -902,24 +900,23 @@
       <section id="writing" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Writing</p>
-            <h2>Engineering notes</h2>
-            <p class="lede measure">
-              The reasoning that wouldn't fit in a commit message.
+            <p class="eyebrow">Writing</p><h2>Guides</h2><p class="lede measure">
+              Reference writing on systems I've had to get right — the design decisions and
+              the failure modes that shaped them, written so they're useful on a system
+              that isn't mine.
             </p>
           </div>
 
           <div class="rowlist reveal">
             <a href="/writing/pubsub-backpressure/" class="group">
               <div class="k">Distributed systems<br /><span class="rowdate">August 2026</span></div>
-              <div class="v">
-                <span
+              <div class="v"><span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
-                  >What 38 nodes were hiding</span
+                  >Running Pub/Sub in a microservice system</span
                 >
-                A queue that grows while you add consumers is not telling you about
-                capacity. It is telling you that some of your capacity is being spent
-                twice.
+                The lease model, flow control, backpressure, idempotency and
+                dead-letter policy — and why adding consumers sometimes makes a backlog
+                worse.
               </div>
             </a>
             <a href="/writing/billing-unit-mismatch/" class="group">

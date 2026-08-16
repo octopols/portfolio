@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>What 38 nodes were hiding — Hirnaymay Bhaskar</title>
+    <title>Running Pub/Sub in a microservice system — Hirnaymay Bhaskar</title>
     <meta
       name="description"
-      content="A Pub/Sub backlog of 1.26M messages that a 38-node fleet had been absorbing for months. The fleet was not undersized — it was feeding the backlog. Redelivery amplification, autoscaler feedback loops, and the three changes that took worst-case delivery from 2.4 hours to 94 seconds."
+      content="A working guide to Google Cloud Pub/Sub between services: the lease model, flow control, backpressure, idempotency, dead-letter policy, and which metric to autoscale on. The defaults are tuned for a fast handler, and yours probably isn't one."
     />
     <link rel="canonical" href="https://hirnaymay.com/writing/pubsub-backpressure/" />
 
@@ -17,10 +17,10 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
     <meta property="og:url" content="https://hirnaymay.com/writing/pubsub-backpressure/" />
-    <meta property="og:title" content="What 38 nodes were hiding" />
+    <meta property="og:title" content="Running Pub/Sub in a microservice system" />
     <meta
       property="og:description"
-      content="A queue that grows while you add consumers is not telling you about capacity. It is telling you that some of your capacity is being spent twice."
+      content="The lease model, flow control, backpressure, idempotency and dead-letter policy — and why adding consumers sometimes makes a backlog worse."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
@@ -66,10 +66,19 @@
 
       header.hero { padding: 80px 0 48px; }
       .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
-      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      h1 { margin: 0; font-size: clamp(36px, 6.2vw, 62px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 700; }
       .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
 
-      section { padding: 56px 0 0; }
+      /* contents */
+      .toc { margin: 40px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02); }
+      .toc h2 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin: 0 0 14px; font-weight: 500; }
+      .toc ol { margin: 0; padding-left: 20px; color: #c8cdd4; font-size: 15px; }
+      .toc li { margin-bottom: 7px; }
+      .toc li::marker { color: var(--dim); font-family: var(--mono); font-size: 12px; }
+      .toc a { text-decoration: none; border-bottom: 1px solid transparent; }
+      .toc a:hover { border-bottom-color: var(--dim); }
+
+      section { padding: 56px 0 0; scroll-margin-top: 24px; }
       .label {
         font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
         color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
@@ -92,6 +101,7 @@
       .tok-c { color: #6b7178; }
       .tok-k { color: #b794f4; }
       .tok-s { color: #f6ad55; }
+      .tok-f { color: #90cdf4; }
 
       blockquote {
         margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
@@ -99,67 +109,36 @@
       }
       blockquote p { color: inherit; margin: 0; }
 
-      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 14.5px; }
       th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
       th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
       td { color: #c8cdd4; }
       td strong { color: var(--text); }
+      td.mono, .mono { font-family: var(--mono); font-size: 13px; }
 
       .callout {
         border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
         padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
       }
       .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout.case { border-left-color: #90cdf4; background: rgba(144,205,244,.035); }
       .callout p:last-child { margin-bottom: 0; }
       .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
       .callout.good .tag { color: var(--accent); }
+      .callout.case .tag { color: #90cdf4; }
 
       ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
       li { margin-bottom: 10px; }
       li::marker { color: var(--dim); }
 
-      /* ============ shared figure chrome ============ */
       .fig { margin: 0 0 30px; }
       .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
       .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
       .cap b { color: var(--muted); font-weight: 500; }
 
-      /* ============ amplification bars ============ */
-      .amp { min-width: 520px; }
-      .amp-row { display: grid; grid-template-columns: 96px 1fr 116px; gap: 14px; align-items: center; margin-bottom: 9px; }
-      .amp-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
-      .amp-track { display: flex; height: 26px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
-      .amp-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; white-space: nowrap; }
-      .amp-seg.useful { background: rgba(104,211,145,.28); color: #b9e6cb; }
-      .amp-seg.dup { background: rgba(252,129,129,.22); color: #ffc9c9; border-left: 1px solid rgba(252,129,129,.4); }
-      .amp-val { font-size: 12.5px; color: #c8cdd4; font-family: var(--mono); }
-      .amp-legend { display: flex; gap: 20px; font-size: 11.5px; color: var(--dim); margin-top: 12px; }
-      .amp-legend span { display: flex; align-items: center; gap: 7px; }
-      .amp-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
-
-      /* ============ feedback loop ============ */
-      .loop { min-width: 540px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; align-items: stretch; }
-      .loop-node {
-        border: 1px solid var(--line); border-radius: 9px; padding: 14px 12px; background: var(--panel);
-        text-align: center; position: relative;
-      }
-      .loop-node .ln-n { font-size: 10px; font-family: var(--mono); color: var(--dim); margin-bottom: 7px; }
-      .loop-node .ln-t { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
-      .loop-node.bad { border-color: rgba(252,129,129,.35); background: rgba(252,129,129,.05); }
-      .loop-node.bad .ln-t { color: #ffc9c9; }
-      .loop-arrow { display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 15px; font-family: var(--mono); padding: 0 6px; }
-      .loop-back {
-        margin-top: 10px; border-top: 1px dashed rgba(252,129,129,.4); position: relative;
-        height: 26px; min-width: 540px;
-      }
-      .loop-back span {
-        position: absolute; left: 50%; transform: translateX(-50%); top: 6px;
-        font-size: 11.5px; color: var(--bad); background: var(--bg); padding: 0 10px;
-      }
-
-      /* ============ lease timeline ============ */
+      /* lease timeline */
       .lease { min-width: 560px; }
-      .lease-row { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: center; margin-bottom: 14px; }
+      .lease-row { display: grid; grid-template-columns: 132px 1fr; gap: 16px; align-items: center; margin-bottom: 16px; }
       .lease-name { font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.35; }
       .lease-track { position: relative; height: 30px; border-radius: 4px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
       .lease-span { position: absolute; top: 4px; height: 20px; border-radius: 3px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; white-space: nowrap; }
@@ -168,11 +147,18 @@
       .lease-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--warn); }
       .lease-mark span { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--warn); white-space: nowrap; font-family: var(--mono); }
 
-      /* ============ outcome ============ */
-      .outcome { border: 1px solid var(--line); border-radius: 12px; padding: 28px 26px; background: rgba(104,211,145,.03); margin: 8px 0 0; }
-      .outcome-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
-      .oc-k { font-size: 10.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); margin-bottom: 9px; }
-      .oc-v { font-size: clamp(19px, 2.6vw, 25px); font-weight: 700; letter-spacing: -.02em; color: var(--accent); line-height: 1.15; }
+      /* amplification bars */
+      .amp { min-width: 520px; }
+      .amp-row { display: grid; grid-template-columns: 96px 1fr 116px; gap: 14px; align-items: center; margin-bottom: 9px; }
+      .amp-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
+      .amp-track { display: flex; height: 26px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); background: rgba(255,255,255,.03); }
+      .amp-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; white-space: nowrap; }
+      .amp-seg.useful { background: rgba(104,211,145,.28); color: #b9e6cb; }
+      .amp-seg.dup { background: rgba(252,129,129,.22); color: #ffc9c9; border-left: 1px solid rgba(252,129,129,.4); }
+      .amp-val { font-size: 12.5px; color: #c8cdd4; font-family: var(--mono); }
+      .amp-legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 11.5px; color: var(--dim); margin-top: 12px; }
+      .amp-legend span { display: flex; align-items: center; gap: 7px; }
+      .amp-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
 
       footer {
         margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
@@ -185,7 +171,6 @@
       @media (max-width: 640px) {
         header.hero { padding: 56px 0 36px; }
         section { padding: 40px 0 0; }
-        .outcome-grid { grid-template-columns: 1fr; gap: 20px; }
       }
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
@@ -197,78 +182,88 @@
   <body>
     <div class="wrap">
       <nav>
-        <a href="/" class="mark">OCTOPOLS</a>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
         <a href="/writing/">← All writing</a>
       </nav>
 
       <header class="hero">
-        <div class="kicker">Distributed systems · Field notes</div>
-        <h1>What 38 nodes were hiding</h1>
+        <div class="kicker">Distributed systems · Guide</div>
+        <h1>Running Pub/Sub in a microservice system</h1>
         <p class="standfirst">
-          Two subscriptions carrying 1.26M messages of backlog, a worst-case delivery delay of 2.4
-          hours, and a fleet that had been sized to absorb it. The fleet was not undersized. It was
-          feeding the backlog.
+          Publishing is the easy half. Everything difficult about Pub/Sub lives on the
+          subscriber side, in a lease model most teams never configure — and the
+          defaults assume a handler far faster than yours.
         </p>
+
+        <nav class="toc" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#semantics">What at-least-once actually costs you</a></li>
+            <li><a href="#lease">The lease model</a></li>
+            <li><a href="#flow-control">Flow control: sizing what you hold</a></li>
+            <li><a href="#backpressure">Backpressure: who sets the pace</a></li>
+            <li><a href="#amplification">Why adding consumers can make it worse</a></li>
+            <li><a href="#autoscaling">Autoscaling on a signal that isn't lying</a></li>
+            <li><a href="#idempotency">Idempotency, ordering and dead letters</a></li>
+            <li><a href="#defaults">A starting configuration</a></li>
+          </ol>
+        </nav>
       </header>
 
-      <section>
-        <div class="label">[ <b>01</b> — The symptom ]</div>
-        <h2>A queue that would not drain, and a fleet that would not shrink</h2>
+      <section id="semantics">
+        <div class="label">[ <b>01</b> — Delivery semantics ]</div>
+        <h2>What at-least-once actually costs you</h2>
         <p>
-          Two Pub/Sub subscriptions on the delivery path. Combined backlog sat at
-          <strong>1.26M messages</strong>. Worst-case delivery delay — the age of the oldest unacked
-          message — reached <strong>2.4 hours</strong>.
+          Pub/Sub is at-least-once by default. Not sometimes, not only under failure —
+          by design. A message you have already processed can arrive again, at any time,
+          on any consumer, and the system considers that correct behaviour.
         </p>
         <p>
-          The response, over time, had been consumers. The fleet had grown to
-          <strong>38 nodes</strong>, autoscaled on backlog depth, and it frequently never scaled back
-          down. That last detail is the interesting one, and it took me a while to see why.
+          Exactly-once delivery is available as a subscription setting, and it is
+          genuinely useful, but it is narrower than the name suggests: it applies within
+          an acknowledgement window on a single subscription, it constrains where your
+          subscribers can run, and it costs throughput. It also does not make your side
+          effects safe. If your handler charges a card or sends an email, an
+          exactly-once subscription does not save you — the crash between "sent" and
+          "acked" still happens.
         </p>
+
+        <blockquote>
+          <p>
+            The first design decision is not which flags to set. It is accepting that
+            every consumer you write must be safe to run twice on the same message.
+          </p>
+        </blockquote>
+
         <p>
-          The system was not alerting on anything except the backlog itself. Nothing was crashing,
-          error rates were normal, and every individual node looked healthy. It read as a capacity
-          problem, and it had been treated as one for months.
+          Everything else in this guide assumes that. Section 07 covers how to get it.
+          If you take one thing away, take that one — it is the difference between a
+          queue that degrades gracefully under load and one that corrupts data whenever
+          it is busy.
         </p>
       </section>
 
-      <section>
-        <div class="label">[ <b>02</b> — The tell ]</div>
-        <h2>Throughput per node fell as nodes were added</h2>
+      <section id="lease">
+        <div class="label">[ <b>02</b> — The lease model ]</div>
+        <h2>The ack deadline is a lease, not a timeout</h2>
         <p>
-          Adding consumers did something. Each scale-out event produced a visible dip in backlog,
-          which is exactly what you would expect if the fleet were undersized — and exactly why the
-          approach kept getting repeated.
+          When a subscriber receives a message it takes out a lease on it. The
+          <em>ack deadline</em> is how long that lease lasts: acknowledge within it and
+          the message is done; miss it and Pub/Sub assumes your consumer died and hands
+          the message to someone else.
         </p>
         <p>
-          But the dip never held, and the number that mattered was moving the wrong way:
-          <strong>messages successfully acked per node per minute was falling</strong> as the fleet
-          grew.
+          The default is 10 seconds, and the configurable range is 10 to 600. Almost
+          nobody's handler finishes in 10 seconds, which is why the client libraries
+          paper over it: a lease-management thread calls
+          <code>modifyAckDeadline</code> in the background, extending the lease while
+          your handler runs, up to a maximum total extension you can also configure.
         </p>
         <p>
-          That is not a capacity curve, and the distinction matters more than it
-          sounds. A fleet that is genuinely too small shows roughly <em>flat</em>
-          per-node throughput as you add nodes: you get more total work done, each
-          node keeps pulling its weight, and the backlog drains. Per-node throughput
-          that <em>degrades</em> with fleet size means the nodes are interfering with
-          each other — every one you add makes the others slightly worse.
-        </p>
-        <p>They were interfering through the one thing they all shared.</p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>03</b> — The mechanism ]</div>
-        <h2>Redelivery amplification</h2>
-        <p>
-          Pub/Sub is at-least-once. Every message you pull comes with an ack deadline — a lease. Ack
-          within the deadline and the message is done. Miss it, and Pub/Sub assumes the consumer died
-          and redelivers the message to someone else.
-        </p>
-        <p>
-          The client library tries to protect you from this: a lease-management thread extends the
-          deadline in the background with <code>modifyAckDeadline</code> while your handler is still
-          running. That works right up until the process has leased more messages than it can
-          actually work through — at which point messages sit in the client's internal buffer,
-          holding leases, waiting for a worker slot that is not coming fast enough.
+          That works well, and it hides the failure mode. Lease extension renews the
+          messages your process is <em>holding</em> — including the ones sitting in the
+          client's internal buffer waiting for a worker slot that isn't free. A message
+          can burn its entire lease without your code ever seeing it.
         </p>
 
         <div class="fig">
@@ -282,7 +277,7 @@
                 </div>
               </div>
               <div class="lease-row">
-                <div class="lease-name">Handler still<br />queued at deadline</div>
+                <div class="lease-name">Still queued<br />when it expires</div>
                 <div class="lease-track">
                   <div class="lease-span over" style="left: 2%; width: 58%">buffered — waiting for a worker slot</div>
                   <div class="lease-mark" style="left: 60%"><span>deadline</span></div>
@@ -292,42 +287,126 @@
             </div>
           </div>
           <p class="cap">
-            <b>A lease you cannot service is worse than a message you never pulled.</b> The second
-            row still consumes a worker eventually — it just does so after another node has already
-            started the same work.
+            <b>A lease you cannot service is worse than a message you never pulled.</b>
+            The second row still consumes a worker eventually — just after another
+            consumer has already started the same work.
           </p>
         </div>
 
         <p>
-          Redelivered work is indistinguishable from new work. It consumes a pull slot,
-          a worker, a database round-trip and a downstream call, and at the end of it
-          the message may well be redundant. So the useful throughput of the fleet is
-          not the raw throughput:
-        </p><pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
+          So derive the deadline from measurement, not taste. Take the p99 of your
+          handler, add headroom, set that. Too short and you manufacture redeliveries
+          for work that was going to succeed. Too long and a genuinely dead consumer
+          holds its messages hostage for the full deadline before anyone retries them.
+        </p>
+      </section>
+
+      <section id="flow-control">
+        <div class="label">[ <b>03</b> — Flow control ]</div>
+        <h2>Size what you hold, not what you can receive</h2>
+        <p>
+          Flow control caps how much a single subscriber client leases at once:
+          <code>maxOutstandingMessages</code> and <code>maxOutstandingBytes</code>. These
+          are the most consequential settings on the subscriber and the ones most often
+          left alone. The defaults are generous — the Node client will hold a thousand
+          messages — because they are tuned for a handler that returns in milliseconds.
+        </p>
+        <p>
+          A third setting matters as much and gets noticed less.
+          <code>allowExcessMessages</code> lets the client accept a delivery that pushes
+          it past your limit rather than deferring it. Left on, it quietly reintroduces
+          the problem you just configured away. Turn it off.
+        </p>
+
+        <h3>Sizing it</h3>
+        <p>
+          Little's Law gives you the number. What a process can have in flight is its
+          concurrency multiplied by how long each item takes:
+        </p>
+
+        <pre><code><span class="tok-c">// What one process can actually be working on at once.</span>
+in_flight = worker_concurrency × p99_handler_seconds
+
+<span class="tok-c">// Lease a little more than that, so workers never starve —</span>
+<span class="tok-c">// but not so much that the surplus ages out of its lease.</span>
+maxOutstandingMessages ≈ in_flight × 1.5</code></pre>
 
         <p>
-          It is worth being precise about what this does and does not explain,
-          because the obvious reading of it is wrong. If the redelivery rate were a
-          <em>constant</em> — some fixed tax you pay per message regardless of fleet
-          size — then useful throughput would be <code>n · k / (1 + r)</code>, which
-          still grows linearly in <code>n</code>. A constant redelivery rate is not
-          futility. It is a discount. Scale-out would have been wasteful, but it
-          would eventually have worked.
+          The multiplier is a buffer, not an ambition. Much above 2× you are holding
+          messages whose leases will expire before a worker reaches them, and you have
+          rebuilt the failure from section 02 with extra steps.
+        </p>
+
+        <div class="callout good">
+          <span class="tag">Rule of thumb</span>
+          <p>
+            <strong>Never lease what you cannot finish inside the deadline.</strong> A
+            message left in the broker is a message another consumer can take. A message
+            buffered in your client is a message nobody can take — and it is ageing.
+          </p>
+        </div>
+      </section>
+
+      <section id="backpressure">
+        <div class="label">[ <b>04</b> — Backpressure ]</div>
+        <h2>The slowest dependency should set the pace</h2>
+        <p>
+          Flow control bounds what the client holds. It says nothing about what your
+          handler does with it. If the handler spawns unbounded concurrent work — a
+          database write, an HTTP call to a service with its own limits — the puller
+          happily accepts messages the downstream cannot absorb, and the lease clock
+          starts on all of them at once.
         </p>
         <p>
-          <strong>The redelivery rate was not constant. It rose with fleet size.</strong>
+          In a microservice system this is the normal case, not the exception. The
+          consumer is rarely the bottleneck. It is a thin thing in front of a database,
+          a third-party API, or another service with its own capacity and its own
+          opinion about how fast you may go.
+        </p>
+
+        <pre><code><span class="tok-c">// Bound in-flight handler work so the downstream sets the rate.</span>
+<span class="tok-k">const</span> limit = pLimit(DOWNSTREAM_CONCURRENCY);
+
+subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt;
+  limit(() =&gt; <span class="tok-f">handle</span>(msg)),
+);</code></pre>
+
+        <p>
+          With both bounds in place, the queue is finally allowed to do the job a queue
+          exists for: hold work. Backlog depth becomes a signal about arrival rate rather
+          than a symptom of your own consumers misbehaving — which is what makes section
+          06 possible at all.
+        </p>
+      </section>
+
+      <section id="amplification">
+        <div class="label">[ <b>05</b> — Redelivery amplification ]</div>
+        <h2>Why adding consumers can make a backlog worse</h2>
+        <p>This is the part that surprises people, so it is worth doing carefully.</p>
+        <p>
+          Redelivered work is indistinguishable from new work. It takes a pull slot, a
+          worker, a database round-trip, and at the end of it the result may be
+          redundant. So the throughput that actually clears the backlog is not the
+          throughput you are paying for:
+        </p>
+
+        <pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
+
+        <p>
+          Be precise about what this does and does not explain, because the obvious
+          reading is wrong. If the redelivery rate <code>r</code> were a constant — a
+          fixed tax per message, independent of fleet size — then useful throughput
+          would be <code>n · k / (1 + r)</code>, which still grows linearly in
+          <code>n</code>. <strong>A constant redelivery rate is not futility. It is a
+          discount.</strong> Scale-out would be wasteful, and it would still work.
         </p>
         <p>
-          Every consumer was calling the same downstream. Add consumers and the
-          concurrency against that shared dependency goes up, its latency goes up
-          with it, and handler time goes up in turn. Handler time is precisely what
-          the ack deadline is racing. So each node added pushed a few more messages
-          on <em>every other node</em> past their deadline — which is exactly the
-          per-node decline from the previous section, seen from the other side.
-        </p><p>
-          With <code>r</code> rising as <code>n</code> rises, useful throughput
-          <code>n · k / (1 + r(n))</code> stops tracking the fleet and starts
-          flattening. You keep buying nodes. You stop buying much work.
+          The failure case is when <code>r</code> rises with <code>n</code>, and in a
+          microservice system there is an obvious reason it would: every consumer calls
+          the same downstream. Add consumers, concurrency against that shared dependency
+          rises, its latency rises with it, and handler time rises in turn. Handler time
+          is exactly what the ack deadline is racing. <strong>Each node you add pushes a
+          few more messages on every other node past their deadline.</strong>
         </p>
 
         <div class="fig">
@@ -364,196 +443,207 @@
             <span><i class="amp-swatch" style="background: rgba(252,129,129,.45)"></i> work that is redelivered and repeated</span>
           </div>
           <p class="cap">
-            <b>Bar length is raw throughput; only the green part is progress.</b> Nearly four times
-            the fleet bought under twice the useful work, because the duplicate share grew as the
-            fleet did. Had the redelivery rate stayed at its 10-node value, 38 nodes would have
-            returned 3.8× and the backlog would have drained — slowly, expensively, but it would
-            have drained. <em>Illustrative shape, not measured data: the direction is the point.</em>
+            <b>Bar length is raw throughput; only the green part is progress.</b> Nearly
+            four times the fleet buys under twice the useful work once the duplicate
+            share grows with the fleet. Had <code>r</code> held at its 10-node value, 38
+            nodes would have returned 3.8×.
+            <em>Illustrative shape, not measured data.</em>
+          </p>
+        </div>
+
+        <h3>The diagnostic</h3>
+        <p>
+          One ratio separates the two cases, and total throughput hides it completely,
+          because total throughput goes up either way:
+        </p>
+
+        <div class="callout good">
+          <span class="tag">Plot this before you provision</span>
+          <p>
+            <strong>Acked messages per node per minute, against fleet size.</strong> Flat
+            means you are genuinely under-provisioned and scale-out is the right answer.
+            Sloping down means the nodes are interfering through something they share —
+            stop adding them and go find it.
+          </p>
+        </div>
+
+        <div class="callout case">
+          <span class="tag">Where I hit this</span>
+          <p>
+            Two subscriptions on a delivery path at work, carrying 1.26M messages of
+            combined backlog, with worst-case delivery delay at 2.4 hours. The standing
+            response had been consumers — 38 of them, on an autoscaler that rarely scaled
+            back down. Fixing flow control, ack deadlines and backpressure took the
+            backlog under 4K and worst-case delay to 94 seconds, and the whole scale-out
+            was retired. No capacity was added. The capacity had been there, being spent
+            twice.
           </p>
         </div>
       </section>
 
-      <section>
-        <div class="label">[ <b>04</b> — Why it never scaled down ]</div>
-        <h2>The autoscaler was closing the loop</h2>
+      <section id="autoscaling">
+        <div class="label">[ <b>06</b> — Autoscaling ]</div>
+        <h2>Pick a signal that isn't polluted by your own output</h2>
         <p>
-          Flattening throughput explains why the backlog stopped draining. It does not
-          explain why the fleet ratcheted to 38 nodes and stayed there. That part is
-          the autoscaler, and it is the same bug wearing a different hat.
+          The obvious metric to scale a subscriber fleet on is
+          <code>num_undelivered_messages</code> — backlog depth. It is the standard
+          choice and it is fine when the backlog is exogenous.
         </p>
         <p>
-          The fleet scaled on <code>num_undelivered_messages</code> — backlog depth.
-          That metric is the standard choice and it is fine when the backlog is
-          exogenous. Here it was not. <strong>A redelivered message is undelivered
-          again</strong>, so every duplicate the fleet generated was counted back to
-          the autoscaler as fresh demand. The number on the dashboard was not queue
-          depth. It was queue depth plus the fleet's own churn.
+          It is a trap when it isn't. <strong>A redelivered message is undelivered
+          again</strong>, so every duplicate your fleet generates is counted straight
+          back to the autoscaler as fresh demand. If your consumers are missing
+          deadlines, the number on the dashboard is not queue depth — it is queue depth
+          plus your fleet's own churn. Scaling up raises the churn, which raises the
+          metric, which authorises scaling up.
+        </p>
+        <p>
+          It also explains a symptom that otherwise looks like a bug in the autoscaler:
+          a fleet in this state can never scale <em>down</em>. Shrinking would reduce the
+          churn inflating the metric, but the metric has to fall first for shrinking to
+          be permitted.
         </p>
 
-        <div class="fig">
-          <div class="fig-scroll">
-            <div class="loop">
-              <div class="loop-node">
-                <div class="ln-n">01</div>
-                <div class="ln-t">Backlog rises</div>
-              </div>
-              <div class="loop-arrow">→</div>
-              <div class="loop-node">
-                <div class="ln-n">02</div>
-                <div class="ln-t">Autoscaler adds consumers</div>
-              </div>
-              <div class="loop-arrow">→</div>
-              <div class="loop-node bad">
-                <div class="ln-n">03</div>
-                <div class="ln-t">More leases than can be serviced</div>
-              </div>
-              <div class="loop-arrow">→</div>
-              <div class="loop-node bad">
-                <div class="ln-n">04</div>
-                <div class="ln-t">Deadlines missed, messages redelivered</div>
-              </div>
-            </div>
-            <div class="loop-back"><span>↑ every duplicate is counted back to the autoscaler as fresh demand</span></div>
-          </div>
-          <p class="cap"><b>The 38 nodes were not responding to load. They were responding to themselves.</b>
-            Each node added raised the redelivery rate, which inflated the metric the
-            autoscaler was reading, which authorised another node.
-          </p>
-        </div>
+        <table>
+          <thead>
+            <tr><th>Signal</th><th>What it tells you</th><th>Use it when</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">oldest_unacked<br />_message_age</td>
+              <td>Whether you are actually falling behind, in time.</td>
+              <td><strong>Default choice.</strong> Immune to redelivery inflation.</td>
+            </tr>
+            <tr>
+              <td class="mono">num_undelivered<br />_messages</td>
+              <td>How much is queued, plus everything circulating.</td>
+              <td>Only once you trust your consumers to hold their leases.</td>
+            </tr>
+            <tr>
+              <td class="mono">downstream<br />saturation</td>
+              <td>Whether more consumers could help at all.</td>
+              <td>When the bottleneck is a database or a third-party limit.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The last row is the one people skip. If the constraint is a rate-limited
+          third-party API, no number of consumers changes your throughput. Scaling on
+          backlog will happily spend money proving that.
+        </p>
+      </section>
+
+      <section id="idempotency">
+        <div class="label">[ <b>07</b> — Correctness ]</div>
+        <h2>Idempotency, ordering and dead letters</h2>
+
+        <h3>Idempotency</h3>
+        <p>
+          The cheapest version: give every message a stable business key, record the keys
+          you have completed, and check before acting. Not the Pub/Sub
+          <code>messageId</code> — a redelivery of the same logical event after a
+          publisher retry gets a new one. Use something from the payload that identifies
+          the work: an order id, an invoice period, a state transition.
+        </p>
+        <p>
+          Some handlers are naturally idempotent —
+          <code>SET status = 'shipped'</code> can run all day. Most are not, and the ones
+          that aren't tend to be the ones that spend money. Write the dedup table.
+        </p>
+
+        <h3>Ordering keys, and what they cost</h3>
+        <p>
+          Ordering keys guarantee that messages sharing a key are delivered in order.
+          They also serialise them: one key is processed by one subscriber at a time, so
+          your parallelism is bounded by your number of distinct keys, and one slow
+          message blocks everything behind it on that key.
+        </p>
+        <p>
+          Use them where order is genuinely part of correctness, key as narrowly as you
+          can — per entity, never per tenant — and expect throughput to look nothing like
+          the unordered case.
+        </p>
+
+        <h3>Dead letters</h3>
+        <p>
+          Configure a dead-letter topic with <code>maxDeliveryAttempts</code>. Without
+          one, a message your handler cannot process is immortal: it fails, it is
+          redelivered, it fails again, forever, consuming a lease and a worker each time.
+          A single poison message with a large payload can hold a meaningful fraction of
+          a subscriber's capacity indefinitely.
+        </p>
 
         <div class="callout">
-          <span class="tag">Worth knowing</span>
-          <p><code>num_undelivered_messages</code> counts redeliveries.
-            <code>oldest_unacked_message_age</code> is the better autoscaling signal
-            for exactly this reason — it tracks whether you are actually falling
-            behind, not how much traffic is circulating. A control loop whose input is
-            polluted by its own output is not a control loop; it is an amplifier. It
-            is also why the fleet could never scale <em>down</em>: shrinking would have
-            reduced the churn inflating the metric, but the metric had to fall first
-            for shrinking to be allowed.
+          <span class="tag">Also worth doing</span>
+          <p>
+            Alert on the dead-letter topic having anything in it at all. A dead-letter
+            queue nobody reads is a folder where you keep your outages.
           </p>
         </div>
       </section>
 
-      <section>
-        <div class="label">[ <b>05</b> — The fix ]</div>
-        <h2>Three changes, all of them about admitting less work</h2>
+      <section id="defaults">
+        <div class="label">[ <b>08</b> — Reference ]</div>
+        <h2>A starting configuration</h2>
         <p>
-          None of this was solved by making the handler faster. It was solved by making each process
-          honest about how much work it could hold.
+          Not universal values — nothing here is. This is the set of decisions worth
+          making deliberately, with the reasoning attached, so you can derive your own.
         </p>
 
-        <h3>1. Flow control sized to what one process can finish</h3>
-        <p>
-          <code>maxOutstandingMessages</code> and <code>maxOutstandingBytes</code> cap how much the
-          client leases at once. The defaults are generous — they assume your handler is fast. Sized
-          correctly, they mean a process never holds a lease it cannot service inside the deadline.
-        </p>
-        <p>
-          <code>allowExcessMessages: false</code> matters here. Left at the default, the client will
-          accept a delivery that pushes it past the limit rather than deferring it, which quietly
-          reintroduces the problem you just configured away.
-        </p>
-
-        <h3>2. An ack deadline derived from measured latency</h3>
-        <p>
-          The deadline should come from the handler's actual p99, with headroom — not from a default,
-          and not from a guess. Too short and you manufacture redeliveries for work that was going to
-          succeed. Too long and genuine failures sit undetected for the full deadline before anyone
-          retries them.
-        </p>
-
-        <h3>3. Backpressure from the real bottleneck</h3>
-        <p>
-          The constraint was never the puller. It was what the handler called downstream. Without a
-          bound on in-flight handler work, the puller cheerfully accepts messages the downstream
-          cannot absorb, and the lease clock starts on all of them at once.
-        </p>
-        <p>
-          Bounding concurrency inside the handler lets the slowest dependency set the pace of the
-          whole consumer. The queue is then allowed to do the job a queue is for — holding work — with
-          the depth of it as a signal rather than a symptom.
-        </p>
-
-        <pre><code><span class="tok-c">// Lease only what this process can finish inside the deadline.</span>
-<span class="tok-k">const</span> subscription = pubsub.subscription(name, {
+        <pre><code><span class="tok-k">const</span> subscription = pubsub.subscription(name, {
   flowControl: {
-    maxOutstandingMessages: <span class="tok-c">/* sized from p99 handler latency × worker count */</span>,
-    maxOutstandingBytes:    <span class="tok-c">/* sized from payload profile, not left at default */</span>,
-    allowExcessMessages:    <span class="tok-s">false</span>,   <span class="tok-c">// defer, don't over-accept</span>
+    <span class="tok-c">// concurrency × p99 handler seconds × 1.5</span>
+    maxOutstandingMessages: <span class="tok-s">120</span>,
+    <span class="tok-c">// from your payload profile, not the default</span>
+    maxOutstandingBytes: <span class="tok-s">64</span> * <span class="tok-s">1024</span> * <span class="tok-s">1024</span>,
+    <span class="tok-c">// defer rather than over-accept</span>
+    allowExcessMessages: <span class="tok-s">false</span>,
   },
-  ackDeadline: <span class="tok-c">/* measured p99 + headroom */</span>,
+  <span class="tok-c">// measured p99 + headroom, not the 10s default</span>
+  ackDeadline: <span class="tok-s">60</span>,
 });
 
 <span class="tok-c">// The downstream sets the pace, not the puller.</span>
-<span class="tok-k">const</span> limit = pLimit(<span class="tok-c">/* what the slowest dependency sustains */</span>);
-subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt; limit(() =&gt; handle(msg)));</code></pre>
+<span class="tok-k">const</span> limit = pLimit(DOWNSTREAM_CONCURRENCY);
+subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt; limit(() =&gt; <span class="tok-f">handle</span>(msg)));</code></pre>
 
-        <div class="callout good">
-          <span class="tag">The general shape</span>
-          <p>
-            All three changes reduce how much work the system accepts at once. None of them increase
-            how much work it can do. The throughput went up anyway — because the capacity had been
-            there the whole time, spent twice.
-          </p>
-        </div>
-      </section>
+        <table>
+          <thead>
+            <tr><th>Decision</th><th>Set it from</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Ack deadline</strong></td><td>Measured p99 handler latency, plus headroom.</td></tr>
+            <tr><td><strong>Outstanding messages</strong></td><td>Little's Law, then a 1.5× buffer. Not the default.</td></tr>
+            <tr><td><strong>Excess messages</strong></td><td>Off, always.</td></tr>
+            <tr><td><strong>Handler concurrency</strong></td><td>What the slowest downstream sustains.</td></tr>
+            <tr><td><strong>Autoscaling signal</strong></td><td>Oldest unacked age, or downstream saturation.</td></tr>
+            <tr><td><strong>Dead letter</strong></td><td>Always configured. Always alerted on.</td></tr>
+            <tr><td><strong>Idempotency</strong></td><td>A business key, not the message id.</td></tr>
+            <tr><td><strong>Ordering keys</strong></td><td>Only where order is correctness. Key per entity.</td></tr>
+          </tbody>
+        </table>
 
-      <section>
-        <div class="label">[ <b>06</b> — Result ]</div>
-        <h2>The scale-out came off</h2>
-
-        <div class="outcome">
-          <div class="outcome-grid">
-            <div>
-              <div class="oc-k">Combined backlog</div>
-              <div class="oc-v">1.26M → &lt;4K</div>
-            </div>
-            <div>
-              <div class="oc-k">Worst-case delay</div>
-              <div class="oc-v">2.4 h → 94 s</div>
-            </div>
-            <div>
-              <div class="oc-k">Fleet</div>
-              <div class="oc-v">38 → 0 extra nodes</div>
-            </div>
-          </div>
-        </div>
-
-        <p style="margin-top: 28px">
-          The 38 nodes were retired. Not reduced — retired. The original fleet handled the same
-          traffic once it stopped competing with itself, which is the clearest evidence available
-          that the extra capacity had never been doing anything except generating the load that
-          justified it.
-        </p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>07</b> — What generalises ]</div>
-        <h2>Scale-out is a valid answer to the wrong question</h2>
         <p>
-          The uncomfortable part of this one is that adding nodes <em>worked</em>, briefly, every
-          single time. There was always a dip. The feedback was positive, immediate, and completely
-          misleading, and it is why the workaround survived long enough to become the architecture.
+          The thread running through all of it: <strong>every one of these settings
+          limits how much work the system admits at once.</strong> None of them make it
+          faster. That is usually the point — throughput problems in a queue are more
+          often about work being done twice than about there being too little capacity to
+          do it once.
         </p>
 
         <blockquote>
           <p>
-            A queue that grows while you add consumers is not telling you about capacity. It is
-            telling you that some of your capacity is being spent twice.
+            A queue that grows while you add consumers is not telling you about capacity.
+            It is telling you that some of your capacity is being spent twice.
           </p>
         </blockquote>
 
         <p>
-          The diagnostic that would have caught this in an afternoon is one ratio: acked messages per
-          node, plotted against fleet size. If it slopes down, stop provisioning and go find the
-          duplicate work. Total throughput hides this completely — it goes up either way.
-        </p>
-        <p>
           Related, and the same disease in a different organ:
           <a href="/writing/billing-unit-mismatch/" style="color: var(--accent)">how to bill AI usage</a>,
-          where the number that governed what customers were charged existed only inside a nightly
-          job that printed nothing.
+          where the number that governed every invoice existed only inside a nightly job
+          that printed nothing.
         </p>
       </section>
 
