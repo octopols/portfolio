@@ -143,6 +143,7 @@
 
       .fig { margin: 0 0 30px; }
       .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .arch-svg { width: 100%; min-width: 640px; height: auto; }
       .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
       .cap b { color: var(--muted); font-weight: 500; }
 
@@ -280,6 +281,151 @@
             five is the cost of channel four. That number is what kills the feature.
           </li>
         </ul>
+
+        <div class="fig">
+          <div class="fig-scroll">
+              <svg
+                class="arch-svg"
+                viewBox="0 0 900 540"
+                role="img"
+                aria-labelledby="archTitle archDesc"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title id="archTitle">
+                  Broadcast delivery, before and after consolidation
+                </title>
+                <desc id="archDesc">
+                  Before: WhatsApp, email and SMS each run their own schedule, retry and
+                  status steps before reaching a provider, and adding RCS would mean
+                  building all three again. After: all four channels feed one shared
+                  Step Functions orchestration that owns scheduling, fan-out, retry,
+                  idempotency, status and audit, then pass through a thin channel
+                  adapter — payload shape, provider auth and webhook parsing — to their
+                  providers. The adapter is the only new code a channel needs.
+                </desc>
+                <defs>
+                  <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,1 L7,4 L0,7 z" fill="rgba(255,255,255,0.3)" />
+                  </marker>
+                  <marker id="ahg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,1 L7,4 L0,7 z" fill="rgba(104,211,145,0.7)" />
+                  </marker>
+                </defs>
+
+                <text x="0" y="12" fill="#5f6672" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">BEFORE</text>
+
+                <g font-family="ui-sans-serif, system-ui">
+                  <text x="0" y="52" fill="#e6e8eb" font-size="12" font-weight="600">WhatsApp</text>
+                  <rect x="88" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="138" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                  <line x1="188" y1="48" x2="206" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="210" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="260" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                  <line x1="310" y1="48" x2="328" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="332" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="382" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                  <line x1="432" y1="48" x2="450" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="454" y="36" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                  <text x="500" y="52.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+
+                  <text x="0" y="92" fill="#e6e8eb" font-size="12" font-weight="600">Email</text>
+                  <rect x="88" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="138" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                  <line x1="188" y1="88" x2="206" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="210" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="260" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                  <line x1="310" y1="88" x2="328" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="332" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="382" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                  <line x1="432" y1="88" x2="450" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="454" y="76" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                  <text x="500" y="92.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+
+                  <text x="0" y="132" fill="#e6e8eb" font-size="12" font-weight="600">SMS</text>
+                  <rect x="88" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="138" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                  <line x1="188" y1="128" x2="206" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="210" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="260" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                  <line x1="310" y1="128" x2="328" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="332" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                  <text x="382" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                  <line x1="432" y1="128" x2="450" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                  <rect x="454" y="116" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                  <text x="500" y="132.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+
+                  <text x="0" y="172" fill="#e0cf7a" font-size="12" font-weight="600">RCS</text>
+                  <rect x="88" y="156" width="458" height="25" rx="5" fill="rgba(246,224,94,0.03)" stroke="rgba(246,224,94,0.25)" stroke-dasharray="4 3" />
+                  <text x="317" y="172.5" fill="#d6c988" text-anchor="middle" font-size="10.5">a new channel means building all three again</text>
+                </g>
+
+                <text x="0" y="208" fill="#5f6672" font-size="11" font-family="ui-sans-serif, system-ui">
+                  3 scheduling implementations · 3 retry policies · 3 status pipelines · nothing shared
+                </text>
+
+                <line x1="0" y1="236" x2="900" y2="236" stroke="rgba(255,255,255,0.07)" />
+
+                <text x="0" y="272" fill="#68d391" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">AFTER</text>
+
+                <g font-family="ui-sans-serif, system-ui">
+                  <rect x="0" y="306" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                  <text x="46" y="323" fill="#e6e8eb" text-anchor="middle" font-size="11">WhatsApp</text>
+                  <rect x="0" y="346" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                  <text x="46" y="363" fill="#e6e8eb" text-anchor="middle" font-size="11">Email</text>
+                  <rect x="0" y="386" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                  <text x="46" y="403" fill="#e6e8eb" text-anchor="middle" font-size="11">SMS</text>
+                  <rect x="0" y="426" width="92" height="26" rx="5" fill="rgba(104,211,145,0.07)" stroke="rgba(104,211,145,0.38)" />
+                  <text x="46" y="443" fill="#68d391" text-anchor="middle" font-size="11">RCS</text>
+
+                  <path d="M92,319 C132,319 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                  <path d="M92,359 C132,359 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                  <path d="M92,399 C132,399 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                  <path d="M92,439 C132,439 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" marker-end="url(#ahg)" />
+
+                  <rect x="172" y="320" width="204" height="118" rx="9" fill="rgba(104,211,145,0.05)" stroke="rgba(104,211,145,0.4)" />
+                  <text x="274" y="344" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">Step Functions</text>
+                  <text x="274" y="360" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">orchestration</text>
+                  <line x1="192" y1="374" x2="356" y2="374" stroke="rgba(104,211,145,0.2)" />
+                  <text x="274" y="392" fill="#a9d9bd" text-anchor="middle" font-size="10.5">schedule · fan-out</text>
+                  <text x="274" y="409" fill="#a9d9bd" text-anchor="middle" font-size="10.5">retry · idempotency</text>
+                  <text x="274" y="426" fill="#a9d9bd" text-anchor="middle" font-size="10.5">status · audit</text>
+
+                  <line x1="376" y1="379" x2="406" y2="379" stroke="rgba(104,211,145,0.45)" marker-end="url(#ahg)" />
+
+                  <rect x="410" y="320" width="126" height="118" rx="9" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" />
+                  <text x="473" y="345" fill="#e6e8eb" text-anchor="middle" font-size="11.5" font-weight="600">Channel adapter</text>
+                  <text x="473" y="368" fill="#8b9199" text-anchor="middle" font-size="10">payload shape</text>
+                  <text x="473" y="385" fill="#8b9199" text-anchor="middle" font-size="10">provider auth</text>
+                  <text x="473" y="402" fill="#8b9199" text-anchor="middle" font-size="10">webhook parse</text>
+                  <text x="473" y="424" fill="#68d391" text-anchor="middle" font-size="10">the only new code</text>
+
+                  <path d="M536,379 C570,379 570,319 604,319" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                  <path d="M536,379 C570,379 570,359 604,359" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                  <path d="M536,379 C570,379 570,399 604,399" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                  <path d="M536,379 C570,379 570,439 604,439" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+
+                  <rect x="608" y="306" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                  <text x="658" y="323" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                  <rect x="608" y="346" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                  <text x="658" y="363" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                  <rect x="608" y="386" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                  <text x="658" y="403" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                  <rect x="608" y="426" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                  <text x="658" y="443" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                </g>
+
+                <text x="0" y="488" fill="#8b9199" font-size="11" font-family="ui-sans-serif, system-ui">
+                  1 scheduling implementation · 1 retry policy · 1 status pipeline · adding a channel is an adapter
+                </text>
+              </svg>
+          </div>
+          <p class="cap">
+            <b>Four per-channel pipelines collapse into one orchestration plus a thin
+            adapter per channel.</b> The dashed RCS row is the whole argument: on the
+            left, a fourth channel means building schedule, retry and status a fourth
+            time. On the right it means writing an adapter.
+          </p>
+        </div>
       </section>
 
       <section id="boundary">

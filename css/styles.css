@@ -347,21 +347,6 @@ img {
 }
 
 /* ===================================
-   FIGURES
-=================================== */
-.arch-fig {
-  margin: 0;
-}
-
-.arch-fig figcaption {
-  margin-top: 1rem;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--secondary);
-  max-width: 62ch;
-}
-
-/* ===================================
    REPOSITORY LIST
 =================================== */
 .repolist {

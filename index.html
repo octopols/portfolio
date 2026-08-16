@@ -139,16 +139,6 @@
           transition: none !important;
         }
       }
-
-      .arch-scroll {
-        overflow-x: auto;
-        padding-bottom: 8px;
-      }
-      .arch-svg {
-        width: 100%;
-        min-width: 640px;
-        height: auto;
-      }
     </style>
 
     <link rel="stylesheet" href="/css/tailwind.css" />
@@ -340,8 +330,8 @@
             <h2>Three problems that break in non-obvious ways</h2>
             <p class="lede measure">
               Each of these is a general class of problem before it is anything I did.
-              I ran into a fairly ugly version of all three at BIK.AI, which is where
-              the numbers come from — full writeups linked.
+              I hit a fairly ugly version of all three at BIK.AI, which is where the
+              numbers come from. Short version below; each one has a full writeup.
             </p>
           </div>
 
@@ -351,33 +341,21 @@
               <p class="case-n"><b>01</b> — Queues &amp; throughput</p>
               <h3>When adding consumers makes a queue slower</h3>
               <p>
-                More workers should mean more throughput. The queue is backed up, you
-                scale the consumer fleet, the backlog dips, and everyone moves on. Then
-                it comes back.
+                More workers should mean more throughput. We scaled the fleet to 38
+                nodes, the backlog dipped, and then it came back. Consumers were
+                leasing more than they could finish inside the ack deadline, so the
+                broker redelivered — and <strong>the autoscaler read those
+                redeliveries as demand and ordered more of the thing causing
+                them</strong>.
               </p>
               <p>
-                What's usually happening: consumers are leasing more messages than they
-                can finish inside the ack deadline, so the broker redelivers them and the
-                same work gets done twice. That alone is only a discount — it would still
-                drain, slowly. It turns into a wall when every consumer shares one
-                downstream, because <strong>each node you add slows the handler on every
-                other node</strong>, pushing more messages past their deadline. Useful
-                throughput flattens while the bill keeps climbing. And if you autoscale on
-                queue depth, the autoscaler reads those redeliveries as demand and orders
-                more of the thing causing them.
-              </p>
-              <p>
-                <strong>We hit a fairly complete version of this.</strong> Two Pub/Sub
-                subscriptions, 1.26M messages backed up, worst-case delivery running 2.4
-                hours behind — against a fleet that had grown to 38 nodes and rarely
-                scaled back down. Nearly 4× the consumers were returning well under 2× the
-                useful work. Rebuilding flow control, ack-deadline handling and
-                backpressure dropped the backlog under 4K and worst-case delay to 94
-                seconds. All 38 nodes came off. No capacity was added — the capacity had
-                been there the whole time, being spent twice.
+                Nearly 4× the consumers were returning well under 2× the useful work.
+                Rebuilding flow control and backpressure took all 38 nodes off. No
+                capacity was added — it had been there the whole time, being spent
+                twice.
               </p>
               <a class="case-link" href="/writing/pubsub-backpressure/"
-                >Guide: running Pub/Sub in a microservice system →</a
+                >The full guide: leases, flow control, backpressure, dead letters →</a
               >
             </div>
             <dl class="rail">
@@ -402,42 +380,34 @@
               <p class="case-n"><b>02</b> — Usage billing</p>
               <h3>Why usage billing fails quietly instead of loudly</h3>
               <p>
-                Metering AI usage is easy — every call can emit an event. Billing it is
-                three harder problems: choosing a unit, reconciling two clocks, and making
-                the arithmetic visible to someone who can notice it's wrong.
+                Usage billing has a property ordinary bugs don't: it fails without
+                erroring. Nothing 500s. Credits get granted, invoices generate, and
+                every number is internally consistent with every other number — which
+                is the only kind of wrong that survives in a billing system for long.
               </p>
               <p>
-                Usage billing has a property that ordinary bugs don't: it fails without
-                erroring. Nothing 500s. Credits get granted, usage gets counted, invoices
-                generate, and every number is internally consistent with every other
-                number. The system is confidently wrong, which is the only kind of wrong
-                that survives in a billing system for long. The two structural causes are
-                nearly always the same — <strong>a value that decides what someone is
-                charged and appears on no screen</strong>, and a unit conversion sitting
-                between what you sold and what you store.
+                Ours was a per-operation rate typed into a free-text field on an
+                internal form. <strong>The field was labelled like a price and behaved
+                like a divisor</strong>: enter 0.1 where 1 was meant and the account
+                silently gets ten times its allocation. Nobody ever typed "give this
+                customer 10×" — they typed a price. Some accounts were drawing 2–10×
+                what they'd paid for, and no screen anywhere rendered the number that
+                decided it.
               </p>
               <p>
-                <strong>Ours was a good example.</strong> The system stored a contracted
-                operation count and a per-operation rate typed into a free-text field on
-                an internal form. The field was labelled like a price and behaved like a
-                divisor: enter 0.1 where 1 was meant, and the account silently gets ten
-                times its allocation. Nobody ever typed "give this customer 10×" — they
-                typed a price. Some accounts were drawing 2–10× what they'd paid for, and
-                no interface anywhere rendered the number that decided it. Rebuilt on a
-                central versioned rate card keyed on tier, country and usage type, with
-                credits denominated in money rather than operation counts. Separately:
-                12.5% of email billing revenue was being dropped by a 3-hour daily cutoff,
-                and a WhatsApp credit runner had 18:30 UTC hardcoded as midnight across
-                five call sites — correct in India, wrong in every other market it served.
+                Two more in the same system: a 3-hour daily cutoff quietly dropping
+                12.5% of email billing revenue, and 18:30 UTC hardcoded as midnight
+                across five call sites — correct in India, wrong in every other market
+                it served.
               </p>
               <a class="case-link" href="/writing/billing-unit-mismatch/"
-                >Guide: how to bill AI usage →</a
+                >The full guide: units, clocks, rate cards, credits →</a
               >
               <a
                 class="case-link"
                 href="/writing/hardcoded-midnight/"
                 style="margin-left: 1.5rem"
-                >18:30 UTC is not midnight →</a
+                >And the timezone one →</a
               >
             </div>
             <dl class="rail">
@@ -463,30 +433,20 @@
               <h3>How to add a fourth channel without building a fourth pipeline</h3>
               <p>
                 Multi-channel messaging systems reliably grow one pipeline per channel.
-                Not by decision — because what differs between providers is concrete and
-                sitting in the API docs, while what they share is abstract and only
-                obvious on the third one.
+                Not by decision — because what differs between providers is concrete
+                and sitting in the API docs, while what they share is abstract and only
+                obvious on the third one. So the boundary gets drawn around the channel
+                instead of around the concern.
               </p>
               <p>
-                So the boundary gets drawn around the channel instead of around the
-                concern, and scheduling, retry and status tracking get written once per
-                provider. The bill isn't 4× — it's that fixes stop propagating,
-                "delivered" comes to mean four different things, and every cross-channel
-                feature costs four implementations. Drawn correctly,
-                <strong>the orchestration owns the lifecycle and the adapter owns only
-                the translation</strong>: payload, auth, webhook parsing, declared limits.
-              </p>
-              <p>
-                <strong>We had the four-pipeline version</strong> across WhatsApp, email,
-                RCS and SMS, and consolidated it onto shared AWS Step Functions
-                orchestration with Redis-backed segment delivery and a webhook status
-                pipeline. The proof it worked wasn't the migration — it was RCS, which
-                launched on that infrastructure needing an adapter and nothing else. No
-                scheduler, no retry policy, no status pipeline. It carries 2.5M messages a
-                month for 50+ enterprise clients.
+                We had the four-pipeline version across WhatsApp, email, RCS and SMS,
+                and consolidated it onto shared Step Functions orchestration.
+                <strong>The proof it worked wasn't the migration — it was RCS</strong>,
+                which launched on that infrastructure needing an adapter and nothing
+                else. No scheduler, no retry policy, no status pipeline.
               </p>
               <a class="case-link" href="/writing/one-pipeline-not-four/"
-                >Guide: one pipeline instead of four →</a
+                >The full guide, with the before/after architecture →</a
               >
             </div>
             <dl class="rail">
@@ -505,150 +465,6 @@
             </dl>
           </article>
 
-          <!-- Architecture diagram belongs to case 03 -->
-          <figure class="arch-fig mt-6 reveal">
-            <div class="arch-scroll">
-            <svg
-              class="arch-svg"
-              viewBox="0 0 900 540"
-              role="img"
-              aria-labelledby="archTitle archDesc"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title id="archTitle">
-                Broadcast delivery, before and after consolidation
-              </title>
-              <desc id="archDesc">
-                Before: WhatsApp, email and SMS each run their own schedule, retry and
-                status steps before reaching a provider, and adding RCS would mean
-                building all three again. After: all four channels feed one shared
-                Step Functions orchestration that owns scheduling, fan-out, retry,
-                idempotency, status and audit, then pass through a thin channel
-                adapter — payload shape, provider auth and webhook parsing — to their
-                providers. The adapter is the only new code a channel needs.
-              </desc>
-              <defs>
-                <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                  <path d="M0,1 L7,4 L0,7 z" fill="rgba(255,255,255,0.3)" />
-                </marker>
-                <marker id="ahg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                  <path d="M0,1 L7,4 L0,7 z" fill="rgba(104,211,145,0.7)" />
-                </marker>
-              </defs>
-
-              <text x="0" y="12" fill="#5f6672" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">BEFORE</text>
-
-              <g font-family="ui-sans-serif, system-ui">
-                <text x="0" y="52" fill="#e6e8eb" font-size="12" font-weight="600">WhatsApp</text>
-                <rect x="88" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="138" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
-                <line x1="188" y1="48" x2="206" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="210" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="260" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
-                <line x1="310" y1="48" x2="328" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="332" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="382" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
-                <line x1="432" y1="48" x2="450" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="454" y="36" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="500" y="52.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-
-                <text x="0" y="92" fill="#e6e8eb" font-size="12" font-weight="600">Email</text>
-                <rect x="88" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="138" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
-                <line x1="188" y1="88" x2="206" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="210" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="260" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
-                <line x1="310" y1="88" x2="328" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="332" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="382" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
-                <line x1="432" y1="88" x2="450" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="454" y="76" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="500" y="92.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-
-                <text x="0" y="132" fill="#e6e8eb" font-size="12" font-weight="600">SMS</text>
-                <rect x="88" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="138" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
-                <line x1="188" y1="128" x2="206" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="210" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="260" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
-                <line x1="310" y1="128" x2="328" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="332" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
-                <text x="382" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
-                <line x1="432" y1="128" x2="450" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <rect x="454" y="116" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="500" y="132.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-
-                <text x="0" y="172" fill="#e0cf7a" font-size="12" font-weight="600">RCS</text>
-                <rect x="88" y="156" width="458" height="25" rx="5" fill="rgba(246,224,94,0.03)" stroke="rgba(246,224,94,0.25)" stroke-dasharray="4 3" />
-                <text x="317" y="172.5" fill="#d6c988" text-anchor="middle" font-size="10.5">a new channel means building all three again</text>
-              </g>
-
-              <text x="0" y="208" fill="#5f6672" font-size="11" font-family="ui-sans-serif, system-ui">
-                3 scheduling implementations · 3 retry policies · 3 status pipelines · nothing shared
-              </text>
-
-              <line x1="0" y1="236" x2="900" y2="236" stroke="rgba(255,255,255,0.07)" />
-
-              <text x="0" y="272" fill="#68d391" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">AFTER</text>
-
-              <g font-family="ui-sans-serif, system-ui">
-                <rect x="0" y="306" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
-                <text x="46" y="323" fill="#e6e8eb" text-anchor="middle" font-size="11">WhatsApp</text>
-                <rect x="0" y="346" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
-                <text x="46" y="363" fill="#e6e8eb" text-anchor="middle" font-size="11">Email</text>
-                <rect x="0" y="386" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
-                <text x="46" y="403" fill="#e6e8eb" text-anchor="middle" font-size="11">SMS</text>
-                <rect x="0" y="426" width="92" height="26" rx="5" fill="rgba(104,211,145,0.07)" stroke="rgba(104,211,145,0.38)" />
-                <text x="46" y="443" fill="#68d391" text-anchor="middle" font-size="11">RCS</text>
-
-                <path d="M92,319 C132,319 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
-                <path d="M92,359 C132,359 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
-                <path d="M92,399 C132,399 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
-                <path d="M92,439 C132,439 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" marker-end="url(#ahg)" />
-
-                <rect x="172" y="320" width="204" height="118" rx="9" fill="rgba(104,211,145,0.05)" stroke="rgba(104,211,145,0.4)" />
-                <text x="274" y="344" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">Step Functions</text>
-                <text x="274" y="360" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">orchestration</text>
-                <line x1="192" y1="374" x2="356" y2="374" stroke="rgba(104,211,145,0.2)" />
-                <text x="274" y="392" fill="#a9d9bd" text-anchor="middle" font-size="10.5">schedule · fan-out</text>
-                <text x="274" y="409" fill="#a9d9bd" text-anchor="middle" font-size="10.5">retry · idempotency</text>
-                <text x="274" y="426" fill="#a9d9bd" text-anchor="middle" font-size="10.5">status · audit</text>
-
-                <line x1="376" y1="379" x2="406" y2="379" stroke="rgba(104,211,145,0.45)" marker-end="url(#ahg)" />
-
-                <rect x="410" y="320" width="126" height="118" rx="9" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" />
-                <text x="473" y="345" fill="#e6e8eb" text-anchor="middle" font-size="11.5" font-weight="600">Channel adapter</text>
-                <text x="473" y="368" fill="#8b9199" text-anchor="middle" font-size="10">payload shape</text>
-                <text x="473" y="385" fill="#8b9199" text-anchor="middle" font-size="10">provider auth</text>
-                <text x="473" y="402" fill="#8b9199" text-anchor="middle" font-size="10">webhook parse</text>
-                <text x="473" y="424" fill="#68d391" text-anchor="middle" font-size="10">the only new code</text>
-
-                <path d="M536,379 C570,379 570,319 604,319" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
-                <path d="M536,379 C570,379 570,359 604,359" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
-                <path d="M536,379 C570,379 570,399 604,399" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
-                <path d="M536,379 C570,379 570,439 604,439" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
-
-                <rect x="608" y="306" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
-                <text x="658" y="323" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-                <rect x="608" y="346" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
-                <text x="658" y="363" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-                <rect x="608" y="386" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
-                <text x="658" y="403" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-                <rect x="608" y="426" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
-                <text x="658" y="443" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
-              </g>
-
-              <text x="0" y="488" fill="#8b9199" font-size="11" font-family="ui-sans-serif, system-ui">
-                1 scheduling implementation · 1 retry policy · 1 status pipeline · adding a channel is an adapter
-              </text>
-            </svg>
-            </div>
-            <figcaption>
-              Four per-channel pipelines collapse into one orchestration plus a thin
-              adapter per channel — so adding RCS meant writing an adapter, not
-              another pipeline.
-            </figcaption>
-          </figure>
         </div>
       </section>
 
@@ -751,13 +567,24 @@
 
           <!-- Open source / GSoC — told once, here -->
           <div class="reveal">
-            <div class="flex items-baseline justify-between gap-4 mb-7 flex-wrap">
-              <h3 class="text-xl font-display font-bold">
-                Google Summer of Code
-                <span class="text-sm font-sans font-normal text-dim"
-                  >· 2023 &amp; 2024, both C++/Qt</span
-                >
-              </h3>
+            <div class="flex items-center justify-between gap-4 mb-7 flex-wrap">
+              <div class="flex items-center gap-4">
+                <img
+                  src="assets/logos/gsoc.svg"
+                  alt=""
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-11 h-11 rounded-lg object-contain bg-white/5 border border-white/10 p-1.5 shrink-0"
+                />
+                <h3 class="text-xl font-display font-bold">
+                  Google Summer of Code
+                  <span class="text-sm font-sans font-normal text-dim"
+                    >· 2023 &amp; 2024, both C++/Qt</span
+                  >
+                </h3>
+              </div>
               <a
                 href="https://github.com/octopols"
                 target="_blank"
