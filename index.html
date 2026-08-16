@@ -25,6 +25,10 @@
     <link rel="canonical" href="https://hirnaymay.com/" />
 
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
     <meta property="og:url" content="https://hirnaymay.com/" />
     <meta
       property="og:title"
@@ -34,12 +38,11 @@
       property="og:description"
       content="Backend engineer owning messaging, billing and event infrastructure at BIK.AI. Distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. 2x Google Summer of Code (VLC, MuseScore)."
     />
-    <!-- No og:image until a purpose-built 1200x630 card exists. A missing tag
-         degrades to a clean text card, which beats a broken image. -->
     <meta property="og:site_name" content="Hirnaymay Bhaskar" />
     <meta property="og:locale" content="en_US" />
 
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
     <meta name="twitter:url" content="https://hirnaymay.com/" />
     <meta
       name="twitter:title"
@@ -173,7 +176,7 @@
     <nav class="fixed inset-x-0 top-0 z-50 mix-blend-difference text-white">
       <div class="shell flex items-center justify-between py-5">
         <a href="#top" class="font-display font-bold text-lg tracking-tight"
-          >OCTOPOLS</a
+          >Hirnaymay Bhaskar</a
         >
         <div class="hidden md:flex items-center gap-7 text-[13px] tracking-wide">
           <a href="#work" class="opacity-60 hover:opacity-100 transition-opacity"
@@ -182,12 +185,12 @@
           <a
             href="#experience"
             class="opacity-60 hover:opacity-100 transition-opacity"
-            >Experience</a
+            >CV</a
           >
           <a
             href="#projects"
             class="opacity-60 hover:opacity-100 transition-opacity"
-            >Projects</a
+            >Open source</a
           >
           <a
             href="/writing/"
@@ -261,7 +264,7 @@
           >
             <a
               href="#work"
-              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read the war stories</a
+              class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors">Read the Pub/Sub writeup</a
             >
             <a
               href="docs/hirnaymay_bhaskar_resume.pdf"
@@ -285,8 +288,8 @@
         <div class="shell">
           <div class="section-head reveal">
             <p class="eyebrow">Selected work</p><h2>Three things that broke, and why</h2><p class="lede measure">
-              All three ran in production. Two have full writeups. The third gets a
-              diagram, because some things are easier to draw than describe.
+              Three systems I own at BIK.AI, in more depth than a résumé bullet allows.
+              Everything else I did there is in the next section.
             </p>
           </div>
 
@@ -305,10 +308,12 @@
               </p>
               <p>
                 Consumers were leasing more messages than they could finish before the ack
-                deadline, so Pub/Sub redelivered them, and a fixed slice of every
-                node's capacity went to doing the same work twice. Add a node, add
-                duplicate work, in exact proportion. The ratio never moves, so the
-                backlog never drains.
+                deadline, so Pub/Sub redelivered them and the work got done twice. The
+                nasty part: every consumer hit the same downstream, so each node added
+                pushed a few more messages on every <em>other</em> node past their
+                deadline. Nearly 4× the fleet bought under 2× the useful work — and the
+                autoscaler was reading a metric that counts redeliveries, so the churn
+                it created looked to it like more demand.
               </p>
               <p>
                 Rebuilt flow control, ack-deadline handling and backpressure. All 38
@@ -327,10 +332,8 @@
                 <dt>Combined backlog</dt>
                 <dd>1.26M → &lt;4K</dd>
               </div>
-              <div>
-                <dt>Fleet</dt>
-                <dd>38 → 0</dd>
-              </div>
+              <div><dt>Scale-out</dt>
+                <dd>38 → 0 extra</dd></div>
             </dl>
           </article>
 
@@ -358,11 +361,15 @@
                 cutoff, and a WhatsApp credit runner with 18:30 UTC hardcoded as
                 midnight in five separate places. Which is midnight in India, and
                 nowhere else on earth.
-              </p>
-              <a class="case-link" href="/writing/billing-unit-mismatch/"
-                >Read the writeup →</a
+              </p><a class="case-link" href="/writing/billing-unit-mismatch/"
+                >How to bill AI usage →</a
               >
-            </div>
+              <a
+                class="case-link"
+                href="/writing/hardcoded-midnight/"
+                style="margin-left: 1.5rem"
+                >18:30 UTC is not midnight →</a
+              ></div>
             <dl class="rail">
               <div>
                 <dt>Revenue recovered</dt>
@@ -415,14 +422,27 @@
           </article>
 
           <!-- Architecture diagram belongs to case 03 -->
-          <div class="arch-scroll mt-6 reveal">
+          <figure class="arch-fig mt-6 reveal">
+            <div class="arch-scroll">
             <svg
               class="arch-svg"
               viewBox="0 0 900 540"
               role="img"
-              aria-label="Diagram comparing four independent per-channel delivery pipelines with a single shared Step Functions orchestration feeding thin channel adapters."
+              aria-labelledby="archTitle archDesc"
               xmlns="http://www.w3.org/2000/svg"
             >
+              <title id="archTitle">
+                Broadcast delivery, before and after consolidation
+              </title>
+              <desc id="archDesc">
+                Before: WhatsApp, email and SMS each run their own schedule, retry and
+                status steps before reaching a provider, and adding RCS would mean
+                building all three again. After: all four channels feed one shared
+                Step Functions orchestration that owns scheduling, fan-out, retry,
+                idempotency, status and audit, then pass through a thin channel
+                adapter — payload shape, provider auth and webhook parsing — to their
+                providers. The adapter is the only new code a channel needs.
+              </desc>
               <defs>
                 <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
                   <path d="M0,1 L7,4 L0,7 z" fill="rgba(255,255,255,0.3)" />
@@ -538,7 +558,13 @@
                 1 scheduling implementation · 1 retry policy · 1 status pipeline · adding a channel is an adapter
               </text>
             </svg>
-          </div>
+            </div>
+            <figcaption>
+              Four per-channel pipelines collapse into one orchestration plus a thin
+              adapter per channel — so adding RCS meant writing an adapter, not
+              another pipeline.
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -549,9 +575,7 @@
       <section id="experience" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Experience</p>
-            <h2>Where the work happened</h2>
-          </div>
+            <p class="eyebrow">Experience</p><h2>The rest of the CV</h2></div>
 
           <!-- BIK.AI -->
           <div class="reveal mb-20">
@@ -583,8 +607,7 @@
             </div>
 
             <p class="text-neutral-400 measure leading-relaxed mb-8">
-              Messaging, billing and event infrastructure on a 25-engineer team. Beyond
-              the three above:
+              Same job, same team of 25 — the work that didn't get its own section above:
             </p>
 
             <div class="rowlist">
@@ -635,9 +658,8 @@
                 <div class="v">
                   On-call for everything above. Drove
                   <strong>SOC 2 Type 2 and ISO 27001</strong> to certification alongside
-                  the CTO, and I am the company-wide AWS/GCP admin holding org-level
-                  IAM — a polite way of saying I have the permissions to delete the
-                  company.
+                  the CTO, and I am the company-wide AWS/GCP administrator with
+                  org-level IAM ownership.
                 </div>
               </div>
             </div>
@@ -721,6 +743,40 @@
               </a>
             </div>
           </div>
+
+          <div class="mt-16 pt-10 border-t border-white/5 reveal">
+            <p class="eyebrow mb-5">Stack</p>
+              <dl class="rowlist">
+                <div>
+                  <dt>Languages</dt>
+                  <dd>TypeScript · JavaScript · Python · SQL · C++/Qt</dd>
+                </div>
+                <div>
+                  <dt>Data</dt>
+                  <dd>PostgreSQL · Elasticsearch · Redis · Firestore</dd>
+                </div>
+                <div>
+                  <dt>Backend</dt>
+                  <dd>
+                    Node.js · Express · REST · GraphQL · microservices ·
+                    event-driven architecture · message queues
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cloud</dt>
+                  <dd>
+                    GCP (Pub/Sub, Cloud Tasks, Cloud Functions, GKE) · AWS (Step
+                    Functions, Lambda, IAM) · Docker · CI/CD
+                  </dd>
+                </div>
+                <div>
+                  <dt>Also</dt>
+                  <dd class="text-neutral-500">
+                    React · Redux — internal dashboards fronting the systems above.
+                  </dd>
+                </div>
+              </dl>
+          </div>
         </div>
       </section>
 
@@ -730,9 +786,8 @@
       <section id="projects" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Projects</p><h2>Things I built because I wanted them</h2><p class="lede measure">
-              Both open source. One I use daily, one my team does. Neither was anyone's
-              idea but mine.
+            <p class="eyebrow">Projects</p><h2>Open source, built for myself</h2><p class="lede measure">
+              Nobody asked for either of these. One I use daily, one my team does.
             </p>
           </div>
 
@@ -798,36 +853,45 @@
           </div>
 
           <div class="mt-10 pt-8 border-t border-white/5 reveal">
-            <p class="eyebrow mb-3">Earlier repositories</p>
-            <p class="text-sm text-neutral-500 leading-relaxed measure">
-              <a
-                href="https://github.com/octopols/Quack"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors"
-                >Quack</a
-              >
-              — searches YouTube comments with an inverted index, because the native
-              search doesn't exist. ·
-              <a
-                href="https://github.com/octopols/google-trends-api-toolkit"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors"
-                >google-trends-api-toolkit</a
-              >
-              — Python wrapper over Google Trends' undocumented endpoints, worked out by
-              staring at network traffic until it made sense. ·
-              <a
-                href="https://github.com/octopols/coloc_mobile"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors"
-                >Coloc</a
-              >
-              — roommate matching via Gale-Shapley and Elo ratings. Yes, really. The
-              approach got published in IJFMR.
-            </p>
+            <p class="eyebrow mb-4">Earlier repositories</p>
+            <ul class="repolist">
+              <li>
+                <a
+                  href="https://github.com/octopols/Quack"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Quack</a
+                >
+                <span
+                  >Searches YouTube comments with an inverted index, because the
+                  native search doesn't exist.</span
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/octopols/google-trends-api-toolkit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >google-trends-api-toolkit</a
+                >
+                <span
+                  >Python wrapper over Google Trends' undocumented endpoints, worked
+                  out by staring at network traffic until it made sense.</span
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/octopols/coloc_mobile"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Coloc</a
+                >
+                <span
+                  >Roommate matching via Gale-Shapley and Elo ratings. Yes,
+                  really.</span
+                >
+              </li>
+            </ul>
           </div>
         </div>
       </section>
@@ -847,7 +911,7 @@
 
           <div class="rowlist reveal">
             <a href="/writing/pubsub-backpressure/" class="group">
-              <div class="k">Distributed systems</div>
+              <div class="k">Distributed systems<br /><span class="rowdate">August 2026</span></div>
               <div class="v">
                 <span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
@@ -859,7 +923,7 @@
               </div>
             </a>
             <a href="/writing/billing-unit-mismatch/" class="group">
-              <div class="k">Billing systems</div>
+              <div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
               <div class="v">
                 <span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
@@ -870,7 +934,7 @@
               </div>
             </a>
             <a href="/writing/hardcoded-midnight/" class="group">
-              <div class="k">Billing systems</div>
+              <div class="k">Billing systems<br /><span class="rowdate">August 2026</span></div>
               <div class="v">
                 <span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
@@ -881,7 +945,7 @@
               </div>
             </a>
             <a href="/writing/lifelong-memory/" class="group">
-              <div class="k">Machine learning</div>
+              <div class="k">Machine learning<br /><span class="rowdate">August 2026</span></div>
               <div class="v">
                 <span
                   class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
@@ -940,12 +1004,16 @@
                   screens. A timezone constant that was right in one country and wrong
                   in every other one.
                 </p>
+              </div>
+
+              <blockquote class="pullquote">
+                Most "scale problems" are correctness problems in a costume.
+              </blockquote>
+
+              <div class="space-y-5 text-neutral-300 leading-relaxed measure">
                 <p>
-                  If there's a pattern:
-                  <strong class="text-white"
-                    >most "scale problems" are correctness problems in a costume</strong
-                  >. Idempotency, backpressure and blast-radius isolation have fixed
-                  more incidents for me than adding capacity ever has — partly because
+                  Idempotency, backpressure and blast-radius isolation have fixed more
+                  incidents for me than adding capacity ever has — partly because
                   adding capacity is sometimes <em>how you get</em> the incident.
                 </p>
                 <p>
@@ -960,39 +1028,7 @@
                 </p>
               </div>
 
-              <div class="mt-12">
-                <p class="eyebrow mb-5">Stack</p>
-                <dl class="rowlist">
-                  <div>
-                    <dt>Languages</dt>
-                    <dd>TypeScript · JavaScript · Python · SQL · C++/Qt</dd>
-                  </div>
-                  <div>
-                    <dt>Data</dt>
-                    <dd>PostgreSQL · Elasticsearch · Redis · Firestore</dd>
-                  </div>
-                  <div>
-                    <dt>Backend</dt>
-                    <dd>
-                      Node.js · Express · REST · GraphQL · microservices ·
-                      event-driven architecture · message queues
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Cloud</dt>
-                    <dd>
-                      GCP (Pub/Sub, Cloud Tasks, Cloud Functions, GKE) · AWS (Step
-                      Functions, Lambda, IAM) · Docker · CI/CD
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Also</dt>
-                    <dd class="text-neutral-500">
-                      React · Redux — internal dashboards fronting the systems above.
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+
             </div>
 
             <aside class="reveal">
@@ -1029,8 +1065,7 @@
           <h2
             class="font-display font-bold tracking-tighter leading-[1.02] mt-5 text-[clamp(1.9rem,5vw,3.25rem)] measure reveal"
           >
-            Talk to me about queues, billing correctness, or anything that broke in a way
-            you're still thinking about.
+            Let's talk.
           </h2>
 
           <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 reveal">
@@ -1073,14 +1108,19 @@
       >
         <p>
           <span class="font-display font-bold text-neutral-400 mr-2"
-            >HIRNAYMAY BHASKAR</span
+            >Hirnaymay Bhaskar</span
           >
+          <span class="mr-2">· @octopols</span>
           © <span id="footer-year">2026</span>
         </p>
         <nav class="flex gap-5 flex-wrap justify-center">
           <a href="#work" class="hover:text-white transition-colors">Work</a>
-          <a href="#projects" class="hover:text-white transition-colors">Projects</a>
+          <a href="#experience" class="hover:text-white transition-colors">CV</a>
+          <a href="#projects" class="hover:text-white transition-colors"
+            >Open source</a
+          >
           <a href="/writing/" class="hover:text-white transition-colors">Writing</a>
+          <a href="#about" class="hover:text-white transition-colors">About</a>
           <a href="photography.html" class="hover:text-white transition-colors"
             >Photography</a
           >

@@ -12,13 +12,18 @@
     <link rel="canonical" href="https://hirnaymay.com/writing/pubsub-backpressure/" />
 
     <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
     <meta property="og:url" content="https://hirnaymay.com/writing/pubsub-backpressure/" />
     <meta property="og:title" content="What 38 nodes were hiding" />
     <meta
       property="og:description"
       content="A queue that grows while you add consumers is not telling you about capacity. It is telling you that some of your capacity is being spent twice."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
     <meta name="twitter:creator" content="@octopols" />
 
     <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
@@ -240,12 +245,14 @@
           grew.
         </p>
         <p>
-          That is not a capacity curve. A fleet that is genuinely too small shows roughly flat
-          per-node throughput as you add nodes — you get more total work done and the per-node rate
-          stays put. Per-node throughput that <em>degrades</em> with fleet size means the nodes are
-          interfering with each other, or they are doing work that does not count.
+          That is not a capacity curve, and the distinction matters more than it
+          sounds. A fleet that is genuinely too small shows roughly <em>flat</em>
+          per-node throughput as you add nodes: you get more total work done, each
+          node keeps pulling its weight, and the backlog drains. Per-node throughput
+          that <em>degrades</em> with fleet size means the nodes are interfering with
+          each other — every one you add makes the others slightly worse.
         </p>
-        <p>They were doing work that did not count.</p>
+        <p>They were interfering through the one thing they all shared.</p>
       </section>
 
       <section>
@@ -292,19 +299,35 @@
         </div>
 
         <p>
-          Redelivered work is indistinguishable from new work. It consumes a pull slot, a worker, a
-          database round-trip and a downstream call, and at the end of it the message may well be
-          redundant. So the useful throughput of the fleet is not the raw throughput:
-        </p>
-
-        <pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
+          Redelivered work is indistinguishable from new work. It consumes a pull slot,
+          a worker, a database round-trip and a downstream call, and at the end of it
+          the message may well be redundant. So the useful throughput of the fleet is
+          not the raw throughput:
+        </p><pre><code>useful_throughput = raw_throughput / (1 + redelivery_rate)</code></pre>
 
         <p>
-          And here is the part that makes the scale-out futile:
-          <strong>adding nodes scales both terms</strong>. More consumers pull more messages, lease
-          more than they can finish, and miss more deadlines — in proportion. The redelivery rate is
-          roughly invariant to fleet size, because it is set by the relationship between handler
-          latency and lease capacity per process, not by how many processes there are.
+          It is worth being precise about what this does and does not explain,
+          because the obvious reading of it is wrong. If the redelivery rate were a
+          <em>constant</em> — some fixed tax you pay per message regardless of fleet
+          size — then useful throughput would be <code>n · k / (1 + r)</code>, which
+          still grows linearly in <code>n</code>. A constant redelivery rate is not
+          futility. It is a discount. Scale-out would have been wasteful, but it
+          would eventually have worked.
+        </p>
+        <p>
+          <strong>The redelivery rate was not constant. It rose with fleet size.</strong>
+        </p>
+        <p>
+          Every consumer was calling the same downstream. Add consumers and the
+          concurrency against that shared dependency goes up, its latency goes up
+          with it, and handler time goes up in turn. Handler time is precisely what
+          the ack deadline is racing. So each node added pushed a few more messages
+          on <em>every other node</em> past their deadline — which is exactly the
+          per-node decline from the previous section, seen from the other side.
+        </p><p>
+          With <code>r</code> rising as <code>n</code> rises, useful throughput
+          <code>n · k / (1 + r(n))</code> stops tracking the fleet and starts
+          flattening. You keep buying nodes. You stop buying much work.
         </p>
 
         <div class="fig">
@@ -313,26 +336,26 @@
               <div class="amp-row">
                 <div class="amp-key">10 nodes</div>
                 <div class="amp-track" style="width: 26%">
-                  <div class="amp-seg useful" style="width: 55%"></div>
-                  <div class="amp-seg dup" style="width: 45%"></div>
+                  <div class="amp-seg useful" style="width: 70%"></div>
+                  <div class="amp-seg dup" style="width: 30%"></div>
                 </div>
                 <div class="amp-val">1.0× useful</div>
               </div>
               <div class="amp-row">
                 <div class="amp-key">20 nodes</div>
-                <div class="amp-track" style="width: 52%">
-                  <div class="amp-seg useful" style="width: 55%"></div>
-                  <div class="amp-seg dup" style="width: 45%"></div>
+                <div class="amp-track" style="width: 53%">
+                  <div class="amp-seg useful" style="width: 52%"></div>
+                  <div class="amp-seg dup" style="width: 48%"></div>
                 </div>
-                <div class="amp-val">2.0× useful</div>
+                <div class="amp-val">1.5× useful</div>
               </div>
               <div class="amp-row">
                 <div class="amp-key">38 nodes</div>
                 <div class="amp-track" style="width: 100%">
-                  <div class="amp-seg useful" style="width: 55%">useful</div>
-                  <div class="amp-seg dup" style="width: 45%">duplicate</div>
+                  <div class="amp-seg useful" style="width: 34%">useful</div>
+                  <div class="amp-seg dup" style="width: 66%">duplicate</div>
                 </div>
-                <div class="amp-val">3.8× useful</div>
+                <div class="amp-val">1.9× useful</div>
               </div>
             </div>
           </div>
@@ -341,9 +364,11 @@
             <span><i class="amp-swatch" style="background: rgba(252,129,129,.45)"></i> work that is redelivered and repeated</span>
           </div>
           <p class="cap">
-            <b>The ratio never improves.</b> You are buying capacity and duplicate work in a fixed
-            proportion. Tripling the fleet triples both — which is why the backlog kept re-converging
-            after every scale-out.
+            <b>Bar length is raw throughput; only the green part is progress.</b> Nearly four times
+            the fleet bought under twice the useful work, because the duplicate share grew as the
+            fleet did. Had the redelivery rate stayed at its 10-node value, 38 nodes would have
+            returned 3.8× and the backlog would have drained — slowly, expensively, but it would
+            have drained. <em>Illustrative shape, not measured data: the direction is the point.</em>
           </p>
         </div>
       </section>
@@ -352,8 +377,17 @@
         <div class="label">[ <b>04</b> — Why it never scaled down ]</div>
         <h2>The autoscaler was closing the loop</h2>
         <p>
-          The fleet scaled on <code>num_undelivered_messages</code> — backlog depth. That metric is
-          the standard choice and it is fine when the backlog is exogenous. Here it was not.
+          Flattening throughput explains why the backlog stopped draining. It does not
+          explain why the fleet ratcheted to 38 nodes and stayed there. That part is
+          the autoscaler, and it is the same bug wearing a different hat.
+        </p>
+        <p>
+          The fleet scaled on <code>num_undelivered_messages</code> — backlog depth.
+          That metric is the standard choice and it is fine when the backlog is
+          exogenous. Here it was not. <strong>A redelivered message is undelivered
+          again</strong>, so every duplicate the fleet generated was counted back to
+          the autoscaler as fresh demand. The number on the dashboard was not queue
+          depth. It was queue depth plus the fleet's own churn.
         </p>
 
         <div class="fig">
@@ -379,22 +413,24 @@
                 <div class="ln-t">Deadlines missed, messages redelivered</div>
               </div>
             </div>
-            <div class="loop-back"><span>↑ redelivered messages re-enter the backlog the autoscaler is reading</span></div>
+            <div class="loop-back"><span>↑ every duplicate is counted back to the autoscaler as fresh demand</span></div>
           </div>
-          <p class="cap">
-            <b>The 38 nodes were not responding to load. They were responding to themselves.</b>
-            Every node added made the signal it was scaling on slightly worse, which is why the fleet
-            ratcheted up and stayed there.
+          <p class="cap"><b>The 38 nodes were not responding to load. They were responding to themselves.</b>
+            Each node added raised the redelivery rate, which inflated the metric the
+            autoscaler was reading, which authorised another node.
           </p>
         </div>
 
         <div class="callout">
           <span class="tag">Worth knowing</span>
-          <p>
-            <code>num_undelivered_messages</code> counts redeliveries. <code>oldest_unacked_message_age</code>
-            is the better autoscaling signal for exactly this reason — it tracks whether you are
-            actually falling behind, not how much traffic is circulating. A control loop whose input
-            is polluted by its own output is not a control loop.
+          <p><code>num_undelivered_messages</code> counts redeliveries.
+            <code>oldest_unacked_message_age</code> is the better autoscaling signal
+            for exactly this reason — it tracks whether you are actually falling
+            behind, not how much traffic is circulating. A control loop whose input is
+            polluted by its own output is not a control loop; it is an amplifier. It
+            is also why the fleet could never scale <em>down</em>: shrinking would have
+            reduced the churn inflating the metric, but the metric had to fall first
+            for shrinking to be allowed.
           </p>
         </div>
       </section>
