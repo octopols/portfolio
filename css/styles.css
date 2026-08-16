@@ -79,25 +79,210 @@ body {
 }
 
 /* ===================================
-   SECTION CHROME
+   LAYOUT GRID
+
+   One container width for the whole page. Every section aligns to the same
+   left and right edge — previously each picked its own max-width, which is
+   what made the page feel unstructured.
 =================================== */
-.section-label {
-  position: absolute;
-  top: 1.75rem;
-  left: 1.5rem;
-  font-family: var(--font-display);
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #4a4a4a;
-  z-index: 20;
-  pointer-events: none;
+.shell {
+  width: 100%;
+  max-width: 62rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
 }
 
 @media (min-width: 768px) {
-  .section-label {
-    left: 3rem;
+  .shell {
+    padding-inline: 2.5rem;
   }
+}
+
+/* Prose never runs wider than a comfortable measure, even inside .shell */
+.measure {
+  max-width: 64ch;
+}
+
+/* ===================================
+   SECTION CHROME
+=================================== */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #5f6672;
+}
+
+.section-head {
+  margin-bottom: 3.5rem;
+}
+
+.section-head h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+  margin: 0.9rem 0 0;
+}
+
+.section-head .lede {
+  margin: 1.1rem 0 0;
+  color: #9aa1ab;
+  line-height: 1.65;
+}
+
+/* Divider between major sections. One hairline, no boxes. */
+.rule {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ===================================
+   CASE STUDIES
+=================================== */
+.case {
+  display: grid;
+  gap: 2.5rem;
+  padding: 3.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (min-width: 900px) {
+  .case {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: 4rem;
+  }
+}
+
+.case-n {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5f6672;
+  margin-bottom: 0.9rem;
+}
+
+.case-n b {
+  color: #f0f0f0;
+  font-weight: 500;
+}
+
+.case h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 2.8vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 0 1.1rem;
+}
+
+.case p {
+  color: #a8aeb8;
+  line-height: 1.7;
+  margin: 0 0 1rem;
+  max-width: 58ch;
+}
+
+.case p strong {
+  color: #f0f0f0;
+  font-weight: 600;
+}
+
+.case-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #cfd4db;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  padding-bottom: 2px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.case-link:hover {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* metric rail */
+.rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-content: start;
+  margin: 0;
+}
+
+@media (min-width: 900px) {
+  .rail {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.09);
+    padding-left: 2rem;
+  }
+}
+
+.rail dt {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5f6672;
+  margin-bottom: 0.4rem;
+}
+
+.rail dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.2;
+}
+
+/* ===================================
+   COMPACT LISTS (experience, stack)
+=================================== */
+.rowlist {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.rowlist > * {
+  display: grid;
+  gap: 0.35rem 2.5rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+@media (min-width: 720px) {
+  .rowlist > * {
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+  }
+}
+
+.rowlist dt,
+.rowlist .k {
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #5f6672;
+  padding-top: 0.15rem;
+}
+
+.rowlist dd,
+.rowlist .v {
+  margin: 0;
+  color: #b4bac4;
+  line-height: 1.6;
+}
+
+.rowlist .v strong {
+  color: #f0f0f0;
+  font-weight: 600;
 }
 
 /* Subtle film grain over the whole page. Decorative only. */

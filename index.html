@@ -11,7 +11,6 @@
       document.documentElement.classList.add("js");
     </script>
 
-    <!-- Primary Meta Tags -->
     <title>Hirnaymay Bhaskar | Backend Engineer | Distributed Systems</title>
     <meta
       name="title"
@@ -25,7 +24,6 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://hirnaymay.com/" />
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://hirnaymay.com/" />
     <meta
@@ -36,13 +34,11 @@
       property="og:description"
       content="Backend engineer owning messaging, billing and event infrastructure at BIK.AI. Distributed systems, event-driven architecture, Node.js, TypeScript, GCP, PostgreSQL. 2x Google Summer of Code (VLC, MuseScore)."
     />
-    <!-- No og:image until a purpose-built 1200x630 card exists at
-         /assets/images/og-image.jpg. A missing tag degrades to a clean text
-         card, which beats a broken image. -->
-    <meta property="og:site_name" content="Hirnaymay Bhaskar Portfolio" />
+    <!-- No og:image until a purpose-built 1200x630 card exists. A missing tag
+         degrades to a clean text card, which beats a broken image. -->
+    <meta property="og:site_name" content="Hirnaymay Bhaskar" />
     <meta property="og:locale" content="en_US" />
 
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:url" content="https://hirnaymay.com/" />
     <meta
@@ -55,14 +51,12 @@
     />
     <meta name="twitter:creator" content="@octopols" />
 
-    <!-- Favicons -->
     <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
     <link rel="apple-touch-icon" href="/assets/logos/favicon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="msapplication-TileColor" content="#050505" />
     <meta name="theme-color" content="#050505" />
 
-    <!-- Performance -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin />
     <link rel="preload" href="css/styles.css" as="style" />
     <link
@@ -73,7 +67,6 @@
       fetchpriority="high"
     />
 
-    <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -86,10 +79,7 @@
           "https://octopols.medium.com"
         ],
         "jobTitle": "Software Engineer II",
-        "worksFor": {
-          "@type": "Organization",
-          "name": "BIK.AI"
-        },
+        "worksFor": { "@type": "Organization", "name": "BIK.AI" },
         "homeLocation": {
           "@type": "Place",
           "address": {
@@ -99,14 +89,8 @@
           }
         },
         "alumniOf": [
-          {
-            "@type": "Organization",
-            "name": "VideoLAN (VLC Media Player)"
-          },
-          {
-            "@type": "Organization",
-            "name": "MuseScore"
-          }
+          { "@type": "Organization", "name": "VideoLAN (VLC Media Player)" },
+          { "@type": "Organization", "name": "MuseScore" }
         ],
         "knowsAbout": [
           "Backend Engineering",
@@ -128,7 +112,6 @@
       }
     </script>
 
-    <!-- Dependencies -->
     <script>
       window.process = { env: { NODE_ENV: "production" } };
     </script>
@@ -141,130 +124,96 @@
     </script>
 
     <style>
-      /* Reveal animations are opt-in via .js — without scripting the content
-         is simply visible. Same for reduced-motion. */
-      .js .reveal-item {
+      /* Reveals are opt-in via .js. Without scripting, content is visible. */
+      .js .reveal {
         opacity: 0;
-        transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+        transform: translateY(24px);
+        transition: opacity 0.9s cubic-bezier(0.23, 1, 0.32, 1),
+          transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
       }
-      .js .reveal-item.fade-up {
-        transform: translateY(40px);
-      }
-      .js .reveal-item.fade-up.active {
+      .js .reveal.active {
         opacity: 1;
-        transform: translateY(0);
-      }
-      .js .reveal-item.fade-scale {
-        transform: scale(0.97);
-      }
-      .js .reveal-item.fade-scale.active {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      .js .split-line {
-        overflow: hidden;
-        display: block;
-      }
-      .js .split-line span {
-        display: block;
-        transform: translateY(100%);
-        transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
-      }
-      .js .split-line.active span {
-        transform: translateY(0);
+        transform: none;
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .js .reveal-item,
-        .js .reveal-item.fade-up,
-        .js .reveal-item.fade-scale {
+        .js .reveal {
           opacity: 1 !important;
           transform: none !important;
           transition: none !important;
         }
-        .js .split-line span {
-          transform: none !important;
-          transition: none !important;
-        }
       }
 
-      .project-card img {
-        transition: transform 0.7s ease-out, opacity 0.7s ease-out;
-      }
-      .project-card:hover img {
-        transform: scale(1.05);
-        opacity: 1;
-      }
-
-      /* Architecture diagram */
-      .arch-svg {
-        width: 100%;
-        min-width: 680px;
-        height: auto;
-      }
       .arch-scroll {
         overflow-x: auto;
         padding-bottom: 8px;
       }
+      .arch-svg {
+        width: 100%;
+        min-width: 640px;
+        height: auto;
+      }
     </style>
 
-    <!-- External Styles -->
     <link rel="stylesheet" href="css/styles.css" />
   </head>
 
   <body class="antialiased selection:bg-white selection:text-black">
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#main" class="skip-link">Skip to main content</a>
 
     <div class="noise-overlay"></div>
     <div
       id="progress-bar"
-      class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0 transition-all duration-100 ease-linear"
+      class="fixed top-0 left-0 h-[2px] bg-white z-[100] w-0"
     ></div>
 
-    <!-- ===================================
-         NAVIGATION
-    =================================== -->
-    <nav
-      class="fixed w-full z-50 px-6 md:px-8 py-6 flex justify-between items-center mix-blend-difference text-white"
-    >
-      <a href="#hero" class="font-display font-bold text-xl tracking-tighter">
-        OCTOPOLS
-      </a>
-      <div class="hidden md:flex gap-8 text-sm font-medium tracking-wide">
-        <a href="#work" class="opacity-60 hover:opacity-100 transition-opacity"
-          >WORK</a
+    <!-- ============================================================
+         NAV
+    ============================================================ -->
+    <nav class="fixed inset-x-0 top-0 z-50 mix-blend-difference text-white">
+      <div class="shell flex items-center justify-between py-5">
+        <a href="#top" class="font-display font-bold text-lg tracking-tight"
+          >OCTOPOLS</a
         >
+        <div class="hidden md:flex items-center gap-7 text-[13px] tracking-wide">
+          <a href="#work" class="opacity-60 hover:opacity-100 transition-opacity"
+            >Work</a
+          >
+          <a
+            href="#experience"
+            class="opacity-60 hover:opacity-100 transition-opacity"
+            >Experience</a
+          >
+          <a
+            href="#projects"
+            class="opacity-60 hover:opacity-100 transition-opacity"
+            >Projects</a
+          >
+          <a
+            href="/writing/"
+            class="opacity-60 hover:opacity-100 transition-opacity"
+            >Writing</a
+          >
+          <a href="#about" class="opacity-60 hover:opacity-100 transition-opacity"
+            >About</a
+          >
+        </div>
         <a
-          href="#projects"
-          class="opacity-60 hover:opacity-100 transition-opacity"
-          >PROJECTS</a
-        >
-        <a href="/writing/" class="opacity-60 hover:opacity-100 transition-opacity"
-          >WRITING</a
+          href="docs/hirnaymay_bhaskar_resume.pdf"
+          class="border border-white/25 px-4 py-1.5 rounded-full text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+          >Résumé</a
         >
       </div>
-      <a
-        href="docs/hirnaymay_bhaskar_resume.pdf"
-        class="border border-white/25 px-5 py-2 rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-      >
-        Résumé
-      </a>
     </nav>
 
-    <!-- ===================================
-         MAIN CONTENT
-    =================================== -->
-    <main id="main-content" class="main-content">
-      <!-- ===================================
-             00. HERO
-        =================================== -->
+    <main id="main" class="main-content">
+      <!-- ============================================================
+           HERO
+      ============================================================ -->
       <header
-        id="hero"
-        class="relative min-h-screen w-full flex items-center justify-center overflow-hidden py-32"
+        id="top"
+        class="relative min-h-[88vh] flex items-center overflow-hidden"
       >
-        <div class="section-label">[ 00. INTRODUCTION ]</div>
-
         <div class="absolute inset-0 z-0">
           <img
             src="assets/photography/DSC00567.webp"
@@ -272,649 +221,514 @@
             height="2844"
             fetchpriority="high"
             decoding="async"
-            class="w-full h-full object-cover opacity-30 grayscale contrast-125"
+            class="w-full h-full object-cover opacity-20 grayscale"
             alt=""
           />
           <div
-            class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-[#050505]/70"
+            class="absolute inset-0 bg-gradient-to-b from-[#050505]/85 via-[#050505]/70 to-[#050505]"
           ></div>
         </div>
 
-        <div class="relative z-10 text-center px-6">
-          <div class="mb-8 flex justify-center">
-            <div
-              class="reveal-item fade-scale border border-white/10 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] uppercase tracking-[0.2em] text-neutral-400"
-            >
-              Backend Engineer · Distributed Systems
-            </div>
-          </div>
+        <div class="shell relative z-10 pt-32 pb-24">
+          <p class="eyebrow reveal">Backend engineer · Bengaluru</p>
 
           <h1
-            class="font-display text-6xl sm:text-7xl md:text-9xl font-bold leading-[0.85] tracking-tighter"
+            class="font-display font-bold tracking-tighter leading-[0.9] mt-6 text-[clamp(2.75rem,9vw,6rem)] reveal"
+            style="transition-delay: 0.05s"
           >
-            <span class="block split-line"><span>HIRNAYMAY</span></span>
-            <span class="block split-line" style="transition-delay: 0.1s"
-              ><span>BHASKAR</span></span
-            >
+            Hirnaymay Bhaskar
           </h1>
 
           <p
-            class="mt-8 text-lg md:text-xl text-neutral-300 max-w-2xl mx-auto reveal-item fade-up"
-            style="transition-delay: 0.3s"
+            class="mt-8 text-lg md:text-xl text-neutral-300 leading-relaxed measure reveal"
+            style="transition-delay: 0.12s"
           >
-            I own the
-            <span class="text-white border-b border-white/50"
-              >messaging, billing and event infrastructure</span
-            >
-            at a YC + Sequoia-backed commerce platform. Mostly: finding why
+            I own the messaging, billing and event infrastructure at
+            <a
+              href="https://bik.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-white border-b border-white/40 hover:border-white transition-colors"
+              >BIK.AI</a
+            >, a YC + Sequoia-backed commerce platform. Mostly: finding why
             something at scale is slow, wrong, or losing money — and fixing the
             cause rather than the symptom.
           </p>
 
           <div
-            class="mt-10 flex flex-wrap gap-4 justify-center reveal-item fade-up"
-            style="transition-delay: 0.45s"
+            class="mt-10 flex flex-wrap items-center gap-3 reveal"
+            style="transition-delay: 0.2s"
           >
             <a
-              href="/writing/pubsub-backpressure/"
+              href="#work"
               class="bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors"
+              >See the work</a
             >
-              Read: What 38 nodes were hiding
-            </a>
             <a
               href="docs/hirnaymay_bhaskar_resume.pdf"
-              class="border border-white/20 bg-white/5 backdrop-blur-sm px-6 py-3 rounded-full text-sm hover:bg-white/10 hover:border-white/40 transition-colors"
+              class="border border-white/20 px-6 py-3 rounded-full text-sm hover:bg-white/5 hover:border-white/40 transition-colors"
+              >Résumé (PDF)</a
             >
-              Download résumé
-            </a>
+            <a
+              href="mailto:hirnaymay@gmail.com"
+              class="text-sm text-neutral-400 hover:text-white transition-colors px-2"
+              >hirnaymay@gmail.com</a
+            >
           </div>
         </div>
       </header>
 
-      <!-- ===================================
-             01. SELECTED RESULTS
-        =================================== -->
-      <section
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 01. SELECTED RESULTS ]</div>
-
-        <div class="max-w-6xl mx-auto">
-          <p
-            class="text-xs uppercase tracking-widest text-neutral-600 mb-10 reveal-item fade-up"
-          >
-            Four systems, four measurements — each one with the mechanism attached
-          </p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-            <a
-              href="/writing/pubsub-backpressure/"
-              class="reveal-item fade-up group block"
-            >
-              <div
-                class="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight"
-              >
-                2.4 h → 94 s
-              </div>
-              <p class="text-sm text-neutral-400 leading-relaxed">
-                Worst-case Pub/Sub delivery delay, after rebuilding consumer flow
-                control and backpressure. 38 nodes retired.
-              </p>
-              <span
-                class="mt-3 inline-block text-xs text-neutral-600 group-hover:text-white transition-colors"
-                >Read the writeup →</span
-              >
-            </a>
-
-            <div class="reveal-item fade-up" style="transition-delay: 0.1s">
-              <div
-                class="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight"
-              >
-                20 s → 200 ms
-              </div>
-              <p class="text-sm text-neutral-400 leading-relaxed">
-                Campaign analytics page load, while doubling page size — rebuilt
-                on a Postgres-first layer with age-tiered caching.
-              </p>
-            </div>
-
-            <a
-              href="/writing/billing-unit-mismatch/"
-              class="reveal-item fade-up group block"
-              style="transition-delay: 0.2s"
-            >
-              <div
-                class="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight"
-              >
-                12.5%
-              </div>
-              <p class="text-sm text-neutral-400 leading-relaxed">
-                Of email billing revenue recovered — lost to a 3-hour daily
-                cutoff nothing in the system displayed.
-              </p>
-              <span
-                class="mt-3 inline-block text-xs text-neutral-600 group-hover:text-white transition-colors"
-                >Read the writeup →</span
-              >
-            </a>
-
-            <div class="reveal-item fade-up" style="transition-delay: 0.3s">
-              <div
-                class="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight"
-              >
-                2.5M / mo
-              </div>
-              <p class="text-sm text-neutral-400 leading-relaxed">
-                RCS messages carried on the shared broadcast orchestration, for
-                50+ enterprise clients.
-              </p>
-            </div>
+      <!-- ============================================================
+           WORK — three case studies. Each fact appears here and
+           nowhere else on the page.
+      ============================================================ -->
+      <section id="work" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Selected work</p>
+            <h2>Three problems worth explaining</h2>
+            <p class="lede measure">
+              All three are production systems at BIK.AI. Two have full writeups;
+              the third is drawn below.
+            </p>
           </div>
-        </div>
-      </section>
 
-      <!-- ===================================
-             02. ARCHITECTURE
-        =================================== -->
-      <section
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 02. ARCHITECTURE ]</div>
+          <!-- Case 01 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>01</b> — Message delivery</p>
+              <h3>A backlog that 38 nodes were hiding</h3>
+              <p>
+                Two Pub/Sub subscriptions carrying 1.26M messages of backlog, and a
+                fleet that had been grown to absorb it and never scaled back down.
+                The fleet was not undersized —
+                <strong>it was feeding the backlog</strong>.
+              </p>
+              <p>
+                Consumers were leasing more messages than they could finish inside
+                the ack deadline, so a fixed share of every node's capacity went to
+                redelivered work. Adding nodes scaled the duplicate work in exact
+                proportion. Rebuilding flow control, ack-deadline handling and
+                backpressure fixed the ratio, and the scale-out came off.
+              </p>
+              <a class="case-link" href="/writing/pubsub-backpressure/"
+                >Read the writeup →</a
+              >
+            </div>
+            <dl class="rail">
+              <div>
+                <dt>Worst-case delay</dt>
+                <dd>2.4 h → 94 s</dd>
+              </div>
+              <div>
+                <dt>Combined backlog</dt>
+                <dd>1.26M → &lt;4K</dd>
+              </div>
+              <div>
+                <dt>Fleet</dt>
+                <dd>38 → 0</dd>
+              </div>
+            </dl>
+          </article>
 
-        <div class="max-w-5xl mx-auto">
-          <h2
-            class="text-3xl md:text-5xl font-display font-bold mb-5 reveal-item fade-up"
-          >
-            One delivery path, not four
-          </h2>
-          <p
-            class="text-neutral-400 max-w-2xl mb-12 leading-relaxed reveal-item fade-up"
-          >
-            Every broadcast channel had grown its own scheduling, retry and
-            status-tracking code. Four implementations of the same three problems,
-            each with its own bugs. Consolidating them onto shared AWS Step
-            Functions orchestration meant a new channel became an adapter rather
-            than a pipeline — which is how RCS shipped.
-          </p>
+          <!-- Case 02 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>02</b> — Billing correctness</p>
+              <h3>Money is the only safe unit</h3>
+              <p>
+                I own billing across every revenue channel. The AI billing system I
+                inherited stored a contracted operation count and a per-operation
+                rate typed into a free-text field — so a number that looked like a
+                price behaved like a divisor, and
+                <strong>stores were drawing 2–10× their allocation</strong>.
+              </p>
+              <p>
+                Rebuilt onto a central versioned rate card keyed on tier, country
+                and usage type, with credits denominated in money rather than
+                counts. Separately: 12.5% of email billing revenue recovered from a
+                3-hour daily cutoff, and a WhatsApp credit runner that had 18:30 UTC
+                hardcoded as midnight across five call sites.
+              </p>
+              <a class="case-link" href="/writing/billing-unit-mismatch/"
+                >Read the writeup →</a
+              >
+            </div>
+            <dl class="rail">
+              <div>
+                <dt>Revenue recovered</dt>
+                <dd>12.5%</dd>
+              </div>
+              <div>
+                <dt>Overdraw found</dt>
+                <dd>2–10×</dd>
+              </div>
+              <div>
+                <dt>Hardcoded midnight</dt>
+                <dd>5 call sites</dd>
+              </div>
+            </dl>
+          </article>
 
-          <div class="arch-scroll reveal-item fade-up">
+          <!-- Case 03 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>03</b> — Broadcast infrastructure</p>
+              <h3>One delivery path, not four</h3>
+              <p>
+                Every broadcast channel had grown its own scheduling, retry and
+                status-tracking code — four implementations of the same three
+                problems, each with its own bugs.
+              </p>
+              <p>
+                Consolidating them onto shared AWS Step Functions orchestration made
+                <strong>a new channel an adapter rather than a pipeline</strong>.
+                That is how RCS shipped: Redis-backed segment delivery and a
+                webhook-driven status pipeline hanging off infrastructure that
+                already existed.
+              </p>
+            </div>
+            <dl class="rail">
+              <div>
+                <dt>RCS volume</dt>
+                <dd>2.5M / mo</dd>
+              </div>
+              <div>
+                <dt>Enterprise clients</dt>
+                <dd>50+</dd>
+              </div>
+              <div>
+                <dt>Delivery paths</dt>
+                <dd>4 → 1</dd>
+              </div>
+            </dl>
+          </article>
+
+          <!-- Architecture diagram belongs to case 03 -->
+          <div class="arch-scroll mt-6 reveal">
             <svg
               class="arch-svg"
-              viewBox="0 0 900 660"
+              viewBox="0 0 900 540"
               role="img"
-              aria-label="Diagram comparing four independent per-channel delivery pipelines with a single shared Step Functions orchestration feeding channel adapters."
+              aria-label="Diagram comparing four independent per-channel delivery pipelines with a single shared Step Functions orchestration feeding thin channel adapters."
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <marker
-                  id="ah"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="7"
-                  refY="4"
-                  orient="auto"
-                >
-                  <path d="M0,1 L7,4 L0,7 z" fill="rgba(255,255,255,0.35)" />
+                <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                  <path d="M0,1 L7,4 L0,7 z" fill="rgba(255,255,255,0.3)" />
                 </marker>
-                <marker
-                  id="ahg"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="7"
-                  refY="4"
-                  orient="auto"
-                >
+                <marker id="ahg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
                   <path d="M0,1 L7,4 L0,7 z" fill="rgba(104,211,145,0.7)" />
                 </marker>
               </defs>
 
-              <!-- ============ BEFORE ============ -->
-              <text
-                x="0"
-                y="18"
-                fill="#6b7178"
-                font-size="11"
-                letter-spacing="2.4"
-                font-family="ui-monospace, monospace"
-              >
-                BEFORE — 4 CHANNELS, 4 PIPELINES
-              </text>
+              <text x="0" y="12" fill="#5f6672" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">BEFORE</text>
 
-              <g font-family="ui-sans-serif, system-ui" font-size="12">
-                <!-- lanes -->
-                <g id="lane-wa">
-                  <text x="0" y="62" fill="#f7fafc" font-size="12.5" font-weight="600">WhatsApp</text>
-                  <rect x="88" y="46" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="140" y="63" fill="#ffc9c9" text-anchor="middle" font-size="11">schedule</text>
-                  <line x1="192" y1="59" x2="212" y2="59" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="216" y="46" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="268" y="63" fill="#ffc9c9" text-anchor="middle" font-size="11">retry</text>
-                  <line x1="320" y1="59" x2="340" y2="59" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="344" y="46" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="396" y="63" fill="#ffc9c9" text-anchor="middle" font-size="11">status</text>
-                  <line x1="448" y1="59" x2="468" y2="59" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="472" y="46" width="96" height="26" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" />
-                  <text x="520" y="63" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                </g>
+              <g font-family="ui-sans-serif, system-ui">
+                <text x="0" y="52" fill="#e6e8eb" font-size="12" font-weight="600">WhatsApp</text>
+                <rect x="88" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="138" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                <line x1="188" y1="48" x2="206" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="210" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="260" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                <line x1="310" y1="48" x2="328" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="332" y="36" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="382" y="52.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                <line x1="432" y1="48" x2="450" y2="48" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="454" y="36" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                <text x="500" y="52.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
 
-                <g id="lane-em">
-                  <text x="0" y="104" fill="#f7fafc" font-size="12.5" font-weight="600">Email</text>
-                  <rect x="88" y="88" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="140" y="105" fill="#ffc9c9" text-anchor="middle" font-size="11">schedule</text>
-                  <line x1="192" y1="101" x2="212" y2="101" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="216" y="88" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="268" y="105" fill="#ffc9c9" text-anchor="middle" font-size="11">retry</text>
-                  <line x1="320" y1="101" x2="340" y2="101" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="344" y="88" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="396" y="105" fill="#ffc9c9" text-anchor="middle" font-size="11">status</text>
-                  <line x1="448" y1="101" x2="468" y2="101" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="472" y="88" width="96" height="26" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" />
-                  <text x="520" y="105" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                </g>
+                <text x="0" y="92" fill="#e6e8eb" font-size="12" font-weight="600">Email</text>
+                <rect x="88" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="138" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                <line x1="188" y1="88" x2="206" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="210" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="260" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                <line x1="310" y1="88" x2="328" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="332" y="76" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="382" y="92.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                <line x1="432" y1="88" x2="450" y2="88" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="454" y="76" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                <text x="500" y="92.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
 
-                <g id="lane-rcs">
-                  <text x="0" y="146" fill="#f7fafc" font-size="12.5" font-weight="600">SMS</text>
-                  <rect x="88" y="130" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="140" y="147" fill="#ffc9c9" text-anchor="middle" font-size="11">schedule</text>
-                  <line x1="192" y1="143" x2="212" y2="143" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="216" y="130" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="268" y="147" fill="#ffc9c9" text-anchor="middle" font-size="11">retry</text>
-                  <line x1="320" y1="143" x2="340" y2="143" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="344" y="130" width="104" height="26" rx="5" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.28)" />
-                  <text x="396" y="147" fill="#ffc9c9" text-anchor="middle" font-size="11">status</text>
-                  <line x1="448" y1="143" x2="468" y2="143" stroke="rgba(255,255,255,0.2)" marker-end="url(#ah)" />
-                  <rect x="472" y="130" width="96" height="26" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" />
-                  <text x="520" y="147" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                </g>
+                <text x="0" y="132" fill="#e6e8eb" font-size="12" font-weight="600">SMS</text>
+                <rect x="88" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="138" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">schedule</text>
+                <line x1="188" y1="128" x2="206" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="210" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="260" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">retry</text>
+                <line x1="310" y1="128" x2="328" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="332" y="116" width="100" height="25" rx="5" fill="rgba(252,129,129,0.05)" stroke="rgba(252,129,129,0.25)" />
+                <text x="382" y="132.5" fill="#f5b5b5" text-anchor="middle" font-size="10.5">status</text>
+                <line x1="432" y1="128" x2="450" y2="128" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <rect x="454" y="116" width="92" height="25" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+                <text x="500" y="132.5" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
 
-                <g id="lane-new" opacity="0.55">
-                  <text x="0" y="188" fill="#f6e05e" font-size="12.5" font-weight="600">RCS</text>
-                  <rect x="88" y="172" width="480" height="26" rx="5" fill="rgba(246,224,94,0.04)" stroke="rgba(246,224,94,0.3)" stroke-dasharray="4 3" />
-                  <text x="328" y="189" fill="#ecdf9a" text-anchor="middle" font-size="11">
-                    a new channel means building all three again
-                  </text>
-                </g>
+                <text x="0" y="172" fill="#e0cf7a" font-size="12" font-weight="600">RCS</text>
+                <rect x="88" y="156" width="458" height="25" rx="5" fill="rgba(246,224,94,0.03)" stroke="rgba(246,224,94,0.25)" stroke-dasharray="4 3" />
+                <text x="317" y="172.5" fill="#d6c988" text-anchor="middle" font-size="10.5">a new channel means building all three again</text>
               </g>
 
-              <text x="0" y="228" fill="#6b7178" font-size="11.5" font-family="ui-sans-serif, system-ui">
-                3 scheduling implementations · 3 retry policies · 3 status pipelines · 0 shared behaviour
+              <text x="0" y="208" fill="#5f6672" font-size="11" font-family="ui-sans-serif, system-ui">
+                3 scheduling implementations · 3 retry policies · 3 status pipelines · nothing shared
               </text>
 
-              <line x1="0" y1="262" x2="900" y2="262" stroke="rgba(255,255,255,0.08)" />
+              <line x1="0" y1="236" x2="900" y2="236" stroke="rgba(255,255,255,0.07)" />
 
-              <!-- ============ AFTER ============ -->
-              <text
-                x="0"
-                y="300"
-                fill="#68d391"
-                font-size="11"
-                letter-spacing="2.4"
-                font-family="ui-monospace, monospace"
-              >
-                AFTER — 1 ORCHESTRATION, N ADAPTERS
-              </text>
+              <text x="0" y="272" fill="#68d391" font-size="10.5" letter-spacing="2.2" font-family="ui-monospace, monospace">AFTER</text>
 
-              <g font-family="ui-sans-serif, system-ui" font-size="12">
-                <!-- channel inputs -->
-                <rect x="0" y="340" width="96" height="28" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.14)" />
-                <text x="48" y="358" fill="#f7fafc" text-anchor="middle" font-size="11.5">WhatsApp</text>
-                <rect x="0" y="382" width="96" height="28" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.14)" />
-                <text x="48" y="400" fill="#f7fafc" text-anchor="middle" font-size="11.5">Email</text>
-                <rect x="0" y="424" width="96" height="28" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.14)" />
-                <text x="48" y="442" fill="#f7fafc" text-anchor="middle" font-size="11.5">SMS</text>
-                <rect x="0" y="466" width="96" height="28" rx="5" fill="rgba(104,211,145,0.08)" stroke="rgba(104,211,145,0.4)" />
-                <text x="48" y="484" fill="#68d391" text-anchor="middle" font-size="11.5">RCS</text>
+              <g font-family="ui-sans-serif, system-ui">
+                <rect x="0" y="306" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                <text x="46" y="323" fill="#e6e8eb" text-anchor="middle" font-size="11">WhatsApp</text>
+                <rect x="0" y="346" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                <text x="46" y="363" fill="#e6e8eb" text-anchor="middle" font-size="11">Email</text>
+                <rect x="0" y="386" width="92" height="26" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" />
+                <text x="46" y="403" fill="#e6e8eb" text-anchor="middle" font-size="11">SMS</text>
+                <rect x="0" y="426" width="92" height="26" rx="5" fill="rgba(104,211,145,0.07)" stroke="rgba(104,211,145,0.38)" />
+                <text x="46" y="443" fill="#68d391" text-anchor="middle" font-size="11">RCS</text>
 
-                <!-- converge -->
-                <path d="M96,354 C140,354 140,417 176,417" fill="none" stroke="rgba(104,211,145,0.4)" />
-                <path d="M96,396 C140,396 140,417 176,417" fill="none" stroke="rgba(104,211,145,0.4)" />
-                <path d="M96,438 C140,438 140,417 176,417" fill="none" stroke="rgba(104,211,145,0.4)" />
-                <path d="M96,480 C140,480 140,417 176,417" fill="none" stroke="rgba(104,211,145,0.4)" marker-end="url(#ahg)" />
+                <path d="M92,319 C132,319 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                <path d="M92,359 C132,359 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                <path d="M92,399 C132,399 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" />
+                <path d="M92,439 C132,439 132,379 168,379" fill="none" stroke="rgba(104,211,145,0.35)" marker-end="url(#ahg)" />
 
-                <!-- orchestration box -->
-                <rect x="180" y="356" width="212" height="122" rx="9" fill="rgba(104,211,145,0.06)" stroke="rgba(104,211,145,0.45)" />
-                <text x="286" y="380" fill="#68d391" text-anchor="middle" font-size="12.5" font-weight="600">
-                  Step Functions
-                </text>
-                <text x="286" y="396" fill="#68d391" text-anchor="middle" font-size="12.5" font-weight="600">
-                  orchestration
-                </text>
-                <line x1="200" y1="410" x2="372" y2="410" stroke="rgba(104,211,145,0.22)" />
-                <text x="286" y="429" fill="#b9e6cb" text-anchor="middle" font-size="11">schedule · fan-out</text>
-                <text x="286" y="447" fill="#b9e6cb" text-anchor="middle" font-size="11">retry · idempotency</text>
-                <text x="286" y="465" fill="#b9e6cb" text-anchor="middle" font-size="11">status · audit</text>
+                <rect x="172" y="320" width="204" height="118" rx="9" fill="rgba(104,211,145,0.05)" stroke="rgba(104,211,145,0.4)" />
+                <text x="274" y="344" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">Step Functions</text>
+                <text x="274" y="360" fill="#68d391" text-anchor="middle" font-size="12" font-weight="600">orchestration</text>
+                <line x1="192" y1="374" x2="356" y2="374" stroke="rgba(104,211,145,0.2)" />
+                <text x="274" y="392" fill="#a9d9bd" text-anchor="middle" font-size="10.5">schedule · fan-out</text>
+                <text x="274" y="409" fill="#a9d9bd" text-anchor="middle" font-size="10.5">retry · idempotency</text>
+                <text x="274" y="426" fill="#a9d9bd" text-anchor="middle" font-size="10.5">status · audit</text>
 
-                <line x1="392" y1="417" x2="424" y2="417" stroke="rgba(104,211,145,0.5)" marker-end="url(#ahg)" />
+                <line x1="376" y1="379" x2="406" y2="379" stroke="rgba(104,211,145,0.45)" marker-end="url(#ahg)" />
 
-                <!-- adapters -->
-                <rect x="428" y="356" width="132" height="122" rx="9" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.14)" />
-                <text x="494" y="381" fill="#f7fafc" text-anchor="middle" font-size="12" font-weight="600">Channel adapter</text>
-                <text x="494" y="404" fill="#8b9199" text-anchor="middle" font-size="10.5">payload shape</text>
-                <text x="494" y="422" fill="#8b9199" text-anchor="middle" font-size="10.5">provider auth</text>
-                <text x="494" y="440" fill="#8b9199" text-anchor="middle" font-size="10.5">webhook parse</text>
-                <text x="494" y="463" fill="#68d391" text-anchor="middle" font-size="10.5">the only new code</text>
+                <rect x="410" y="320" width="126" height="118" rx="9" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" />
+                <text x="473" y="345" fill="#e6e8eb" text-anchor="middle" font-size="11.5" font-weight="600">Channel adapter</text>
+                <text x="473" y="368" fill="#8b9199" text-anchor="middle" font-size="10">payload shape</text>
+                <text x="473" y="385" fill="#8b9199" text-anchor="middle" font-size="10">provider auth</text>
+                <text x="473" y="402" fill="#8b9199" text-anchor="middle" font-size="10">webhook parse</text>
+                <text x="473" y="424" fill="#68d391" text-anchor="middle" font-size="10">the only new code</text>
 
-                <!-- providers -->
-                <path d="M560,417 C596,417 596,354 632,354" fill="none" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <path d="M560,417 C596,417 596,396 632,396" fill="none" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <path d="M560,417 C596,417 596,438 632,438" fill="none" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
-                <path d="M560,417 C596,417 596,480 632,480" fill="none" stroke="rgba(255,255,255,0.18)" marker-end="url(#ah)" />
+                <path d="M536,379 C570,379 570,319 604,319" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                <path d="M536,379 C570,379 570,359 604,359" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                <path d="M536,379 C570,379 570,399 604,399" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
+                <path d="M536,379 C570,379 570,439 604,439" fill="none" stroke="rgba(255,255,255,0.15)" marker-end="url(#ah)" />
 
-                <rect x="636" y="340" width="104" height="28" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="688" y="358" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                <rect x="636" y="382" width="104" height="28" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="688" y="400" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                <rect x="636" y="424" width="104" height="28" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="688" y="442" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
-                <rect x="636" y="466" width="104" height="28" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
-                <text x="688" y="484" fill="#8b9199" text-anchor="middle" font-size="11">provider</text>
+                <rect x="608" y="306" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                <text x="658" y="323" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                <rect x="608" y="346" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                <text x="658" y="363" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                <rect x="608" y="386" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                <text x="658" y="403" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
+                <rect x="608" y="426" width="100" height="26" rx="5" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.09)" />
+                <text x="658" y="443" fill="#8b9199" text-anchor="middle" font-size="10.5">provider</text>
               </g>
 
-              <text x="0" y="536" fill="#8b9199" font-size="11.5" font-family="ui-sans-serif, system-ui">
+              <text x="0" y="488" fill="#8b9199" font-size="11" font-family="ui-sans-serif, system-ui">
                 1 scheduling implementation · 1 retry policy · 1 status pipeline · adding a channel is an adapter
-              </text>
-
-              <text x="0" y="576" fill="#6b7178" font-size="11.5" font-family="ui-sans-serif, system-ui">
-                RCS launched on this path for 50+ enterprise clients and now carries 2.5M messages/month.
-              </text>
-              <text x="0" y="598" fill="#6b7178" font-size="11.5" font-family="ui-sans-serif, system-ui">
-                Redis-backed segment delivery; webhook-driven status updates flow back into the shared pipeline.
               </text>
             </svg>
           </div>
         </div>
       </section>
 
-      <!-- ===================================
-             03. EXPERIENCE
-        =================================== -->
-      <section
-        id="work"
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 03. EXPERIENCE ]</div>
+      <!-- ============================================================
+           EXPERIENCE — timeline plus everything the case studies
+           didn't cover. No repetition of the above.
+      ============================================================ -->
+      <section id="experience" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Experience</p>
+            <h2>Where the work happened</h2>
+          </div>
 
-        <div class="max-w-4xl mx-auto">
           <!-- BIK.AI -->
-          <div class="mb-20 reveal-item fade-up">
-            <div
-              class="flex items-start gap-5 mb-6 pb-6 border-b border-white/10"
-            >
-              <a
-                href="https://bik.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="w-14 h-14 shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center p-2 hover:border-white/30 transition-colors"
-              >
-                <img
-                  src="assets/logos/bik.jpg"
-                  alt="BIK.AI"
-                  width="56"
-                  height="56"
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-contain rounded"
-                />
-              </a>
-              <div class="flex-1">
-                <h3 class="text-2xl font-display font-bold text-white">
+          <div class="reveal mb-20">
+            <div class="flex items-start gap-4 mb-7">
+              <img
+                src="assets/logos/bik.jpg"
+                alt=""
+                width="44"
+                height="44"
+                loading="lazy"
+                decoding="async"
+                class="w-11 h-11 rounded-lg object-contain bg-white/5 border border-white/10 p-1.5 shrink-0"
+              />
+              <div>
+                <h3 class="text-xl font-display font-bold">
                   BIK.AI
                   <span class="text-sm font-sans font-normal text-neutral-500"
-                    >· YC + Sequoia</span
+                    >· YC + Sequoia · Bengaluru</span
                   >
                 </h3>
-                <p class="text-sm text-neutral-300 mt-1">
+                <p class="text-sm text-neutral-400 mt-1">
                   Software Engineer II
-                  <span class="text-neutral-600">· Apr 2026 – Present</span>
-                </p>
-                <p class="text-sm text-neutral-500">
+                  <span class="text-neutral-600">Apr 2026 – Present</span>
+                  <span class="text-neutral-700 mx-1">·</span>
                   Software Engineer
-                  <span class="text-neutral-600">· Dec 2024 – Mar 2026</span>
+                  <span class="text-neutral-600">Dec 2024 – Mar 2026</span>
                 </p>
-                <p class="text-xs text-neutral-600 mt-1">Bengaluru, India</p>
               </div>
             </div>
 
-            <ul class="space-y-5 text-[15px] text-neutral-300 leading-relaxed">
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Root-caused a Pub/Sub backlog across two queues the team had
-                  been absorbing with a 38-node scale-out that often never scaled
-                  back down, then rebuilt consumer flow control, ack-deadline
-                  handling and backpressure. Combined backlog fell
-                  <span class="text-white">1.26M messages to under 4K</span>,
-                  worst-case delivery delay
-                  <span class="text-white">2.4 hours to 94 seconds</span>, and the
-                  scale-out came off.
-                  <a
-                    href="/writing/pubsub-backpressure/"
-                    class="text-white/60 hover:text-white border-b border-white/20 hover:border-white transition-colors whitespace-nowrap"
-                    >Writeup →</a
-                  >
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Own billing across every revenue channel. Redesigned AI billing
-                  after finding stores drawing
-                  <span class="text-white">2–10x their contracted allocation</span>:
-                  a central versioned rate card keyed on tier, country and usage
-                  type, with credits denominated in money rather than operation
-                  counts. Separately recovered
-                  <span class="text-white">12.5% of email billing revenue</span>
-                  lost to a 3-hour daily cutoff, and fixed a WhatsApp credit runner
-                  hardcoding 18:30 UTC as midnight across five call sites.
-                  <a
-                    href="/writing/billing-unit-mismatch/"
-                    class="text-white/60 hover:text-white border-b border-white/20 hover:border-white transition-colors whitespace-nowrap"
-                    >Writeup →</a
-                  >
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Stopped recurring sync failures across
-                  <span class="text-white">250+ Shopify stores</span> with a
-                  resumable orchestrator/executor state machine. Run-scoped
-                  checkpointing, idempotent retries, paced execution under GraphQL
-                  rate limits. Reprocessed
-                  <span class="text-white">2M+ records with zero duplicates</span>,
+            <p class="text-neutral-400 measure leading-relaxed mb-8">
+              Messaging, billing and event infrastructure on a 25-engineer team.
+              Beyond the three systems above:
+            </p>
+
+            <div class="rowlist">
+              <div>
+                <div class="k">Shopify sync</div>
+                <div class="v">
+                  Replaced the codebase's #1 acknowledged tech debt with a resumable
+                  orchestrator/executor state machine — run-scoped checkpointing,
+                  idempotent retries, paced execution under GraphQL rate limits.
+                  <strong>250+ stores, 2M+ records reprocessed, zero duplicates</strong>,
                   flag-gated behind a legacy fallback.
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Cut campaign analytics page load from
-                  <span class="text-white">20s to 200ms</span> while doubling page
-                  size, rebuilding it on a Postgres-first data layer with on-demand
-                  Elasticsearch refresh and age-tiered caching.
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Consolidated WhatsApp, email, RCS and SMS broadcasts onto shared
-                  AWS Step Function orchestration, replacing a separate delivery
-                  path per channel with one provider-agnostic path. Launched RCS on
-                  it for 50+ enterprise clients, now carrying
-                  <span class="text-white">2.5M messages/month</span>.
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Built the external webhook system forwarding platform events to
-                  merchant endpoints, then isolated delivery per store on Cloud
-                  Tasks after tracing duplicate deliveries to ack-deadline
-                  overruns, with a 30s attempt timeout, three bounded retries, and
-                  a 24-hour health evaluator that auto-blocks endpoints past a 50%
-                  failure rate.
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Designed and built the multi-channel alerting platform that
-                  replaced email-only merchant notifications, now the path the
-                  other three engineering pods ship every alert type on. Role-based
-                  routing, per-instance delivery tracking, rate limiting, admin
-                  console.
-                </span>
-              </li>
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Carry on-call for the systems above. Drove
-                  <span class="text-white">SOC 2 Type 2 and ISO 27001</span> to
-                  certification with the CTO; company-wide AWS/GCP administrator
-                  with org-level IAM ownership.
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- VideoLAN -->
-          <div class="mb-20 reveal-item fade-up">
-            <div
-              class="flex items-start gap-5 mb-6 pb-6 border-b border-white/10"
-            >
-              <a
-                href="https://www.videolan.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="w-14 h-14 shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center p-2 hover:border-white/30 transition-colors"
-              >
-                <img
-                  src="assets/logos/vlc.webp"
-                  alt="VideoLAN"
-                  width="56"
-                  height="56"
-                  loading="lazy"
-                  decoding="async"
-                  class="w-full h-full object-contain"
-                />
-              </a>
-              <div class="flex-1">
-                <h3 class="text-2xl font-display font-bold text-white">
-                  VideoLAN
-                  <span class="text-sm font-sans font-normal text-neutral-500"
-                    >· VLC Media Player</span
-                  >
-                </h3>
-                <p class="text-sm text-neutral-300 mt-1">
-                  Google Summer of Code Contributor
-                  <span class="text-neutral-600">· May – Oct 2024</span>
-                </p>
-                <p class="text-xs text-neutral-600 mt-1">Remote</p>
+                </div>
+              </div>
+              <div>
+                <div class="k">Campaign analytics</div>
+                <div class="v">
+                  Rebuilt on a Postgres-first data layer with on-demand Elasticsearch
+                  refresh and age-tiered caching. Page load
+                  <strong>20s → 200ms while doubling page size</strong>.
+                </div>
+              </div>
+              <div>
+                <div class="k">External webhooks</div>
+                <div class="v">
+                  Built the system forwarding platform events to merchant endpoints,
+                  then isolated delivery per store on Cloud Tasks after tracing
+                  duplicate deliveries to ack-deadline overruns. 30s attempt timeout,
+                  three bounded retries, and a 24-hour health evaluator that
+                  auto-blocks endpoints past a 50% failure rate.
+                </div>
+              </div>
+              <div>
+                <div class="k">Alerting platform</div>
+                <div class="v">
+                  Replaced email-only merchant notifications with multi-channel
+                  routing —
+                  <strong
+                    >now the path the other three engineering pods ship every alert
+                    type on</strong
+                  >. Role-based routing, per-instance delivery tracking, rate
+                  limiting, admin console.
+                </div>
+              </div>
+              <div>
+                <div class="k">Operations</div>
+                <div class="v">
+                  On-call for the systems above. Drove
+                  <strong>SOC 2 Type 2 and ISO 27001</strong> to certification with
+                  the CTO; company-wide AWS/GCP administrator with org-level IAM
+                  ownership.
+                </div>
               </div>
             </div>
-            <ul class="space-y-5 text-[15px] text-neutral-300 leading-relaxed">
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Shipped multi-file metadata editing in C++/Qt into a codebase
-                  maintained by 50+ developers across 15+ countries: extensible
-                  metadata-provider interface with cross-file command-pattern
-                  undo/redo, cutting
-                  <span class="text-white">75% of the steps</span> in multi-file
-                  tagging. Mentored by VideoLAN founder Jean-Baptiste Kempf.
-                  <a
-                    href="https://summerofcode.withgoogle.com/archive/2024/projects/2M8QX6wq"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-white/60 hover:text-white border-b border-white/20 hover:border-white transition-colors whitespace-nowrap"
-                    >GSoC archive →</a
-                  >
-                </span>
-              </li>
-            </ul>
           </div>
 
-          <!-- MuseScore -->
-          <div class="reveal-item fade-up">
-            <div
-              class="flex items-start gap-5 mb-6 pb-6 border-b border-white/10"
-            >
+          <!-- Open source / GSoC — told once, here -->
+          <div class="reveal">
+            <div class="flex items-baseline justify-between gap-4 mb-7 flex-wrap">
+              <h3 class="text-xl font-display font-bold">
+                Google Summer of Code
+                <span class="text-sm font-sans font-normal text-neutral-500"
+                  >· 2023 &amp; 2024, both C++/Qt</span
+                >
+              </h3>
               <a
-                href="https://musescore.org"
+                href="https://github.com/octopols"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="w-14 h-14 shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center p-2 hover:border-white/30 transition-colors"
+                class="text-sm text-neutral-500 hover:text-white transition-colors"
+                >github.com/octopols →</a
+              >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <a
+                href="https://summerofcode.withgoogle.com/archive/2024/projects/2M8QX6wq"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group rounded-lg overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
               >
                 <img
-                  src="assets/logos/musescore_studio.svg"
-                  alt="MuseScore"
-                  width="56"
-                  height="56"
+                  src="assets/images/vlc_gsoc.webp"
+                  alt="GSoC 2024 project page — VideoLAN"
+                  width="1280"
+                  height="720"
                   loading="lazy"
                   decoding="async"
-                  class="w-full h-full object-contain"
+                  class="w-full aspect-video object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                 />
+                <div class="p-5">
+                  <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
+                    VideoLAN · 2024
+                  </p>
+                  <p class="text-[15px] text-neutral-300 leading-relaxed">
+                    Multi-file metadata editing shipped into VLC — extensible
+                    metadata-provider interface with cross-file command-pattern
+                    undo/redo, cutting
+                    <span class="text-white">75% of the steps</span> in multi-file
+                    tagging. Mentored by founder Jean-Baptiste Kempf.
+                  </p>
+                </div>
               </a>
-              <div class="flex-1">
-                <h3 class="text-2xl font-display font-bold text-white">
-                  MuseScore
-                </h3>
-                <p class="text-sm text-neutral-300 mt-1">
-                  Google Summer of Code Contributor
-                  <span class="text-neutral-600">· May – Oct 2023</span>
-                </p>
-                <p class="text-xs text-neutral-600 mt-1">Remote</p>
-              </div>
+
+              <a
+                href="https://summerofcode.withgoogle.com/archive/2023/projects/OifrwbNC"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group rounded-lg overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
+              >
+                <img
+                  src="assets/images/musescore_gsoc.webp"
+                  alt="GSoC 2023 project page — MuseScore"
+                  width="1280"
+                  height="720"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full aspect-video object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                />
+                <div class="p-5">
+                  <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
+                    MuseScore · 2023
+                  </p>
+                  <p class="text-[15px] text-neutral-300 leading-relaxed">
+                    Built MuseScore 4.6's inline popup framework on Qt's model-view
+                    architecture; later GSoC cohorts extended the same
+                    infrastructure. Still contributing —
+                    <span class="text-white">10 merged PRs</span> across the
+                    inspector, UI framework and platform layers.
+                  </p>
+                </div>
+              </a>
             </div>
-            <ul class="space-y-5 text-[15px] text-neutral-300 leading-relaxed">
-              <li class="flex items-start gap-3">
-                <span class="text-white/30 mt-1.5 text-xs">▪</span>
-                <span>
-                  Built MuseScore 4.6's inline popup framework in C++/QML on Qt's
-                  model-view architecture. Later GSoC cohorts extended the same
-                  infrastructure. Still contributing — 10 merged PRs across the
-                  inspector, UI framework and platform layers.
-                  <a
-                    href="https://summerofcode.withgoogle.com/archive/2023/projects/OifrwbNC"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-white/60 hover:text-white border-b border-white/20 hover:border-white transition-colors whitespace-nowrap"
-                    >GSoC archive →</a
-                  >
-                </span>
-              </li>
-            </ul>
           </div>
         </div>
       </section>
 
-      <!-- ===================================
-             04. PROJECTS
-        =================================== -->
-      <section
-        id="projects"
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 04. PROJECTS ]</div>
+      <!-- ============================================================
+           PROJECTS
+      ============================================================ -->
+      <section id="projects" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Projects</p>
+            <h2>Built outside work</h2>
+            <p class="lede measure">
+              Both open source, both actually used — one by me every day, one by my
+              team.
+            </p>
+          </div>
 
-        <div class="max-w-6xl mx-auto">
-          <h2
-            class="text-3xl md:text-5xl font-display font-bold mb-4 reveal-item fade-up"
-          >
-            Things I built outside work
-          </h2>
-          <p
-            class="text-neutral-400 mb-14 max-w-2xl reveal-item fade-up leading-relaxed"
-          >
-            Both of these exist because I wanted them to exist. Both are open
-            source and both are used — one by me every day, one by my team.
-          </p>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- HomeCam TV -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
             <a
               href="/projects/homecam-tv/"
-              class="project-card reveal-item fade-scale rounded-xl overflow-hidden relative group block border border-white/10 hover:border-white/25 transition-colors"
+              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
             >
               <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
                 <img
@@ -924,39 +738,25 @@
                   height="1080"
                   loading="lazy"
                   decoding="async"
-                  class="w-full h-full object-cover opacity-80"
+                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
                 />
               </div>
-              <div class="p-7">
-                <div class="flex gap-2 mb-4 flex-wrap">
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Android TV</span
-                  >
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Kotlin</span
-                  >
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Compose</span
-                  >
-                </div>
-                <h3 class="text-2xl font-display font-bold mb-3">HomeCam TV</h3>
-                <p class="text-neutral-400 text-sm leading-relaxed">
-                  A Dahua NVR on the television, driven entirely by the remote.
-                  The interesting constraint is the d-pad, not the video: every
-                  screen names the control it opens on, so focus never lands
-                  nowhere.
+              <div class="p-6">
+                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-3">
+                  Android TV · Kotlin · Compose
+                </p>
+                <h3 class="text-xl font-display font-bold mb-2">HomeCam TV</h3>
+                <p class="text-neutral-400 text-[15px] leading-relaxed">
+                  A Dahua NVR on the television. The interesting constraint is the
+                  d-pad, not the video — every screen names the control it opens on,
+                  so focus never lands nowhere.
                 </p>
               </div>
             </a>
 
-            <!-- envswitch -->
             <a
               href="/projects/envswitch/"
-              class="project-card reveal-item fade-scale rounded-xl overflow-hidden relative group block border border-white/10 hover:border-white/25 transition-colors"
-              style="transition-delay: 0.1s"
+              class="group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors"
             >
               <div class="aspect-[16/10] overflow-hidden bg-neutral-900">
                 <img
@@ -966,46 +766,31 @@
                   height="1080"
                   loading="lazy"
                   decoding="async"
-                  class="w-full h-full object-cover opacity-80"
+                  class="w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
                 />
               </div>
-              <div class="p-7">
-                <div class="flex gap-2 mb-4 flex-wrap">
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Zsh</span
-                  >
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Shell</span
-                  >
-                  <span
-                    class="text-[10px] px-2.5 py-1 bg-white/10 rounded-full text-neutral-300 uppercase tracking-wider"
-                    >Dev tooling</span
-                  >
-                </div>
-                <h3 class="text-2xl font-display font-bold mb-3">envswitch</h3>
-                <p class="text-neutral-400 text-sm leading-relaxed">
+              <div class="p-6">
+                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-3">
+                  Zsh · Shell · Dev tooling
+                </p>
+                <h3 class="text-xl font-display font-bold mb-2">envswitch</h3>
+                <p class="text-neutral-400 text-[15px] leading-relaxed">
                   Shell environments by name, auto-loaded by directory and git
-                  branch. Production is never auto-loaded — the whole safety model
-                  is that implicit actions only reach environments where being
-                  wrong is cheap.
+                  branch. Production is never auto-loaded — implicit actions only
+                  reach environments where being wrong is cheap.
                 </p>
               </div>
             </a>
           </div>
 
-          <!-- Earlier repos, de-emphasised -->
-          <div class="mt-16 pt-10 border-t border-white/5 reveal-item fade-up">
-            <p class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
-              Earlier repositories
-            </p>
-            <p class="text-sm text-neutral-500 leading-relaxed max-w-3xl">
+          <div class="mt-10 pt-8 border-t border-white/5 reveal">
+            <p class="eyebrow mb-3">Earlier repositories</p>
+            <p class="text-sm text-neutral-500 leading-relaxed measure">
               <a
                 href="https://github.com/octopols/Quack"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors border-b border-white/10 hover:border-white/40"
+                class="text-neutral-400 hover:text-white transition-colors"
                 >Quack</a
               >
               — YouTube comment search over an inverted index, as a Chrome
@@ -1014,7 +799,7 @@
                 href="https://github.com/octopols/google-trends-api-toolkit"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors border-b border-white/10 hover:border-white/40"
+                class="text-neutral-400 hover:text-white transition-colors"
                 >google-trends-api-toolkit</a
               >
               — Python wrapper over Google Trends' undocumented endpoints,
@@ -1023,502 +808,276 @@
                 href="https://github.com/octopols/coloc_mobile"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-neutral-400 hover:text-white transition-colors border-b border-white/10 hover:border-white/40"
+                class="text-neutral-400 hover:text-white transition-colors"
                 >Coloc</a
               >
-              — roommate matching on Gale-Shapley with Elo ratings; the approach
-              was published in IJFMR.
+              — roommate matching on Gale-Shapley with Elo ratings; approach
+              published in IJFMR.
             </p>
           </div>
         </div>
       </section>
 
-      <!-- ===================================
-             05. WRITING
-        =================================== -->
-      <section
-        id="writing"
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 05. WRITING ]</div>
+      <!-- ============================================================
+           WRITING
+      ============================================================ -->
+      <section id="writing" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">Writing</p>
+            <h2>Engineering notes</h2>
+            <p class="lede measure">
+              The reasoning that didn't fit in a commit message.
+            </p>
+          </div>
 
-        <div class="max-w-3xl mx-auto">
-          <h2
-            class="text-3xl md:text-5xl font-display font-bold mb-4 reveal-item fade-up"
-          >
-            Engineering notes
-          </h2>
-          <p
-            class="text-neutral-400 mb-12 leading-relaxed reveal-item fade-up"
-          >
-            Write-ups of things I actually had to fix — delivery backlogs, retry
-            semantics, billing correctness. Mostly the reasoning that didn't fit in
-            a commit message.
-          </p>
-
-          <div class="flex flex-col gap-5">
-            <a
-              href="/writing/pubsub-backpressure/"
-              class="article-card reveal-item fade-up block"
-            >
-              <div class="flex items-center gap-3 mb-3 flex-wrap">
-                <span class="article-meta">Distributed Systems</span>
-                <span class="article-meta">·</span>
-                <span class="article-meta">8 min read</span>
-              </div>
-              <h3
-                class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
-              >
-                What 38 nodes were hiding
-              </h3>
-              <p class="text-neutral-400 text-sm leading-relaxed">
+          <div class="rowlist reveal">
+            <a href="/writing/pubsub-backpressure/" class="group">
+              <div class="k">Distributed systems</div>
+              <div class="v">
+                <span
+                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  >What 38 nodes were hiding</span
+                >
                 A queue that grows while you add consumers is not telling you about
-                capacity. It is telling you that some of your capacity is being
-                spent twice.
-              </p>
-            </a>
-
-            <a
-              href="/writing/billing-unit-mismatch/"
-              class="article-card reveal-item fade-up block"
-            >
-              <div class="flex items-center gap-3 mb-3 flex-wrap">
-                <span class="article-meta">Billing Systems</span>
-                <span class="article-meta">·</span>
-                <span class="article-meta">12 min read</span>
+                capacity. It is telling you that some of your capacity is being spent
+                twice.
               </div>
-              <h3
-                class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
-              >
-                How to bill AI usage
-              </h3>
-              <p class="text-neutral-400 text-sm leading-relaxed">
+            </a>
+            <a href="/writing/billing-unit-mismatch/" class="group">
+              <div class="k">Billing systems</div>
+              <div class="v">
+                <span
+                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  >How to bill AI usage</span
+                >
                 Metering AI is easy. Billing it correctly is a unit problem, a clock
-                problem and a visibility problem — a working design, and the failure
-                modes that shaped it.
-              </p>
-            </a>
-
-            <a
-              href="/writing/hardcoded-midnight/"
-              class="article-card reveal-item fade-up block"
-            >
-              <div class="flex items-center gap-3 mb-3 flex-wrap">
-                <span class="article-meta">Billing Systems</span>
-                <span class="article-meta">·</span>
-                <span class="article-meta">7 min read</span>
+                problem and a visibility problem.
               </div>
-              <h3
-                class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
-              >
-                18:30 UTC is not midnight
-              </h3>
-              <p class="text-neutral-400 text-sm leading-relaxed">
+            </a>
+            <a href="/writing/hardcoded-midnight/" class="group">
+              <div class="k">Billing systems</div>
+              <div class="v">
+                <span
+                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  >18:30 UTC is not midnight</span
+                >
                 A constant that was right once, in one place, for one market — then
-                copied to five call sites. Constants are concepts that never got
-                named.
-              </p>
-            </a>
-          </div>
-
-          <a
-            href="/writing/"
-            class="mt-10 inline-flex items-center gap-2 border border-white/15 px-6 py-3 rounded-full text-sm hover:bg-white/5 hover:border-white/30 transition-colors"
-          >
-            All writing →
-          </a>
-        </div>
-      </section>
-
-      <!-- ===================================
-             06. OPEN SOURCE
-        =================================== -->
-      <section
-        id="open-source"
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 06. OPEN SOURCE ]</div>
-
-        <div class="max-w-6xl mx-auto">
-          <div
-            class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12"
-          >
-            <div class="reveal-item fade-up">
-              <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">
-                Two Google Summer of Code cycles
-              </h2>
-              <p class="text-neutral-400 max-w-xl leading-relaxed">
-                Selected in 2023 and 2024, both in C++/Qt, both in codebases with
-                users in the hundreds of millions. Still contributing to MuseScore.
-              </p>
-            </div>
-            <a
-              href="https://github.com/octopols"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="shrink-0 flex items-center gap-3 border border-white/15 px-6 py-3 rounded-full text-sm hover:bg-white/5 hover:border-white/30 transition-colors"
-            >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.83.58C20.57 22.3 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"
-                />
-              </svg>
-              <span>github.com/octopols</span>
-            </a>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <a
-              href="https://summerofcode.withgoogle.com/archive/2024/projects/2M8QX6wq"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="reveal-item fade-up group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors block"
-            >
-              <img
-                src="assets/images/vlc_gsoc.webp"
-                alt="GSoC 2024 project page — VideoLAN"
-                width="1280"
-                height="720"
-                loading="lazy"
-                decoding="async"
-                class="w-full aspect-video object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-              />
-              <div class="p-5">
-                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
-                  GSoC 2024
-                </p>
-                <p class="text-white font-medium">
-                  VideoLAN — multi-file metadata editing
-                </p>
+                copied to five call sites.
               </div>
             </a>
-            <a
-              href="https://summerofcode.withgoogle.com/archive/2023/projects/OifrwbNC"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="reveal-item fade-up group rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors block"
-              style="transition-delay: 0.1s"
-            >
-              <img
-                src="assets/images/musescore_gsoc.webp"
-                alt="GSoC 2023 project page — MuseScore"
-                width="1280"
-                height="720"
-                loading="lazy"
-                decoding="async"
-                class="w-full aspect-video object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-              />
-              <div class="p-5">
-                <p class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
-                  GSoC 2023
-                </p>
-                <p class="text-white font-medium">
-                  MuseScore — inline popup framework
-                </p>
+            <a href="/writing/lifelong-memory/" class="group">
+              <div class="k">Machine learning</div>
+              <div class="v">
+                <span
+                  class="block text-white font-display font-bold text-lg mb-1 group-hover:text-neutral-300 transition-colors"
+                  >The model is rented. The memory is yours.</span
+                >
+                A roadmap written as gates rather than milestones — each phase has one
+                number you must hit before you earn the next.
               </div>
             </a>
           </div>
 
-          <!-- Contribution graph. Hidden until the image actually loads so a
-               blocked/failed request leaves no empty panel behind. -->
-          <div
-            id="gh-graph"
-            class="reveal-item fade-up hidden bg-white/5 border border-white/10 rounded-lg p-6 overflow-hidden"
-          >
-            <img
-              id="gh-graph-img"
-              src="https://ghchart.rshah.org/39D353/octopols"
-              alt="GitHub contribution graph for octopols"
-              loading="lazy"
-              decoding="async"
-              class="w-full rounded opacity-90"
-              style="filter: invert(1) hue-rotate(180deg)"
-            />
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================================
-             07. TOOLS
-        =================================== -->
-      <section
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 07. TOOLS ]</div>
-
-        <div class="max-w-4xl mx-auto reveal-item fade-up">
-          <h2 class="text-3xl md:text-5xl font-display font-bold mb-10">
-            What I build with
-          </h2>
-
-          <dl class="divide-y divide-white/5">
-            <div class="grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-2 sm:gap-8 py-5">
-              <dt class="text-xs uppercase tracking-widest text-neutral-600 pt-1">
-                Languages
-              </dt>
-              <dd class="text-neutral-300">
-                TypeScript · JavaScript · Python · SQL · C++/Qt
-              </dd>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-2 sm:gap-8 py-5">
-              <dt class="text-xs uppercase tracking-widest text-neutral-600 pt-1">
-                Data
-              </dt>
-              <dd class="text-neutral-300">
-                PostgreSQL · Elasticsearch · Redis · Firestore
-              </dd>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-2 sm:gap-8 py-5">
-              <dt class="text-xs uppercase tracking-widest text-neutral-600 pt-1">
-                Backend
-              </dt>
-              <dd class="text-neutral-300">
-                Node.js · Express · REST · GraphQL · microservices ·
-                event-driven architecture · distributed systems · message queues
-              </dd>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-2 sm:gap-8 py-5">
-              <dt class="text-xs uppercase tracking-widest text-neutral-600 pt-1">
-                Cloud
-              </dt>
-              <dd class="text-neutral-300">
-                GCP (Pub/Sub, Cloud Tasks, Cloud Functions, GKE) · AWS (Step
-                Functions, Lambda, IAM) · Docker · CI/CD
-              </dd>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-2 sm:gap-8 py-5">
-              <dt class="text-xs uppercase tracking-widest text-neutral-600 pt-1">
-                Also
-              </dt>
-              <dd class="text-neutral-500 text-sm pt-0.5">
-                React · Redux — internal billing and configuration dashboards
-                fronting the systems above.
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      <!-- ===================================
-             08. ABOUT
-        =================================== -->
-      <section
-        id="about"
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 08. ABOUT ]</div>
-
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1fr_20rem] gap-14 items-start">
-          <div class="reveal-item fade-up">
-            <h2 class="text-3xl md:text-5xl font-display font-bold mb-8">
-              About
-            </h2>
-            <div class="space-y-5 text-neutral-300 leading-relaxed text-[17px]">
-              <p>
-                I'm a backend engineer in Bengaluru. I own the messaging, billing
-                and event infrastructure at BIK.AI, a commerce platform for Shopify
-                merchants, on a team of about 25 engineers.
-              </p>
-              <p>
-                Most of what I do is diagnosis. Something is slow, or wrong, or
-                quietly costing money, and the interesting part is almost never the
-                fix — it's working out which of the five plausible explanations is
-                the real one. The systems I've enjoyed most were the ones where the
-                obvious answer was wrong: a queue that grew faster the more
-                consumers we added, a billing figure that governed every invoice and
-                appeared on no screen, a timezone constant that was correct in
-                exactly one country.
-              </p>
-              <p>
-                The through-line, if there is one:
-                <strong class="text-white"
-                  >most "scale problems" are correctness problems in a
-                  costume</strong
-                >. Idempotency, backpressure and blast-radius isolation have
-                resolved more incidents for me than adding capacity ever has —
-                partly because adding capacity often <em>is</em> the incident.
-              </p>
-              <p>
-                Before this I did two Google Summer of Code cycles in C++/Qt, at
-                VideoLAN and MuseScore, which is where I learned to work in a
-                codebase far older and larger than my understanding of it. I still
-                send patches to MuseScore.
-              </p>
-              <p>
-                Away from a terminal I shoot film and digital, mostly street and
-                mostly badly.
-              </p>
-            </div>
-
-            <div class="mt-10 flex flex-wrap gap-4">
-              <a
-                href="photography.html"
-                class="inline-flex items-center gap-2 border border-white/15 px-5 py-2.5 rounded-full text-sm hover:bg-white/5 hover:border-white/30 transition-colors"
-              >
-                Photography →
-              </a>
-              <a
-                href="docs/hirnaymay_bhaskar_resume.pdf"
-                class="inline-flex items-center gap-2 border border-white/15 px-5 py-2.5 rounded-full text-sm hover:bg-white/5 hover:border-white/30 transition-colors"
-              >
-                Résumé (PDF) →
-              </a>
-            </div>
-          </div>
-
-          <div class="reveal-item fade-up" style="transition-delay: 0.15s">
-            <img
-              src="assets/photography/harshloveschunli-20240101-0004.webp"
-              alt=""
-              width="1200"
-              height="1500"
-              loading="lazy"
-              decoding="async"
-              class="w-full rounded-xl border border-white/10 grayscale hover:grayscale-0 transition-all duration-700"
-            />
-            <p class="mt-4 text-xs text-neutral-600 leading-relaxed">
-              Bengaluru, India · open to hybrid and remote.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================================
-             09. CONTACT
-        =================================== -->
-      <section
-        id="contact-section"
-        class="py-28 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
-      >
-        <div class="section-label">[ 09. CONTACT ]</div>
-
-        <div class="max-w-4xl mx-auto text-center">
-          <h2
-            class="text-4xl md:text-7xl font-display font-bold tracking-tighter mb-6 reveal-item fade-up"
-          >
-            Get in touch
-          </h2>
-          <p class="text-neutral-400 mb-10 reveal-item fade-up">
-            Happy to talk about queues, billing correctness, or anything that
-            broke in an interesting way.
-          </p>
-          <a
-            href="mailto:hirnaymay@gmail.com"
-            class="inline-block text-xl md:text-3xl font-display text-white border-b-2 border-white/30 hover:border-white transition-colors reveal-item fade-up"
-          >
-            hirnaymay@gmail.com
-          </a>
-
-          <div class="mt-12 flex gap-4 justify-center reveal-item fade-up">
-            <a
-              href="https://linkedin.com/in/hirnaymay"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
-              aria-label="LinkedIn"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zm1.78 13.02H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"
-                />
-              </svg>
-            </a>
-            <a
-              href="https://github.com/octopols"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
-              aria-label="GitHub"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.83.58C20.57 22.3 24 17.8 24 12.5 24 5.87 18.63.5 12 .5z"
-                />
-              </svg>
-            </a>
+          <p class="mt-8 text-sm text-neutral-500 reveal">
+            Earlier writing on
             <a
               href="https://octopols.medium.com"
               target="_blank"
               rel="noopener noreferrer"
-              class="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center hover:bg-white hover:text-black transition-colors"
-              aria-label="Medium"
+              class="text-neutral-400 hover:text-white transition-colors"
+              >Medium</a
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M13.54 12a6.8 6.8 0 0 1-6.77 6.82A6.8 6.8 0 0 1 0 12a6.8 6.8 0 0 1 6.77-6.82A6.8 6.8 0 0 1 13.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42zM24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"
+            and the
+            <a
+              href="https://musescore.org/en/user/4385394/blog/2023/10/08/gsoc-2023-text-style-popup"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-neutral-400 hover:text-white transition-colors"
+              >MuseScore blog</a
+            >.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ABOUT — prose, stack, photography. Last content section.
+      ============================================================ -->
+      <section id="about" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <div class="section-head reveal">
+            <p class="eyebrow">About</p>
+            <h2>Who's writing this</h2>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_15rem] gap-12 md:gap-16"
+          >
+            <div class="reveal">
+              <div class="space-y-5 text-neutral-300 leading-relaxed measure">
+                <p>
+                  Most of what I do is diagnosis. Something is slow, or wrong, or
+                  quietly costing money, and the interesting part is almost never the
+                  fix — it's working out which of the five plausible explanations is
+                  the real one.
+                </p>
+                <p>
+                  The systems I've enjoyed most were the ones where the obvious
+                  answer was wrong: a queue that grew faster the more consumers we
+                  added, a billing figure that governed every invoice and appeared on
+                  no screen, a timezone constant that was correct in exactly one
+                  country.
+                </p>
+                <p>
+                  The through-line, if there is one:
+                  <strong class="text-white"
+                    >most "scale problems" are correctness problems in a
+                    costume</strong
+                  >. Idempotency, backpressure and blast-radius isolation have
+                  resolved more incidents for me than adding capacity ever has —
+                  partly because adding capacity often <em>is</em> the incident.
+                </p>
+                <p>
+                  Before this, two Google Summer of Code cycles in C++/Qt taught me
+                  to work in codebases far older and larger than my understanding of
+                  them. Away from a terminal I shoot film and digital, mostly street
+                  and mostly badly.
+                </p>
+              </div>
+
+              <div class="mt-12">
+                <p class="eyebrow mb-5">Stack</p>
+                <dl class="rowlist">
+                  <div>
+                    <dt>Languages</dt>
+                    <dd>TypeScript · JavaScript · Python · SQL · C++/Qt</dd>
+                  </div>
+                  <div>
+                    <dt>Data</dt>
+                    <dd>PostgreSQL · Elasticsearch · Redis · Firestore</dd>
+                  </div>
+                  <div>
+                    <dt>Backend</dt>
+                    <dd>
+                      Node.js · Express · REST · GraphQL · microservices ·
+                      event-driven architecture · message queues
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Cloud</dt>
+                    <dd>
+                      GCP (Pub/Sub, Cloud Tasks, Cloud Functions, GKE) · AWS (Step
+                      Functions, Lambda, IAM) · Docker · CI/CD
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Also</dt>
+                    <dd class="text-neutral-500">
+                      React · Redux — internal dashboards fronting the systems above.
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <aside class="reveal">
+              <a href="photography.html" class="group block">
+                <img
+                  src="assets/photography/harshloveschunli-20240101-0004.webp"
+                  alt="Photograph by Hirnaymay Bhaskar"
+                  width="720"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full rounded-xl border border-white/10 grayscale group-hover:grayscale-0 transition-all duration-700"
                 />
-              </svg>
-            </a>
+                <p
+                  class="mt-3 text-sm text-neutral-500 group-hover:text-white transition-colors"
+                >
+                  Photography →
+                </p>
+              </a>
+              <p class="mt-6 text-sm text-neutral-500 leading-relaxed">
+                Bengaluru, India.<br />Open to hybrid and remote.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           CONTACT
+      ============================================================ -->
+      <section id="contact" class="py-24 md:py-32 rule">
+        <div class="shell">
+          <p class="eyebrow reveal">Contact</p>
+          <h2
+            class="font-display font-bold tracking-tighter leading-[1.02] mt-5 text-[clamp(1.9rem,5vw,3.25rem)] measure reveal"
+          >
+            Happy to talk about queues, billing correctness, or anything that broke
+            in an interesting way.
+          </h2>
+
+          <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 reveal">
+            <a
+              href="mailto:hirnaymay@gmail.com"
+              class="text-lg md:text-xl font-display text-white border-b-2 border-white/30 hover:border-white transition-colors"
+              >hirnaymay@gmail.com</a
+            >
+            <div class="flex gap-5 text-sm">
+              <a
+                href="https://linkedin.com/in/hirnaymay"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-neutral-400 hover:text-white transition-colors"
+                >LinkedIn</a
+              >
+              <a
+                href="https://github.com/octopols"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-neutral-400 hover:text-white transition-colors"
+                >GitHub</a
+              >
+              <a
+                href="https://octopols.medium.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-neutral-400 hover:text-white transition-colors"
+                >Medium</a
+              >
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- ===================================
-         FOOTER
-    =================================== -->
-    <footer id="contact" class="bg-black text-white border-t border-white/5">
-      <div class="max-w-6xl mx-auto px-6 md:px-12 py-14">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10">
-          <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
-              Navigation
-            </h3>
-            <nav class="space-y-2">
-              <a href="#hero" class="block text-neutral-400 hover:text-white transition-colors text-sm">Home</a>
-              <a href="#work" class="block text-neutral-400 hover:text-white transition-colors text-sm">Experience</a>
-              <a href="#projects" class="block text-neutral-400 hover:text-white transition-colors text-sm">Projects</a>
-              <a href="/writing/" class="block text-neutral-400 hover:text-white transition-colors text-sm">Writing</a>
-              <a href="#about" class="block text-neutral-400 hover:text-white transition-colors text-sm">About</a>
-            </nav>
-          </div>
-
-          <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
-              Connect
-            </h3>
-            <nav class="space-y-2">
-              <a href="https://linkedin.com/in/hirnaymay" target="_blank" rel="noopener noreferrer" class="block text-neutral-400 hover:text-white transition-colors text-sm">LinkedIn</a>
-              <a href="https://github.com/octopols" target="_blank" rel="noopener noreferrer" class="block text-neutral-400 hover:text-white transition-colors text-sm">GitHub</a>
-              <a href="https://octopols.medium.com" target="_blank" rel="noopener noreferrer" class="block text-neutral-400 hover:text-white transition-colors text-sm">Medium</a>
-              <a href="mailto:hirnaymay@gmail.com" class="block text-neutral-400 hover:text-white transition-colors text-sm">Email</a>
-            </nav>
-          </div>
-
-          <div>
-            <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-4">
-              Location
-            </h3>
-            <p class="text-neutral-400 text-sm leading-relaxed mb-4">
-              Bengaluru · open to hybrid and remote.
-            </p>
-            <div data-local-time-block class="hidden">
-              <h3 class="text-xs uppercase tracking-widest text-neutral-600 mb-2">
-                Local Time
-              </h3>
-              <p class="text-neutral-400 text-sm" id="local-time"></p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="flex flex-col md:flex-row justify-between items-center border-t border-white/5 pt-6 text-xs text-neutral-600 gap-3"
-        >
-          <div>
-            <span class="font-display font-bold text-white mr-3">HIRNAYMAY BHASKAR</span>
-            © <span id="footer-year">2026</span>
-          </div>
-          <div class="flex gap-4 flex-wrap justify-center">
-            <span>Backend Engineer</span>
-            <span>Distributed Systems</span>
-          </div>
-        </div>
+    <footer class="rule py-10">
+      <div
+        class="shell flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
+      >
+        <p>
+          <span class="font-display font-bold text-neutral-400 mr-2"
+            >HIRNAYMAY BHASKAR</span
+          >
+          © <span id="footer-year">2026</span>
+        </p>
+        <nav class="flex gap-5 flex-wrap justify-center">
+          <a href="#work" class="hover:text-white transition-colors">Work</a>
+          <a href="#projects" class="hover:text-white transition-colors">Projects</a>
+          <a href="/writing/" class="hover:text-white transition-colors">Writing</a>
+          <a href="photography.html" class="hover:text-white transition-colors"
+            >Photography</a
+          >
+          <a
+            href="docs/hirnaymay_bhaskar_resume.pdf"
+            class="hover:text-white transition-colors"
+            >Résumé</a
+          >
+        </nav>
       </div>
     </footer>
 
-    <!-- ===================================
-         ANALYTICS
-    =================================== -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-YEG239XM6X"

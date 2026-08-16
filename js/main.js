@@ -44,7 +44,11 @@
      If IntersectionObserver is unavailable, everything is activated
      immediately rather than left hidden.
   --------------------------------------------------------------- */
-  var revealTargets = document.querySelectorAll(".reveal-item, .split-line");
+  // .reveal is the homepage convention; .reveal-item/.split-line remain on
+  // photography.html, which also loads this file.
+  var revealTargets = document.querySelectorAll(
+    ".reveal, .reveal-item, .split-line",
+  );
 
   var activateAll = function () {
     for (var i = 0; i < revealTargets.length; i++) {

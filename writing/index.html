@@ -113,9 +113,8 @@
     <!-- ===================================
          NAVIGATION
     =================================== -->
-    <nav
-      class="fixed w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference text-white"
-    >
+    <nav class="fixed inset-x-0 top-0 z-50 mix-blend-difference text-white">
+      <div class="shell flex items-center justify-between py-5">
       <a
         href="/"
         class="font-display font-bold text-xl tracking-tighter"
@@ -140,6 +139,7 @@
       >
         Back
       </a>
+      </div>
     </nav>
 
     <!-- ===================================
@@ -150,11 +150,11 @@
              HEADER
         =================================== -->
       <header
-        class="relative pt-40 pb-20 px-6 md:px-12 overflow-hidden bg-[#050505]"
+        class="relative pt-40 pb-20 overflow-hidden bg-[#050505]"
       >
         <div class="section-label">[ 00. WRITING ]</div>
 
-        <div class="max-w-3xl mx-auto">
+        <div class="shell">
           <h1
             class="font-display text-6xl md:text-8xl font-bold leading-[0.85] tracking-tighter"
           >
@@ -179,11 +179,11 @@
              SECTION 01: ARTICLES
         =================================== -->
       <section
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
+        class="py-24 bg-[#050505] border-t border-white/5 relative"
       >
         <div class="section-label">[ 01. ARTICLES ]</div>
 
-        <div class="max-w-3xl mx-auto">
+        <div class="shell">
           <div class="flex flex-col gap-6">
             <!-- Article: pubsub-backpressure -->
             <a
@@ -278,11 +278,11 @@
              SECTION 02: ELSEWHERE
         =================================== -->
       <section
-        class="py-24 px-6 md:px-12 bg-[#050505] border-t border-white/5 relative"
+        class="py-24 bg-[#050505] border-t border-white/5 relative"
       >
         <div class="section-label">[ 02. ELSEWHERE ]</div>
 
-        <div class="max-w-3xl mx-auto">
+        <div class="shell">
           <div class="mb-8">
             <h2 class="text-2xl font-display font-bold mb-2">Elsewhere</h2>
             <p class="text-neutral-500 text-sm">
@@ -369,7 +369,7 @@
     =================================== -->
     <footer class="bg-black text-white border-t border-white/5">
       <div
-        class="max-w-3xl mx-auto px-6 md:px-12 py-12 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
+        class="shell py-12 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-600"
       >
         <div>
           <span class="font-display font-bold text-white mr-4"
