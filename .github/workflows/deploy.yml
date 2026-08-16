@@ -51,6 +51,7 @@ jobs:
           # /projects/<slug>/index.html — same clean-URL resolution as writing,
           # so the directory structure has to survive the copy.
           cp -r projects dist/
+          cp -r colophon dist/
           cp robots.txt dist/
           cp sitemap.xml dist/
           cp site.webmanifest dist/

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Colophon — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="How this site is built, what it weighs, the rules it is held to, and the four things about it I am not happy with."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/colophon/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru." />
+    <meta property="og:url" content="https://hirnaymay.com/colophon/" />
+    <meta property="og:title" content="Colophon" />
+    <meta
+      property="og:description"
+      content="24.9 KB of text, three external requests, and four things I am not happy with."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #82898f;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      section { padding: 56px 0 0; }
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      /* ---- weight table ---- */
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 460px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; font-family: var(--mono); font-size: 13px; }
+      td:first-child { font-family: inherit; font-size: 14.5px; }
+      td.num { text-align: right; color: var(--text); }
+      tr.total td { border-bottom: 0; color: var(--accent); font-weight: 600; }
+      tr.total td:first-child { color: var(--text); }
+
+      /* ---- weight bar ---- */
+      .bar { display: flex; height: 30px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+      .bar i { display: flex; overflow: hidden; align-items: center; justify-content: center; font-size: 10.5px; font-family: var(--mono); white-space: nowrap; }
+      .bar .img { background: rgba(246,224,94,.22); color: #ecdf9a; }
+      .bar .txt { background: rgba(104,211,145,.3); color: #b9e6cb; }
+      .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--dim); }
+      .legend span { display: flex; align-items: center; gap: 7px; }
+      .legend i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+
+      /* ---- the honest list ---- */
+      .flaws { display: grid; gap: 14px; margin: 0 0 24px; }
+      .flaw { border: 1px solid var(--line); border-left: 2px solid var(--bad); border-radius: 8px; padding: 16px 18px; background: rgba(252,129,129,.03); }
+      .flaw-t { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+      .flaw-d { font-size: 13.5px; color: var(--dim); line-height: 1.55; }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;
+        font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <div class="navlinks">
+          <a href="/#work">Work</a>
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/docs/hirnaymay_bhaskar_resume.pdf">Résumé</a>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Colophon · <time datetime="2026-08">August 2026</time></div>
+        <h1>How this site is built</h1>
+        <p class="standfirst">
+          Ten pages, no framework, 24.9&nbsp;KB of text on the home page, and three
+          requests to a domain that isn't mine. Also four things about it I am not
+          happy with, which are at the bottom because they are the interesting part.
+        </p>
+      </header>
+
+      <section>
+        <div class="label">[ <b>01</b> — Stack ]</div>
+        <h2>Static files and one build step</h2>
+        <p>
+          It is hand-written HTML. There is no framework, no component layer, no
+          client-side router, and no hydration. Every page is a file that a server
+          can hand over without thinking about it.
+        </p>
+        <p>
+          The single build step compiles Tailwind's utility classes into a static
+          stylesheet. Before that, the site loaded the Play CDN from
+          <code>&lt;head&gt;</code> — about 120&nbsp;KB gzipped of JavaScript that has
+          to run and generate the CSS <em>before</em> the first styled paint, on a
+          build Tailwind documents as development-only. Compiling it ships
+          <strong>4.0&nbsp;KB gzipped instead of 120</strong>, and nothing has to
+          execute for the page to look right.
+        </p>
+        <p>
+          The rest is four small JavaScript files totalling 13.1&nbsp;KB unminified,
+          with no dependencies between them and none from npm: the nav, the cursor,
+          the scroll reveals, and the photography lightbox. The lightbox used to pull
+          GSAP from a CDN for four tweens; it is CSS transitions now.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>02</b> — Weight ]</div>
+        <h2>What the home page actually costs</h2>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr><th>Resource</th><th class="num" style="text-align:right">Gzipped</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>index.html</td><td class="num">10.7 KB</td></tr>
+                <tr><td>css/styles.css — hand-written</td><td class="num">5.9 KB</td></tr>
+                <tr><td>css/tailwind.css — compiled</td><td class="num">4.0 KB</td></tr>
+                <tr><td>js/cursor.js</td><td class="num">1.7 KB</td></tr>
+                <tr><td>js/main.js</td><td class="num">1.6 KB</td></tr>
+                <tr><td>js/nav.js</td><td class="num">1.1 KB</td></tr>
+                <tr class="total"><td>All markup, styles and script</td><td class="num">24.9 KB</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="cap">
+            <b>Measured, not estimated.</b> Served locally and gzipped at default
+            compression. Third-party requests and the hero photograph are excluded
+            here and accounted for below.
+          </p>
+        </div>
+
+        <div class="fig">
+          <div class="bar">
+            <i class="img" style="width: 87.4%">hero photograph — 172.5 KB</i>
+            <i class="txt" style="width: 12.6%">24.9 KB</i>
+          </div>
+          <div class="legend">
+            <span><i style="background: rgba(246,224,94,.5)"></i>one image</span>
+            <span><i style="background: rgba(104,211,145,.55)"></i>ten pages of HTML, CSS and JS</span>
+          </div>
+          <p class="cap">
+            <b>197&nbsp;KB for a first view, and 87% of it is one photograph.</b>
+            Every optimisation described on this page is the small green sliver. That
+            is worth knowing before anyone — me included — spends another evening
+            shaving bytes off a stylesheet.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>03</b> — Rules ]</div>
+        <h2>Three rules, all checkable</h2>
+        <p>
+          Values are cheap to write down. These are ones you can verify from the
+          source in about a minute each.
+        </p>
+
+        <h3>A contrast floor</h3>
+        <p>
+          Two greys are defined in <code>css/styles.css</code> and nothing on the site
+          is allowed to be dimmer: <code>--label</code> at 5.4:1 and
+          <code>--secondary</code> at 6.4:1 against the background. The accent green
+          sits at 11:1. This is enforced by a script that parses every stylesheet and
+          every inline <code>&lt;style&gt;</code> block and fails on anything under
+          4.5:1 — it caught section labels sitting at 3.5:1 and article dates at
+          2.7:1, which is below the floor for large text, never mind 11px capitals.
+        </p>
+
+        <h3>Nothing hides behind JavaScript</h3>
+        <p>
+          Every scroll animation is gated behind a <code>.js</code> class set in the
+          document head. If a script fails, the class is never added, nothing is
+          hidden, and the page is a plain readable document. The mobile nav degrades
+          to a list of links. The custom cursor only hides the real one
+          <em>after</em> the replacement is confirmed running — the original set
+          <code>cursor: none</code> in CSS, which left a broken script with no pointer
+          at all.
+        </p>
+
+        <h3>The build runs in CI, not on my laptop</h3>
+        <p>
+          The compiled stylesheet depends on class names in the HTML, so a build that
+          only ever runs locally drifts the first time someone forgets. GitHub Actions
+          recompiles it on every push to <code>main</code> and deploys to GitHub
+          Pages. If the compile produces an empty file, the deploy fails rather than
+          shipping an unstyled site.
+        </p>
+      </section>
+
+      <section>
+        <div class="label">[ <b>04</b> — Third parties ]</div>
+        <h2>Three requests leave for somewhere else</h2>
+        <p>
+          Two go to <code>fonts.googleapis.com</code> and
+          <code>fonts.gstatic.com</code> for Space Grotesk, the display face. One goes
+          to <code>googletagmanager.com</code> for analytics. That is the whole list —
+          no CDN scripts, no icon library, no embedded widgets, no tag manager beyond
+          the one.
+        </p>
+        <div class="callout good">
+          <span class="tag">Where the images come from</span>
+          <p>
+            All photography is mine, resized through a
+            <code>sharp</code> script that writes an 800px thumbnail and a 1920px
+            version and regenerates a manifest. The grid lazy-loads thumbnails; the
+            full size is only fetched when you open one.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">[ <b>05</b> — Honest ]</div>
+        <h2>Four things I am not happy with</h2>
+        <p>
+          A colophon that only lists good decisions is marketing. These are the open
+          ones, roughly in order of how much they bother me.
+        </p>
+
+        <div class="flaws">
+          <div class="flaw">
+            <div class="flaw-t">The hero photograph is 87% of the page</div>
+            <div class="flaw-d">
+              172.5&nbsp;KB against 24.9&nbsp;KB for everything else. It is a webp,
+              it is sized correctly, it has <code>fetchpriority="high"</code> — and it
+              still dwarfs the entire rest of the site. The honest fix is a smaller
+              crop or no photograph, and I have kept it because I like it. That is a
+              preference, not an engineering decision, and it should be labelled as
+              one.
+            </div>
+          </div>
+          <div class="flaw">
+            <div class="flaw-t">There is a Google tracker on a site that otherwise phones nobody</div>
+            <div class="flaw-d">
+              Every other third-party dependency has been removed, and then there is
+              analytics, loading from Google, on every page. IP anonymisation is on,
+              which is close to meaningless as a defence. I want the numbers, which is
+              exactly the reasoning everybody uses.
+            </div>
+          </div>
+          <div class="flaw">
+            <div class="flaw-t">The article pages each ship their own copy of the CSS</div>
+            <div class="flaw-d">
+              Every writing and project page is deliberately self-contained so one can
+              be rewritten without regression-testing the others. The cost is roughly
+              8&nbsp;KB of near-identical inline CSS per page and no cache sharing
+              between them. For seven pages that is a trade I am happy with; at thirty
+              it would be indefensible.
+            </div>
+          </div>
+          <div class="flaw">
+            <div class="flaw-t">The custom cursor is a preference imposed on you</div>
+            <div class="flaw-d">
+              It is off on touch devices and off under
+              <code>prefers-reduced-motion</code>, and it still replaces a control the
+              operating system already got right. I kept it because the site should
+              feel like a person made it. It is the one piece of this page arguing
+              against the rest of it.
+            </div>
+          </div>
+        </div>
+
+        <p>
+          Everything above is checkable against
+          <a
+            href="https://github.com/octopols/portfolio"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--accent)"
+            >the repository</a
+          >. If a number here is wrong, that is a bug, and I would like to know.
+        </p>
+      </section>
+
+      <footer>
+        <div>Measured August 2026. Numbers will drift; the method is in the repo.</div>
+        <div class="links">
+          <a href="/writing/">Writing</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+
+    <script src="/js/nav.js" defer></script>
+    <script src="/js/cursor.js" defer></script>
+  </body>
+</html>
