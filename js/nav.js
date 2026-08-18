@@ -18,7 +18,8 @@
 
      The bar carries a light scrim at the top of the page and a stronger,
      blurrier one once you are past it, so it always reads as a layer above
-     the content rather than part of it.
+     the content rather than part of it. Only the Tailwind pages have
+     #site-nav; the standalone pages use a plain link row.
   ----------------------------------------------------------------- */
   var bar = document.getElementById("site-nav");
   if (bar) {

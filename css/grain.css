@@ -1,0 +1,46 @@
+/* ===================================
+   FILM GRAIN — the one definition, linked by every page.
+
+   The article and project pages are deliberately self-contained for layout,
+   but grain is decoration shared by all of them, and a data URI copied into
+   nine files is the kind of duplication that drifts.
+
+   Static, viewport-fixed, no animation, no transform, no compositing hints —
+   the standard grain overlay. feTurbulence produces Perlin noise rather than
+   white noise, and that drives every value:
+
+     - numOctaves stays high. One octave is smooth gradient noise on a regular
+       lattice, and sampling it near its own lattice frequency gives moiré — a
+       visibly repeating pattern instead of grain. Four octaves sum detail
+       across scales, which is what reads as random, and the upper octaves give
+       the slight clumping real emulsion has.
+
+     - saturate=0 collapses the independently-randomised R/G/B channels into
+       luminance. Without it the output is coloured speckle.
+
+     - Alpha is randomised too, which makes coverage blotchy. Flattening it to
+       1 leaves only brightness varying.
+
+     - The gamma pass pushes midtones down, leaving sparse bright specks on
+       black. Uniform mid-grey noise over a near-black page reads as haze.
+
+   Two layers at coprime tile sizes, offset from one another. A single tile
+   repeats every N pixels and the eye finds it; 237 and 373 share no factors,
+   so the combined pattern does not repeat inside any real viewport — and the
+   two scales give two grain sizes for free. This is what replaces animation as
+   the way to stop it looking mechanical.
+
+   Intensity is the one dial: opacity below. 0.08 is subtle, 0.15 is heavy.
+=================================== */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 90;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='gamma' exponent='3'/%3E%3CfeFuncG type='gamma' exponent='3'/%3E%3CfeFuncB type='gamma' exponent='3'/%3E%3CfeFuncA type='discrete' tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='gamma' exponent='3'/%3E%3CfeFuncG type='gamma' exponent='3'/%3E%3CfeFuncB type='gamma' exponent='3'/%3E%3CfeFuncA type='discrete' tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 237px 237px, 373px 373px;
+  background-position: 0 0, 61px 137px;
+  background-repeat: repeat, repeat;
+}
