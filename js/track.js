@@ -28,7 +28,15 @@
 (function () {
   "use strict";
 
-  var ENDPOINT =
+  // Preferred: a same-origin path, proxied to the backend by a Cloudflare
+  // Worker (tools/cloudflare-worker.js). Blockers cannot drop a request to
+  // the host the visitor is already on.
+  var ENDPOINT = "/api/track";
+
+  // Used only until the Worker is live, and automatically after the
+  // first-party path is seen to 404. This is a cross-origin POST, which is
+  // the shape heuristic blockers kill — expect to lose visitors here.
+  var FALLBACK =
     "https://script.google.com/macros/s/AKfycbyLJ4mLnXWz1YZUZ18u3aiRVjX5Xbph9lkyzVlMinxK_N8O0RMmrZUov4dUxjSyLY7U5w/exec";
 
   // One lookup per visit, cached for the session. Set to "" to stop resolving
@@ -151,23 +159,62 @@
   }
   function setQueue(q) { ls(QUEUE, JSON.stringify(q.slice(-40))); }
 
+  // pagehide/visibilitychange have to use sendBeacon; everything else uses
+  // fetch so failures are detectable.
+  var leaving = false;
+
   function flush(extra) {
     var q = queued();
     if (extra) q.push(extra);
     if (!q.length) return;
     var body = JSON.stringify({ batch: q });
-    var blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
+    var url = ss("tk_ep") || ENDPOINT;
 
-    // Clear optimistically, restore if the transport refuses outright. A
-    // beacon that is accepted but never arrives is covered by the next page
-    // load re-sending nothing — which is why every event is an idempotent
-    // upsert on the server.
-    setQueue([]);
-    if (navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, blob)) return;
-    try {
-      fetch(ENDPOINT, { method: "POST", mode: "no-cors", keepalive: true, body: body });
-    } catch (e) {
+    // Unloading: sendBeacon is the only transport that survives the page
+    // going away. It reports whether the browser *queued* the request, not
+    // whether it arrived, so the payload is kept until a verified send.
+    if (leaving && navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=UTF-8" }));
+      return;
+    }
+
+    // Otherwise use fetch, because a rejected promise is how a blocked
+    // request becomes visible. sendBeacon returns true and swallows
+    // ERR_BLOCKED_BY_CLIENT silently, which is how this went unnoticed.
+    post(url, body, function (ok) {
+      if (ok) { setQueue([]); return; }
+      // First-party path missing means the Worker is not deployed yet.
+      if (url === ENDPOINT && FALLBACK) {
+        ss("tk_ep", FALLBACK);
+        post(FALLBACK, body, function (ok2) { if (ok2) setQueue([]); else setQueue(q); });
+        return;
+      }
+      // Blocked or offline: hold everything for a later page or visit.
       setQueue(q);
+    });
+  }
+
+  function post(url, body, done) {
+    // Same-origin: a normal fetch, so the HTTP status is readable and a
+    // missing Worker (404) is distinguishable from a successful write.
+    // Cross-origin: no-cors is forced, the response is opaque, and the only
+    // observable failure is the promise rejecting — which is what a blocked
+    // request does.
+    var sameOrigin = url.charAt(0) === "/";
+    var opts = {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: body,
+    };
+    if (!sameOrigin) opts.mode = "no-cors";
+
+    try {
+      fetch(url, opts)
+        .then(function (res) { done(sameOrigin ? res.ok : true); })
+        .catch(function () { done(false); });
+    } catch (e) {
+      done(false);
     }
   }
 
@@ -238,11 +285,15 @@
   /* ---------------- lifecycle ----------------------------------------- */
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "visible") resume();
-    else { accrue(); ss("tk_secs", String(secs())); flush(payload()); }
+    else {
+      accrue(); ss("tk_secs", String(secs()));
+      leaving = true; flush(payload()); leaving = false;
+    }
   });
   window.addEventListener("blur", accrue);
   window.addEventListener("focus", resume);
   window.addEventListener("pagehide", function () {
+    leaving = true;
     accrue(); ss("tk_secs", String(secs())); flush(payload());
   });
 
