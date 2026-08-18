@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>How to show analytics for a high-throughput system — Hirnaymay Bhaskar</title>
+    <meta
+      name="description"
+      content="A dashboard over an event store has to be instant and fresh at once. Materialise the numbers, serve the saved copy first, refresh only what is stale, and tier the recompute by how much each screen actually needs."
+    />
+    <link rel="canonical" href="https://hirnaymay.com/writing/high-throughput-analytics/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
+    <meta property="og:url" content="https://hirnaymay.com/writing/high-throughput-analytics/" />
+    <meta property="og:title" content="How to show analytics for a high-throughput system" />
+    <meta
+      property="og:description"
+      content="Two calls, age-tiered freshness, a two-tier recompute, and read-time aggregation. 20s to 200ms at double the page size."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
+    <meta name="twitter:creator" content="@octopols" />
+
+    <link rel="icon" type="image/png" href="/assets/logos/favicon.png" />
+    <meta name="theme-color" content="#050505" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --bg: #050505;
+        --panel: #0d0f12;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f7fafc;
+        --muted: #8b9199;
+        --dim: #82898f;
+        --accent: #68d391;
+        --warn: #f6e05e;
+        --bad: #fc8181;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0; background: var(--bg); color: var(--text);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+
+      /* Same link set as every other page. No JS: the row simply wraps on a
+         narrow screen rather than hiding behind a menu button. */
+      nav { flex-wrap: wrap; gap: 10px 16px; }
+      .navlinks { display: flex; flex-wrap: wrap; gap: 18px; }
+      @media (max-width: 560px) {
+        nav { font-size: 11px; }
+        .navlinks { gap: 13px; }
+      }
+
+      nav {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 28px 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      nav a { text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+      nav a:hover { opacity: 1; }
+      nav .mark { font-weight: 700; letter-spacing: -0.02em; text-transform: none; font-size: 18px; opacity: 1; }
+
+      header.hero { padding: 80px 0 48px; }
+      .kicker { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 24px; }
+      h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
+      .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
+
+      section { padding: 56px 0 0; scroll-margin-top: 24px; }
+      .label {
+        font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
+      }
+      .label b { color: var(--accent); font-weight: 500; }
+      h2 { margin: 0 0 24px; font-size: clamp(26px, 3.6vw, 34px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 700; }
+      h3 { margin: 32px 0 14px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+
+      p { margin: 0 0 20px; color: #c8cdd4; }
+      p strong { color: var(--text); font-weight: 600; }
+      em { color: var(--text); font-style: italic; }
+
+      pre {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+        color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
+      }
+      .tok-s { color: #f6ad55; }
+      code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      blockquote {
+        margin: 0 0 24px; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+        color: var(--text); font-size: 19px; line-height: 1.5;
+      }
+      blockquote p { color: inherit; margin: 0; }
+
+      table { width: 100%; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+      th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+      td { color: #c8cdd4; }
+      td strong { color: var(--text); }
+
+      .callout {
+        border: 1px solid var(--line); border-left: 2px solid var(--warn); border-radius: 8px;
+        padding: 18px 20px; margin: 0 0 24px; background: rgba(246,224,94,.03);
+      }
+      .callout.case { border-left-color: #90cdf4; background: rgba(144,205,244,.035); }
+      .callout.case .tag { color: #90cdf4; }
+      .callout.good { border-left-color: var(--accent); background: rgba(104,211,145,.03); }
+      .callout p:last-child { margin-bottom: 0; }
+      .callout .tag { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--warn); display: block; margin-bottom: 8px; }
+      .callout.good .tag { color: var(--accent); }
+
+      ul { margin: 0 0 24px; padding-left: 20px; color: #c8cdd4; }
+      li { margin-bottom: 10px; }
+      li::marker { color: var(--dim); }
+
+      /* ============ shared figure chrome ============ */
+      /* contents */
+      .toc { margin: 40px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02); }
+      .toc h2 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin: 0 0 14px; font-weight: 500; }
+      .toc ol { margin: 0; padding-left: 20px; color: #c8cdd4; font-size: 15px; }
+      .toc li { margin-bottom: 7px; }
+      .toc li::marker { color: var(--dim); font-family: var(--mono); font-size: 12px; }
+      .toc a { text-decoration: none; border-bottom: 1px solid transparent; }
+      .toc a:hover { border-bottom-color: var(--dim); }
+
+      .fig { margin: 0 0 30px; }
+      .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
+      .cap b { color: var(--muted); font-weight: 500; }
+
+      /* ============ unit diagram ============ */
+      .units { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; min-width: 540px; }
+      .unit-box { border: 1px solid var(--line); border-radius: 10px; padding: 16px 14px; text-align: center; background: var(--panel); }
+      .unit-box .u-role { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+      .unit-box .u-unit { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+      .unit-box .u-sub { font-size: 12px; color: var(--dim); margin-top: 4px; font-family: var(--mono); }
+      .unit-box.solid { border-color: rgba(104,211,145,.4); background: rgba(104,211,145,.06); }
+      .unit-box.solid .u-unit { color: var(--accent); }
+      .unit-box.shaky { border-color: rgba(246,224,94,.35); background: rgba(246,224,94,.05); }
+      .unit-box.shaky .u-unit { color: var(--warn); }
+      .u-arrow { padding: 0 10px; text-align: center; color: var(--dim); font-size: 11px; letter-spacing: .1em; }
+      .u-arrow div { font-family: var(--mono); font-size: 15px; color: var(--muted); }
+
+      /* ============ bars ============ */
+      .bars { min-width: 420px; }
+      .bar-row { display: grid; grid-template-columns: 110px 1fr 88px; gap: 14px; align-items: center; margin-bottom: 10px; }
+      .bar-key { font-size: 12px; color: var(--muted); font-family: var(--mono); text-align: right; }
+      .bar-track { height: 22px; background: rgba(255,255,255,.04); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
+      .bar-fill { height: 100%; }
+      .bar-fill.ok { background: rgba(104,211,145,.45); }
+      .bar-fill.warn { background: rgba(246,224,94,.4); }
+      .bar-fill.bad { background: rgba(252,129,129,.4); }
+      .bar-val { font-size: 12.5px; color: #c8cdd4; font-family: var(--mono); }
+
+      /* ============ waterfall ============ */
+      .wf { min-width: 480px; }
+      .wf-bar { display: flex; height: 40px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+      .wf-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; white-space: nowrap; padding: 0 8px; }
+      .wf-seg.free { background: rgba(104,211,145,.18); color: #b9e6cb; border-right: 1px solid rgba(104,211,145,.35); }
+      .wf-seg.wallet { background: rgba(255,255,255,.05); color: #c8cdd4; }
+      .wf-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); font-family: var(--mono); margin-top: 6px; }
+
+      /* ============ chain ============ */
+      .chain { min-width: 460px; }
+      .chain-step { display: grid; grid-template-columns: 26px 1fr; gap: 14px; align-items: start; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,.07); }
+      .chain-step:last-child { border-bottom: 0; }
+      .chain-n { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--dim); font-family: var(--mono); }
+      .chain-step.hit .chain-n { border-color: rgba(104,211,145,.5); color: var(--accent); }
+      .chain-step.miss .chain-n { border-color: rgba(252,129,129,.4); color: var(--bad); }
+      .chain-note { font-size: 12.5px; color: var(--dim); margin-top: 3px; }
+
+      /* ============ pipeline ============ */
+      .pipe { min-width: 520px; }
+      .pipe-step { display: grid; grid-template-columns: 92px 1fr; gap: 18px; }
+      .pipe-when { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); text-align: right; padding-top: 16px; }
+      .pipe-body { border-left: 1px solid var(--line); padding: 0 0 18px 20px; position: relative; }
+      .pipe-step:last-child .pipe-body { border-left-color: transparent; }
+      .pipe-body::before { content: ""; position: absolute; left: -4px; top: 17px; width: 7px; height: 7px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--dim); }
+      .pipe-step.key .pipe-body::before { border-color: var(--accent); background: var(--accent); }
+      .pipe-title { padding-top: 10px; font-size: 15.5px; font-weight: 600; }
+      .pipe-desc { font-size: 13.5px; color: var(--dim); margin-top: 3px; line-height: 1.55; }
+
+      /* ============ timelines ============ */
+      .tl { margin: 0 0 30px; }
+      .tl-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .tl-inner { min-width: 600px; }
+      .tl-row { display: grid; grid-template-columns: 118px 1fr; gap: 18px; align-items: center; }
+      .tl-name { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); text-align: right; line-height: 1.35; }
+      .tl-track { position: relative; height: 44px; }
+      .tl-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed rgba(255,255,255,.07); }
+      .tl-span { position: absolute; top: 11px; height: 22px; border-radius: 4px; display: flex; align-items: center; padding: 0 9px; font-size: 11.5px; white-space: nowrap; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: #c8cdd4; }
+      .tl-span.accent { border-color: rgba(104,211,145,.4); background: rgba(104,211,145,.08); color: #b9e6cb; }
+      .tl-span.warn { border-color: rgba(246,224,94,.35); background: rgba(246,224,94,.07); color: #ecdf9a; }
+      .tl-span.ghost { border-style: dashed; color: var(--dim); }
+      .tl-point { position: absolute; top: 4px; height: 36px; width: 0; }
+      .tl-point::before { content: ""; position: absolute; left: -1px; top: 0; width: 2px; height: 100%; background: var(--accent); }
+      .tl-point span { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 11.5px; white-space: nowrap; color: #cbd5e0; }
+      .tl-band { position: absolute; top: 0; bottom: 0; background: rgba(246,224,94,.07); border-left: 1px solid rgba(246,224,94,.3); border-right: 1px solid rgba(246,224,94,.3); }
+      .tl-axis { position: relative; height: 26px; margin-top: 2px; }
+      .tl-axis::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: 1px solid var(--line); }
+      .tl-t { position: absolute; top: 7px; transform: translateX(-50%); font-size: 10px; letter-spacing: .06em; color: var(--dim); font-family: var(--mono); white-space: nowrap; }
+      .tl-t::before { content: ""; position: absolute; left: 50%; top: -7px; width: 1px; height: 5px; background: rgba(255,255,255,.18); }
+      .tl-link { position: absolute; top: 50%; height: 0; border-top: 1px dashed rgba(104,211,145,.55); }
+      .tl-link::before { content: ""; position: absolute; left: 0; top: -3px; border: 3px solid transparent; border-right-color: rgba(104,211,145,.8); }
+      .tl-link span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); font-size: 11px; color: var(--accent); white-space: nowrap; background: var(--bg); padding: 0 8px; }
+
+      /* ============ event anatomy ============ */
+      .anat { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 520px; }
+      .anat-head { background: rgba(255,255,255,.03); padding: 10px 16px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line); }
+      .anat-row { display: grid; grid-template-columns: 165px 1fr; gap: 16px; padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 13.5px; }
+      .anat-row:last-child { border-bottom: 0; }
+      .anat-f { font-family: var(--mono); font-size: 12.5px; color: #e2e8f0; }
+      .anat-w { color: var(--dim); }
+      .anat-row.req { background: rgba(252,129,129,.04); }
+      .anat-row.req .anat-f { color: #ffc9c9; }
+
+      footer {
+        margin-top: 64px; border-top: 1px solid var(--line); padding: 32px 0 56px;
+        display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--dim);
+      }
+      footer a { text-decoration: none; }
+      footer a:hover { color: var(--text); }
+      footer .links { display: flex; gap: 20px; }
+
+      @media (max-width: 640px) {
+        header.hero { padding: 56px 0 36px; }
+        section { padding: 40px 0 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="/" class="mark">Hirnaymay Bhaskar</a>
+        <div class="navlinks">
+          <a href="/#experience">CV</a>
+          <a href="/#projects">Open source</a>
+          <a href="/writing/">Writing</a>
+          <a href="/resume/">Résumé</a>
+        </div>
+      </nav>
+
+      <header class="hero">
+        <div class="kicker">Analytics · Guide · <time datetime="2026-08">August 2026</time></div>
+        <h1>How to show analytics for a high-throughput system</h1>
+        <p class="standfirst">
+          Your events live in a store built for aggregation, not for page loads. The
+          dashboard has to be instant and correct at the same time, and those pull in
+          opposite directions. This is how to have both — and the read path that took
+          ours from 20 seconds to 200 milliseconds while doubling what fits on a page.
+        </p>
+
+        <nav class="toc" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#forces">The two forces</a></li>
+            <li><a href="#materialise">Stop aggregating on read</a></li>
+            <li><a href="#twocall">Two calls, one endpoint</a></li>
+            <li><a href="#ttl">Freshness should scale with age</a></li>
+            <li><a href="#tiers">Two tiers of recompute</a></li>
+            <li><a href="#families">Aggregating families at read time</a></li>
+            <li><a href="#redis">A cache layer, if the dashboard is hot</a></li>
+            <li><a href="#hit">What we hit</a></li>
+            <li><a href="#checklist">The checklist</a></li>
+          </ol>
+        </nav>
+      </header>
+
+      <section id="forces">
+        <div class="label">[ <b>01</b> — The tension ]</div>
+        <h2>The two forces</h2>
+        <p>
+          Every event your system produces gets logged — sent, delivered, read, clicked,
+          converted. That log is the truth, and it lives somewhere built for aggregating
+          across millions of rows: a search cluster, a columnar warehouse, whatever you
+          picked.
+        </p>
+        <p>
+          Then someone opens a dashboard and wants fifty rows of computed metrics,
+          paginated, sorted, with rates and revenue attribution. Two requirements, in
+          direct opposition:
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="units">
+              <div class="unit-box shaky">
+                <div class="u-role">requirement</div>
+                <div class="u-unit">instant</div>
+                <div class="u-sub">&lt; 300ms</div>
+              </div>
+              <div class="u-arrow">
+                <div>&times;</div>
+                pick one?
+              </div>
+              <div class="unit-box shaky">
+                <div class="u-role">requirement</div>
+                <div class="u-unit">fresh</div>
+                <div class="u-sub">seconds old</div>
+              </div>
+              <div class="u-arrow">
+                <div>&rarr;</div>
+                or don't
+              </div>
+              <div class="unit-box solid">
+                <div class="u-role">what works</div>
+                <div class="u-unit">both</div>
+                <div class="u-sub">saved &rarr; refresh</div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="cap">
+            <b>You don't have to choose, but you do have to sequence.</b> Serve something
+            immediately, then correct it. The trick is that the correction is almost
+            always a no-op, and knowing when it isn't.
+          </figcaption>
+        </div>
+
+        <p>
+          Aggregate live on every request and the page takes as long as your heaviest
+          query — for us, twenty seconds on a busy account, which is long enough to
+          alt-tab and forget why you opened it. Serve a precomputed copy and the numbers
+          for something still actively running are minutes behind reality, which for a
+          campaign mid-send is worse than slow.
+        </p>
+      </section>
+
+      <section id="materialise">
+        <div class="label">[ <b>02</b> — Storage ]</div>
+        <h2>Stop aggregating on read</h2>
+        <p>
+          The first move is to stop computing metrics in the request path at all. Keep
+          the event store as the source of truth, and keep a <strong>materialised copy of
+          the computed numbers</strong> in your transactional database. Pages read the
+          copy. Nothing else.
+        </p>
+        <p>
+          One decision worth making deliberately: <strong>put the numbers on the entity
+          row, not in a separate analytics table.</strong> A campaign row carries its own
+          sent, delivered, read, revenue and the timestamp of when those were last
+          computed. No join, no second table to keep in step, no window where the entity
+          exists and its metrics don't.
+        </p>
+
+        <div class="callout good">
+          <span class="tag">Why on the row</span>
+          <p>
+            The alternative — a metrics table keyed by entity id — sounds cleaner and
+            costs you a join on every list query, plus a whole class of bug where the two
+            tables disagree about what exists. Metrics are an <em>attribute</em> of the
+            campaign, not a separate concept. Store them like one.
+          </p>
+        </div>
+
+        <p>
+          You now have a fast read and a new problem: the copy goes stale. Everything
+          below is about refreshing it as rarely as you can get away with.
+        </p>
+      </section>
+
+      <section id="twocall">
+        <div class="label">[ <b>03</b> — The pattern ]</div>
+        <h2>Two calls, one endpoint</h2>
+        <p>
+          The frontend fires the same request twice, differing in one flag. Not two
+          endpoints — one endpoint with two modes, so there is no chance of the shapes
+          drifting apart.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="pipe">
+              <div class="pipe-step">
+                <div class="pipe-when">call 1</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Saved copy, no questions asked</div>
+                  <div class="pipe-desc">
+                    Read the materialised numbers and return them. No freshness check, no
+                    event-store query. The page paints in milliseconds with numbers that
+                    are probably right.
+                  </div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">call 2</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">Same read, then check each row</div>
+                  <div class="pipe-desc">
+                    Read again, and for every row ask whether its saved copy is too old.
+                    Most aren't. The ones that are get recomputed from the event store,
+                    written back, and re-read.
+                  </div>
+                </div>
+              </div>
+              <div class="pipe-step">
+                <div class="pipe-when">then</div>
+                <div class="pipe-body">
+                  <div class="pipe-title">The screen corrects itself</div>
+                  <div class="pipe-desc">
+                    Second response replaces the first. Usually identical, so the user
+                    sees nothing. Occasionally a number ticks up, which is exactly the
+                    behaviour you want on a live campaign.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="cap">
+            <b>Cheap in the common case.</b> Call 2 only touches the event store for rows
+            that are actually stale — on a page of fifty campaigns that is usually one or
+            two, often none.
+          </figcaption>
+        </div>
+
+        <p>
+          Two details that matter more than they look:
+        </p>
+        <ul>
+          <li>
+            <strong>Default the flag to "fast".</strong> If a caller omits it, serve the
+            saved copy. A forgotten parameter should degrade to a quick response, never
+            to a twenty-second aggregation.
+          </li>
+          <li>
+            <strong>Keep a hard-refresh escape hatch.</strong> One flag that bypasses both
+            the saved copy and the freshness rules and always recomputes. Users who don't
+            believe a number need a way to force the issue, and you need it for support.
+          </li>
+        </ul>
+      </section>
+
+      <section id="ttl">
+        <div class="label">[ <b>04</b> — Freshness ]</div>
+        <h2>Freshness should scale with age</h2>
+        <p>
+          A single TTL is the obvious implementation and it's wrong in both directions at
+          once. Set it tight and you recompute year-old campaigns that cannot possibly
+          have changed. Set it loose and a campaign that is mid-send shows numbers from
+          ten minutes ago.
+        </p>
+        <p>
+          The fix: <strong>make the tolerance a function of how old the thing is.</strong>
+          Recent data is volatile and worth recomputing. Old data is effectively immutable
+          and recomputing it is pure waste.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr><th>Age of the entity</th><th>Refresh if older than</th><th>Why</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">&lt; 7 days</td><td class="mono">5 min</td><td>still moving — reads, clicks, orders arriving</td></tr>
+                <tr><td class="mono">7 – 14 days</td><td class="mono">15 min</td><td>slowing down</td></tr>
+                <tr><td class="mono">14 – 30 days</td><td class="mono">30 min</td><td>occasional late attribution</td></tr>
+                <tr><td class="mono">&gt; 30 days</td><td class="mono">never</td><td>frozen — nothing will change again</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption class="cap">
+            <b>The last row does the heavy lifting.</b> Most rows on any given page are
+            older than a month, so most of the time call 2 does no work at all. That is
+            what makes the pattern affordable.
+          </figcaption>
+        </div>
+
+        <p>
+          Two guards worth adding while you're in there:
+        </p>
+        <ul>
+          <li>
+            <strong>Never refreshed = always stale.</strong> A missing timestamp should
+            mean "recompute", not "assume fresh". Otherwise a newly created row can
+            display zeroes indefinitely.
+          </li>
+          <li>
+            <strong>Skip entities with nothing to aggregate.</strong> Something queued but
+            not yet started has no events. Don't spend a query proving it.
+          </li>
+        </ul>
+      </section>
+
+      <section id="tiers">
+        <div class="label">[ <b>05</b> — Tiering ]</div>
+        <h2>Two tiers of recompute</h2>
+        <p>
+          Here is the part that most affects your event-store bill. A list page and a
+          detail page need very different amounts of data, and if you compute one payload
+          for both you are computing the expensive one fifty times per page load.
+        </p>
+        <p>
+          So define two tiers, and make one a strict superset of the other:
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr><th></th><th>Tier A — the list</th><th>Tier B — the detail</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Computes</strong></td>
+                  <td>headline counts, revenue, rates</td>
+                  <td>everything in A <em>plus</em> engagement detail, failure reasons, funnel steps, opt-outs</td>
+                </tr>
+                <tr>
+                  <td><strong>Query cost</strong></td>
+                  <td class="mono">light</td>
+                  <td class="mono">heavy</td>
+                </tr>
+                <tr>
+                  <td><strong>Rows per request</strong></td>
+                  <td class="mono">up to a page</td>
+                  <td class="mono">exactly one</td>
+                </tr>
+                <tr>
+                  <td><strong>Stamps written</strong></td>
+                  <td class="mono">A</td>
+                  <td class="mono">A <em>and</em> B</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption class="cap">
+            <b>The superset relationship is the whole trick.</b> Because B computes
+            everything A does, a detail refresh can honestly stamp both — so opening a
+            campaign also freshens its row in the list. It never works the other way.
+          </figcaption>
+        </div>
+
+        <p>
+          That asymmetry is why you need <strong>two freshness timestamps, not one</strong>.
+          The list checks the A stamp; the detail page checks the B stamp. Collapse them
+          into one and you get a detail page that believes it's fresh because a light list
+          refresh touched the row — showing stale funnel numbers next to correct headline
+          numbers, which is the kind of bug that erodes trust in the whole dashboard.
+        </p>
+
+        <div class="callout">
+          <span class="tag">Naming matters here</span>
+          <p>
+            Call them what they are — <code>headlineComputedAt</code> and
+            <code>detailComputedAt</code> beats <code>updatedAt1</code> and
+            <code>updatedAt2</code>. Someone will have to reason about which screen a
+            given stamp gates, at speed, during an incident.
+          </p>
+        </div>
+      </section>
+
+      <section id="families">
+        <div class="label">[ <b>06</b> — Aggregation ]</div>
+        <h2>Aggregating families at read time</h2>
+        <p>
+          Most systems like this have parent/child structure. A campaign gets retried, so
+          the original send has three follow-up attempts, each its own row with its own
+          numbers. The list wants one line per campaign; the detail page wants a choice.
+        </p>
+        <p>
+          Resist the urge to store a pre-combined total. <strong>Aggregate on read.</strong>
+          A stored rollup is a third copy that can disagree with the two you already have,
+          and it needs invalidating every time any child changes. Summing four rows at
+          read time is free by comparison.
+        </p>
+        <p>
+          Three rules, and the second and third are where the bugs live:
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="chain">
+              <div class="chain-step hit">
+                <div class="chain-n">1</div>
+                <div>
+                  <strong>Counts sum.</strong>
+                  <div class="chain-note">Delivered, clicked, orders, revenue. Straightforward addition across the family.</div>
+                </div>
+              </div>
+              <div class="chain-step miss">
+                <div class="chain-n">2</div>
+                <div>
+                  <strong>Rates never sum.</strong>
+                  <div class="chain-note">
+                    Recompute from the summed totals. Adding a 40% read rate to a 60% read
+                    rate gives you 100%, which is not a thing. Averaging them is also
+                    wrong unless the denominators happen to match.
+                  </div>
+                </div>
+              </div>
+              <div class="chain-step miss">
+                <div class="chain-n">3</div>
+                <div>
+                  <strong>Cardinality doesn't sum either.</strong>
+                  <div class="chain-note">
+                    The same person appears in the original send and in two retries.
+                    Add the per-row "people reached" and you've counted them three
+                    times. This needs a de-duplicated count computed once across the
+                    whole family and stored on the parent.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="cap">
+            <b>Rule 3 is the one that ships to production.</b> It looks like a sum, it
+            type-checks like a sum, and it silently overstates reach by however many
+            retries you ran.
+          </figcaption>
+        </div>
+
+        <div class="callout">
+          <span class="tag">Family-aware staleness</span>
+          <p>
+            If a parent's displayed total includes its children, then the parent is stale
+            when <strong>the parent or any child</strong> is stale. Check freshness across
+            the family, not just the row you're rendering — otherwise the combined number
+            sits wrong until something else happens to refresh a child, and you get bug
+            reports about totals that "fix themselves eventually".
+          </p>
+        </div>
+
+        <p>
+          Then expose the choice rather than deciding for the user. The list collapses to
+          one row per family with combined numbers and expands to show each attempt
+          separately. The detail page offers <em>combined</em>, <em>original</em>, or a
+          specific attempt. Same aggregation function behind all of it — only the
+          selection differs.
+        </p>
+      </section>
+
+      <section id="redis">
+        <div class="label">[ <b>07</b> — Caching ]</div>
+        <h2>A cache layer, if the dashboard is hot</h2>
+        <p>
+          Everything so far removes the event store from the hot path. If a dashboard is
+          opened often enough — a team all watching the same account, or a page that
+          polls — the transactional read becomes the hot path instead, and that is when a
+          cache in front earns its place.
+        </p>
+        <p>
+          Add it <em>after</em> the rest, not instead of it. A cache over a slow
+          aggregation just serves stale slow data; a cache over a materialised read is
+          genuinely just speed.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="chain">
+              <div class="chain-step hit">
+                <div class="chain-n">1</div>
+                <div>
+                  <strong>Cache the response, not the rows</strong>
+                  <div class="chain-note">
+                    Key on everything that changes the output: tenant, filters, sort,
+                    page, date range. A row-level cache leaves you reassembling and
+                    re-sorting on every hit, which is most of the cost you were trying to
+                    avoid.
+                  </div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">2</div>
+                <div>
+                  <strong>TTL shorter than your shortest refresh window</strong>
+                  <div class="chain-note">
+                    Cache TTL and materialisation TTL stack. A 5-minute cache over a
+                    5-minute refresh window means numbers up to ten minutes old. Keep the
+                    cache well under — a couple of minutes at most.
+                  </div>
+                </div>
+              </div>
+              <div class="chain-step miss">
+                <div class="chain-n">3</div>
+                <div>
+                  <strong>Only the fast call may be cached</strong>
+                  <div class="chain-note">
+                    Call 1 caches. Call 2 must bypass, or the refresh path returns a
+                    cached response and the screen never corrects itself — which quietly
+                    disables the entire two-call design while looking like it works.
+                  </div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">4</div>
+                <div>
+                  <strong>Invalidate on write-back</strong>
+                  <div class="chain-note">
+                    When call 2 writes fresh numbers, drop the keys that cover that
+                    entity. Hard-refresh bypasses the cache entirely.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="cap">
+            <b>Step 3 is the one to get right.</b> It is very easy to add caching at the
+            controller, catch both calls, and ship a dashboard that is fast and
+            permanently a few minutes behind.
+          </figcaption>
+        </div>
+
+        <p>
+          A time-series chart across the same data is worth caching per segment rather
+          than per request — each bucket of the range under its own key, so changing the
+          window reuses most of the work instead of recomputing the whole series.
+        </p>
+      </section>
+
+      <section id="hit">
+        <div class="label">[ <b>08</b> — From production ]</div>
+        <h2>What we hit</h2>
+        <p>
+          The design above is what we ended with. Here is what it replaced and what went
+          wrong on the way.
+        </p>
+
+        <div class="callout case">
+          <span class="tag">A 20-second page</span>
+          <p>
+            The original read path aggregated from the event store on every load, for
+            every row on the page. On a large account that was <strong>20 seconds</strong>
+            — long enough that people opened it, switched tabs, and came back having
+            forgotten why. Moving to a materialised copy with the two-call pattern took it
+            to <strong>200ms</strong>, and we <strong>doubled the page size</strong> at the
+            same time because per-row cost had stopped mattering.
+          </p>
+        </div>
+
+        <div class="callout case">
+          <span class="tag">Summed rates</span>
+          <p>
+            The first aggregation across a retry family added the rates. Read rate came out
+            over 100% for any campaign with two retries, which at least fails loudly.
+            Click-through came out plausible-but-wrong, which doesn't. Rates are now always
+            recomputed from summed counts, and never stored pre-combined.
+          </p>
+        </div>
+
+        <div class="callout case">
+          <span class="tag">The same customer, counted three times</span>
+          <p>
+            Reach was summed across the family. Since a retry targets people who didn't
+            engage the first time, the overlap is nearly total — so a campaign with three
+            retries reported roughly three times the audience it actually touched. The fix
+            was a de-duplicated count computed once across the family, stored on the
+            parent, and never derived by addition again.
+          </p>
+        </div>
+
+        <div class="callout case">
+          <span class="tag">Totals that fixed themselves later</span>
+          <p>
+            Freshness was checked on the row being rendered. A parent whose displayed cost
+            included its children would show a stale total whenever a child was stale —
+            then silently correct minutes later when something else refreshed that child.
+            Support tickets described it as numbers that "settle down after a while", which
+            is a horrible thing for a billing figure to do. Staleness is now evaluated
+            across the whole family.
+          </p>
+        </div>
+
+        <p>
+          The pattern across all four: <strong>the slow version was obvious and the wrong
+          version was quiet.</strong> A 20-second page gets fixed because everyone
+          complains. A reach number inflated 3× by a summed cardinality gets quoted in a
+          board deck.
+        </p>
+      </section>
+
+      <section id="checklist">
+        <div class="label">[ <b>09</b> — Reference ]</div>
+        <h2>The checklist</h2>
+        <ul>
+          <li>
+            <strong>Materialise the metrics onto the entity row.</strong> Event store stays
+            the source of truth; pages never query it directly.
+          </li>
+          <li>
+            <strong>Two calls to one endpoint.</strong> Saved copy first, refresh-if-stale
+            second. Default the flag to fast.
+          </li>
+          <li>
+            <strong>Tier the TTL by entity age</strong>, and let old entities freeze
+            entirely. Most rows should cost nothing to "refresh".
+          </li>
+          <li>
+            <strong>Two recompute tiers, B a superset of A</strong>, with a separate
+            freshness stamp each. A detail refresh freshens the list; never the reverse.
+          </li>
+          <li>
+            <strong>Aggregate families at read time.</strong> Counts sum, rates recompute,
+            cardinality de-duplicates.
+          </li>
+          <li>
+            <strong>Evaluate staleness across the family</strong> when the displayed number
+            spans it.
+          </li>
+          <li>
+            <strong>Cache the response, keyed on everything that shapes it</strong> — and
+            only on the fast path.
+          </li>
+          <li>
+            <strong>Keep a hard refresh</strong> that bypasses every layer.
+          </li>
+          <li>
+            <strong>Missing timestamp means stale</strong>, not fresh.
+          </li>
+        </ul>
+
+        <blockquote>
+          <p>
+            A dashboard is a cache with opinions. The only question is how many layers of
+            it you're willing to admit to.
+          </p>
+        </blockquote>
+      </section>
+
+      <footer>
+        <div>Written from production. Details generalised.</div>
+        <div class="links">
+          <a href="/writing/">All writing</a>
+          <a href="/">Portfolio</a>
+        </div>
+      </footer>
+    </div>
+    <script src="/js/track.js"></script>
+    <script src="/js/nav.js" defer></script>
+    <script src="/js/cursor.js" defer></script>
+  </body>
+</html>

@@ -111,6 +111,7 @@
           "PostgreSQL",
           "Redis",
           "Elasticsearch",
+          "Kubernetes",
           "C++",
           "Open Source"
         ],
@@ -168,11 +169,6 @@
           <div
             class="hidden md:flex items-center gap-7 text-[13px] tracking-wide"
           >
-            <a
-              href="/#work"
-              class="nav-link"
-              >Work</a
-            >
             <a
               href="/#experience"
               class="nav-link"
@@ -236,7 +232,6 @@
       </div>
       <div class="nav-panel" id="nav-panel" hidden>
         <div class="shell">
-          <a href="/#work">Work</a>
           <a href="/#experience">CV</a>
           <a href="/#projects">Open source</a>
           <a href="/writing/">Writing</a>
@@ -340,184 +335,7 @@
         </div>
       </header>
 
-      <!-- ============================================================
-           WORK — three case studies. Each fact appears here and
-           nowhere else on the page.
-      ============================================================ -->
-      <section id="work" class="py-24 md:py-32 rule">
-        <div class="shell">
-          <div class="section-head reveal">
-            <p class="eyebrow">Selected work</p>
-            <h2>Three problems that break in non-obvious ways</h2>
-            <p class="lede measure">
-              Each is a general class of problem before it is anything I did. What
-              broke and what changed is below; the why is in the writeup.
-            </p>
-          </div>
-
-          <!-- Case 01 -->
-          <article class="case reveal">
-            <div>
-              <p class="case-n"><b>01</b> — Queues &amp; throughput <span class="case-at">BIK.AI</span></p>
-              <h3>When adding consumers makes a queue slower</h3>
-              <p>
-                1.26M messages backed up across two Pub/Sub subscriptions. Worst case,
-                a message took 2.4 hours to arrive. The standing answer had been more
-                consumers — 38 of them, on an autoscaler that had stopped scaling back
-                down.
-              </p>
-              <p><strong>The fleet wasn't too small. It was feeding the backlog.</strong></p>
-              <a class="case-link" href="/writing/pubsub-backpressure/"
-                >Why, and how to size it properly <span class="arw">&rarr;</span></a
-              >
-            </div>
-            <div class="case-side">
-              <figure class="case-viz">
-                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz1t viz1d">
-                  <title id="viz1t">Backlog over time</title>
-                  <desc id="viz1d">Backlog holds at its peak while the fleet grows, then collapses to near zero once flow control and backpressure are fixed — with no capacity added.</desc>
-                  <path d="M0,14 C34,12 62,17 92,13 L112,15" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55" fill="none" stroke="#68d391" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55 L240,64 L112,64 Z" fill="#68d391" opacity=".1"/>
-                  <line x1="112" y1="4" x2="112" y2="60" stroke="#68d391" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
-                  <text x="0" y="62" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">1.26M</text>
-                  <text x="240" y="46" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">&lt;4K</text>
-                </svg>
-                <figcaption>Backlog, before and after the fix. No nodes added.</figcaption>
-              </figure>
-              <dl class="rail stagger">
-              <div>
-                <dt>Worst-case delay</dt>
-                <dd>2.4 h <em>&rarr;</em> <b>94 s</b></dd>
-              </div>
-              <div>
-                <dt>Combined backlog</dt>
-                <dd>1.26M <em>&rarr;</em> <b>&lt;4K</b></dd>
-              </div>
-              <div>
-                <dt>Scale-out</dt>
-                <dd>38 <em>&rarr;</em> <b>0 extra</b></dd>
-              </div>
-            </dl>
-            </div>
-          </article>
-
-          <!-- Case 02 -->
-          <article class="case reveal">
-            <div>
-              <p class="case-n"><b>02</b> — Usage billing <span class="case-at">BIK.AI</span></p>
-              <h3>Why usage billing fails quietly instead of loudly</h3>
-              <p>
-                Some accounts were drawing 2&ndash;10&times; the usage they had paid
-                for. Nothing had errored. Credits were granted, invoices generated, and
-                every number agreed with every other number.
-              </p>
-              <p>
-                <strong>A rate field was labelled like a price and behaved like a
-                divisor</strong> — and no screen anywhere rendered it.
-              </p>
-              <a class="case-link" href="/writing/billing-unit-mismatch/"
-                >Units, clocks, rate cards, credits <span class="arw">&rarr;</span></a
-              >
-              <a
-                class="case-link"
-                href="/writing/hardcoded-midnight/"
-                style="margin-left: 1.5rem"
-                >And the timezone one <span class="arw">&rarr;</span></a
-              >
-            </div>
-            <div class="case-side">
-              <figure class="case-viz">
-                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz2t viz2d">
-                  <title id="viz2t">Contracted allocation versus drawn usage</title>
-                  <desc id="viz2d">What the customer paid for stays flat while what the account could draw runs two to ten times higher, until credits are re-denominated in money.</desc>
-                  <line x1="0" y1="44" x2="240" y2="44" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
-                  <text x="0" y="58" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">PAID 1&#215;</text>
-                  <path d="M0,44 L150,44 L150,10 L240,10" fill="none" stroke="#fc8181" stroke-width="2" stroke-linejoin="round" opacity=".85"/>
-                  <path d="M150,44 L150,10 L240,10 L240,44 Z" fill="#fc8181" opacity=".1"/>
-                  <text x="240" y="8" fill="#fc8181" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">DRAWN 2&#8211;10&#215;</text>
-                  <circle cx="150" cy="44" r="3" fill="#68d391"/>
-                  <text x="150" y="60" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">0.1 typed</text>
-                </svg>
-                <figcaption>One free-text field, read as a divisor.</figcaption>
-              </figure>
-              <dl class="rail stagger">
-              <div>
-                <dt>Revenue recovered</dt>
-                <dd><b>12.5%</b></dd>
-              </div>
-              <div>
-                <dt>Silent overdraw</dt>
-                <dd><b>2&ndash;10&times;</b></dd>
-              </div>
-              <div>
-                <dt>Hardcoded midnight</dt>
-                <dd><b>5</b> call sites</dd>
-              </div>
-            </dl>
-            </div>
-          </article>
-
-          <!-- Case 03 -->
-          <article class="case reveal">
-            <div>
-              <p class="case-n"><b>03</b> — Architecture <span class="case-at">BIK.AI</span></p>
-              <h3>How to add a fourth channel without building a fourth pipeline</h3>
-              <p>
-                WhatsApp, email, RCS and SMS had grown four separate delivery
-                pipelines — four schedulers, four retry policies, four meanings of
-                "delivered". A fifth channel was quoted at the price of the fourth.
-              </p>
-              <p>
-                <strong>The proof the rebuild worked wasn't the migration — it was
-                RCS</strong>, which launched needing an adapter and nothing else.
-              </p>
-              <a class="case-link" href="/writing/one-pipeline-not-four/"
-                >Where to draw the boundary <span class="arw">&rarr;</span></a
-              >
-            </div>
-            <div class="case-side">
-              <figure class="case-viz">
-                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz3t viz3d">
-                  <title id="viz3t">Four delivery pipelines becoming one</title>
-                  <desc id="viz3d">WhatsApp, email, RCS and SMS each ran their own scheduling, retry and status logic; they now converge on one shared orchestration with a thin adapter per channel.</desc>
-                  <path d="M2,8 C60,8 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,24 C60,24 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,40 C60,40 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,56 C60,56 70,32 104,32" fill="none" stroke="#68d391" stroke-width="1.6"/>
-                  <circle cx="2" cy="8" r="2.5" fill="#8b9199"/><circle cx="2" cy="24" r="2.5" fill="#8b9199"/>
-                  <circle cx="2" cy="40" r="2.5" fill="#8b9199"/><circle cx="2" cy="56" r="2.5" fill="#68d391"/>
-                  <rect x="104" y="20" width="66" height="24" rx="6" fill="#68d391" fill-opacity=".12" stroke="#68d391" stroke-opacity=".5"/>
-                  <text x="137" y="35" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">ONE</text>
-                  <path d="M170,32 L204,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <text x="240" y="35" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">adapter</text>
-                </svg>
-                <figcaption>RCS, in green, needed only the adapter.</figcaption>
-              </figure>
-              <dl class="rail stagger">
-              <div>
-                <dt>RCS volume</dt>
-                <dd><b>2.5M</b> / mo</dd>
-              </div>
-              <div>
-                <dt>Enterprise clients</dt>
-                <dd><b>50+</b></dd>
-              </div>
-              <div>
-                <dt>Delivery paths</dt>
-                <dd>4 <em>&rarr;</em> <b>1</b></dd>
-              </div>
-            </dl>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           EXPERIENCE — timeline plus everything the case studies
-           didn't cover. No repetition of the above.
-      ============================================================ -->
-      <section id="experience" class="py-24 md:py-32 rule">
+<section id="experience" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
             <p class="eyebrow">Experience</p><h2>Where I've worked</h2></div>
@@ -563,8 +381,8 @@
               <div>
                 <div class="k">Campaign analytics</div>
                 <div class="v">
-                  Rebuilt on a Postgres-first data layer with on-demand Elasticsearch
-                  refresh and age-tiered caching.
+                  Rebuilt the read path as an on-demand Postgres materialization over
+                  Elasticsearch, with age-tiered Redis caching.
                   <strong>20s &rarr; 200ms, at double the page size.</strong>
                 </div>
               </div>
@@ -696,34 +514,176 @@
       <section id="writing" class="py-24 md:py-32 rule">
         <div class="shell">
           <div class="section-head reveal">
-            <p class="eyebrow">Writing</p><h2>Guides</h2><p class="lede measure">
-              Five reference pieces. The
-              <a href="/writing/" class="text-white border-b border-white/30 hover:border-white transition-colors">index</a>
-              says what each one covers.
+            <p class="eyebrow">Writing</p><h2>Three problems, written up properly</h2><p class="lede measure">
+              Each one is a general class of problem before it is anything I did. I hit an
+              ugly version of all three in production — that's where the numbers come
+              from.
             </p>
           </div>
 
+          <!-- Case 01 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>01</b> — Queues &amp; throughput <span class="case-at">BIK.AI</span></p>
+              <h3>How to create a consumer for all your queues</h3>
+              <p>
+                Most people don't know when to add a worker and when to raise the
+                ingestion rate. They're not interchangeable, and picking wrong is how a
+                1.26M-message backlog survives 38 workers.
+              </p>
+              <p>
+                <strong>The fleet wasn't too small. It was feeding the backlog.</strong>
+                Half the connections, moving more.
+              </p>
+              <a class="case-link" href="/writing/pubsub-backpressure/"
+                >Read the guide <span class="arw">&rarr;</span></a
+              >
+            </div>
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz1t viz1d">
+                  <title id="viz1t">Backlog over time</title>
+                  <desc id="viz1d">Backlog holds at its peak while the fleet grows, then collapses to near zero once flow control and backpressure are fixed — with no capacity added.</desc>
+                  <path d="M0,14 C34,12 62,17 92,13 L112,15" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55" fill="none" stroke="#68d391" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M112,15 C126,17 130,44 146,50 C168,57 200,55 240,55 L240,64 L112,64 Z" fill="#68d391" opacity=".1"/>
+                  <line x1="112" y1="4" x2="112" y2="60" stroke="#68d391" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+                  <text x="0" y="62" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">1.26M</text>
+                  <text x="240" y="46" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">&lt;4K</text>
+                </svg>
+                <figcaption>Backlog, before and after the fix. No nodes added.</figcaption>
+              </figure>
+              <dl class="rail stagger">
+              <div>
+                <dt>Average delay</dt>
+                <dd>2.4 h <em>&rarr;</em> <b>94 s</b></dd>
+              </div>
+              <div>
+                <dt>Combined backlog</dt>
+                <dd>1.26M <em>&rarr;</em> <b>&lt;4K</b></dd>
+              </div>
+              <div>
+                <dt>Scale-out</dt>
+                <dd>38 <em>&rarr;</em> <b>0 extra</b></dd>
+              </div>
+            </dl>
+            </div>
+          </article>
+
+          <!-- Case 02 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>02</b> — Usage billing <span class="case-at">BIK.AI</span></p>
+              <h3>How to bill AI usage without making a loss</h3>
+              <p>
+                Accounts drawing 2&ndash;10&times; what they paid for. A dollar charged
+                for a fraction-of-a-cent call. 12.5% of revenue dropped by a daily
+                cutoff. Every one of them silent — nothing ever errored.
+              </p>
+              <p>
+                <strong>All three were the same mistake: a number that decided the bill
+                and appeared on no screen.</strong> Fixed with one versioned rate card
+                and credits denominated in money, not counts.
+              </p>
+              <a class="case-link" href="/writing/billing-unit-mismatch/"
+                >Read the guide <span class="arw">&rarr;</span></a
+              >
+              <a
+                class="case-link"
+                href="/writing/hardcoded-midnight/"
+                style="margin-left: 1.5rem"
+                >And the timezone one <span class="arw">&rarr;</span></a
+              >
+            </div>
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz2t viz2d">
+                  <title id="viz2t">Contracted allocation versus drawn usage</title>
+                  <desc id="viz2d">What the customer paid for stays flat while what the account could draw runs two to ten times higher, until credits are re-denominated in money.</desc>
+                  <line x1="0" y1="44" x2="240" y2="44" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-linecap="round"/>
+                  <text x="0" y="58" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1">PAID 1&#215;</text>
+                  <path d="M0,44 L150,44 L150,10 L240,10" fill="none" stroke="#fc8181" stroke-width="2" stroke-linejoin="round" opacity=".85"/>
+                  <path d="M150,44 L150,10 L240,10 L240,44 Z" fill="#fc8181" opacity=".1"/>
+                  <text x="240" y="8" fill="#fc8181" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">DRAWN 2&#8211;10&#215;</text>
+                  <circle cx="150" cy="44" r="3" fill="#68d391"/>
+                  <text x="150" y="60" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">0.1 typed</text>
+                </svg>
+                <figcaption>One free-text field, read as a divisor.</figcaption>
+              </figure>
+              <dl class="rail stagger">
+              <div>
+                <dt>Revenue recovered</dt>
+                <dd><b>12.5%</b></dd>
+              </div>
+              <div>
+                <dt>Silent overdraw</dt>
+                <dd><b>2&ndash;10&times;</b></dd>
+              </div>
+              <div>
+                <dt>Hardcoded midnight</dt>
+                <dd><b>5</b> call sites</dd>
+              </div>
+            </dl>
+            </div>
+          </article>
+
+          <!-- Case 03 -->
+          <article class="case reveal">
+            <div>
+              <p class="case-n"><b>03</b> — Analytics <span class="case-at">BIK.AI</span></p>
+              <h3>How to show analytics for a high-throughput system</h3>
+              <p>
+                A dashboard over an event store has to be instant and fresh at the same
+                time, and those pull opposite ways. Aggregating on every load took 20
+                seconds. Serving a saved copy meant a live campaign showed numbers from
+                ten minutes ago.
+              </p>
+              <p>
+                <strong>200ms, at double the page size.</strong> Materialise the
+                numbers, refresh only what's actually stale, and tier the recompute by
+                how much each screen needs.
+              </p>
+              <a class="case-link" href="/writing/high-throughput-analytics/"
+                >Read the guide <span class="arw">&rarr;</span></a
+              >
+            </div>
+            <div class="case-side">
+              <figure class="case-viz">
+                <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz3t viz3d">
+                  <title id="viz3t">Four delivery pipelines becoming one</title>
+                  <desc id="viz3d">WhatsApp, email, RCS and SMS each ran their own scheduling, retry and status logic; they now converge on one shared orchestration with a thin adapter per channel.</desc>
+                  <path d="M2,8 C60,8 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,24 C60,24 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,40 C60,40 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <path d="M2,56 C60,56 70,32 104,32" fill="none" stroke="#68d391" stroke-width="1.6"/>
+                  <circle cx="2" cy="8" r="2.5" fill="#8b9199"/><circle cx="2" cy="24" r="2.5" fill="#8b9199"/>
+                  <circle cx="2" cy="40" r="2.5" fill="#8b9199"/><circle cx="2" cy="56" r="2.5" fill="#68d391"/>
+                  <rect x="104" y="20" width="66" height="24" rx="6" fill="#68d391" fill-opacity=".12" stroke="#68d391" stroke-opacity=".5"/>
+                  <text x="137" y="35" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">ONE</text>
+                  <path d="M170,32 L204,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
+                  <text x="240" y="35" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">adapter</text>
+                </svg>
+                <figcaption>RCS, in green, needed only the adapter.</figcaption>
+              </figure>
+              <dl class="rail stagger">
+              <div>
+                <dt>Page load</dt>
+                <dd>20 s <em>&rarr;</em> <b>200 ms</b></dd>
+              </div>
+              <div>
+                <dt>Rows per page</dt>
+                <dd><b>2&times;</b></dd>
+              </div>
+              <div>
+                <dt>Recompute tiers</dt>
+                <dd><b>2</b></dd>
+              </div>
+            </dl>
+            </div>
+          </article>
+
+                    <p class="eyebrow mt-4 mb-5 reveal">Also</p>
           <div class="rowlist reveal stagger">
-            <a href="/writing/pubsub-backpressure/" class="group">
-              <div class="k">Distributed systems</div>
-              <div class="v flex flex-wrap items-baseline gap-x-3">
-                <span
-                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
-                  >Running Pub/Sub in a microservice system</span
-                >
-                <span class="rowdate">August 2026 · 12 min</span>
-              </div>
-            </a>
-            <a href="/writing/billing-unit-mismatch/" class="group">
-              <div class="k">Billing systems</div>
-              <div class="v flex flex-wrap items-baseline gap-x-3">
-                <span
-                  class="text-white font-display font-bold text-lg group-hover:text-neutral-300 transition-colors"
-                  >How to bill AI usage</span
-                >
-                <span class="rowdate">August 2026 · 12 min</span>
-              </div>
-            </a>
             <a href="/writing/one-pipeline-not-four/" class="group">
               <div class="k">Architecture</div>
               <div class="v flex flex-wrap items-baseline gap-x-3">
@@ -754,6 +714,14 @@
                 <span class="rowdate">August 2026 · 8 min</span>
               </div>
             </a>
+          </div>
+
+          <div class="mt-12 reveal">
+            <a
+              href="/writing/"
+              class="inline-block bg-white text-black px-6 py-3 rounded-full text-sm font-semibold hover:bg-neutral-200 transition-colors"
+              >Read all writing</a
+            >
           </div>
 
           <p class="mt-8 text-sm text-neutral-400 reveal">
@@ -996,7 +964,7 @@
                 <div>
                   <dt>Cloud</dt>
                   <dd>
-                    GCP (Pub/Sub, Cloud Tasks, Cloud Functions) · AWS (Step
+                    GCP (Pub/Sub, Cloud Tasks, Cloud Run, Cloud Functions, GKE) · AWS (Step
                     Functions, Lambda, IAM) · Docker · CI/CD
                   </dd>
                 </div>
@@ -1069,7 +1037,6 @@
           © <span id="footer-year">2026</span>
         </p>
         <nav class="flex gap-5 flex-wrap justify-center">
-          <a href="#work" class="hover:text-white transition-colors">Work</a>
           <a href="#experience" class="hover:text-white transition-colors">CV</a>
           <a href="#projects" class="hover:text-white transition-colors"
             >Open source</a

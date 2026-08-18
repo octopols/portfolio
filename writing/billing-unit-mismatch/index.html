@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>How to bill AI usage — Hirnaymay Bhaskar</title>
+    <title>How to bill AI usage without making a loss — Hirnaymay Bhaskar</title>
     <meta
       name="description"
-      content="Metering AI is easy. Billing it correctly is a unit problem, a clock problem and a visibility problem. A working design, the failure modes that shaped it, and why every number that touches money belongs on a screen."
+      content="Store money, show operations, never let anyone type a rate into a form. A working design, the failure modes that shaped it, and why every number that touches money belongs on a screen."
     />
     <link rel="canonical" href="https://hirnaymay.com/writing/billing-unit-mismatch/" />
 
@@ -17,7 +17,7 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
     <meta property="og:url" content="https://hirnaymay.com/writing/billing-unit-mismatch/" />
-    <meta property="og:title" content="How to bill AI usage" />
+    <meta property="og:title" content="How to bill AI usage without making a loss" />
     <meta
       property="og:description"
       content="A working design for metering and billing AI usage — units, rate cards, credit waterfalls, the nightly run, and the two clocks that never agree."
@@ -79,7 +79,7 @@
       h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
       .standfirst { margin: 26px 0 0; font-size: clamp(18px, 2.2vw, 21px); line-height: 1.5; color: var(--muted); }
 
-      section { padding: 56px 0 0; }
+      section { padding: 56px 0 0; scroll-margin-top: 24px; }
       .label {
         font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
         color: var(--dim); margin-bottom: 20px; padding-top: 40px; border-top: 1px solid var(--line);
@@ -97,6 +97,7 @@
         padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
         color: #cbd5e0; font-family: var(--mono); margin: 0 0 24px;
       }
+      .tok-s { color: #f6ad55; }
       code { font-family: var(--mono); font-size: 0.9em; background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #e2e8f0; }
       pre code { background: none; padding: 0; font-size: inherit; }
 
@@ -126,6 +127,15 @@
       li::marker { color: var(--dim); }
 
       /* ============ shared figure chrome ============ */
+      /* contents */
+      .toc { margin: 40px 0 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.02); }
+      .toc h2 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin: 0 0 14px; font-weight: 500; }
+      .toc ol { margin: 0; padding-left: 20px; color: #c8cdd4; font-size: 15px; }
+      .toc li { margin-bottom: 7px; }
+      .toc li::marker { color: var(--dim); font-family: var(--mono); font-size: 12px; }
+      .toc a { text-decoration: none; border-bottom: 1px solid transparent; }
+      .toc a:hover { border-bottom-color: var(--dim); }
+
       .fig { margin: 0 0 30px; }
       .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
       .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
@@ -241,7 +251,6 @@
       <nav>
         <a href="/" class="mark">Hirnaymay Bhaskar</a>
         <div class="navlinks">
-          <a href="/#work">Work</a>
           <a href="/#experience">CV</a>
           <a href="/#projects">Open source</a>
           <a href="/writing/">Writing</a>
@@ -250,642 +259,733 @@
       </nav>
 
       <header class="hero">
-        <div class="kicker">Billing systems · Field notes · <time datetime="2026-08">August 2026</time></div>
-        <h1>How to bill AI usage</h1>
+        <div class="kicker">Billing systems · Guide · <time datetime="2026-08">August 2026</time></div>
+        <h1>How to bill AI usage without making a loss</h1>
         <p class="standfirst">
-          Metering AI is easy — every call can emit an event. Billing it correctly is three harder
-          problems: choosing a unit, reconciling two clocks, and making the arithmetic visible. Here
-          is a design that holds up, and the failure modes that shaped it.
+          Metering is the easy half — every model call can emit an event. Turning those
+          events into an invoice nobody has to apologise for is where it gets
+          interesting. This is the design I'd build again, in the order I'd build it.
         </p>
+
+        <nav class="toc" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#unit">Decide what one credit actually is</a></li>
+            <li><a href="#ratecard">One rate card, versioned, never hand-typed</a></li>
+            <li><a href="#modalities">Voice is seconds. Text is operations.</a></li>
+            <li><a href="#event">The usage event contract</a></li>
+            <li><a href="#credits">Free credits are a balance, not a counter</a></li>
+            <li><a href="#run">The nightly run</a></li>
+            <li><a href="#clocks">Two clocks, one alignment key</a></li>
+            <li><a href="#display">Turning money back into what you sold</a></li>
+            <li><a href="#warstories">What actually broke</a></li>
+            <li><a href="#checklist">The checklist</a></li>
+          </ol>
+        </nav>
       </header>
 
-      <section>
-        <div class="label">[ <b>01</b> — The decision that determines everything ]</div>
-        <h2>Pick the unit before you build the ledger</h2>
+      <section id="unit">
+        <div class="label">[ <b>01</b> — The unit ]</div>
+        <h2>Decide what one credit actually is</h2>
         <p>
-          Every AI billing system has three units in it, and they are rarely the same unit.
+          This is the whole article. Everything downstream is a consequence of it, and
+          it is almost always decided by accident — someone needs a number in a
+          database on a Tuesday and picks one.
         </p>
         <p>
-          There is what you <em>sold</em> — usually a count, because that is what a buyer can hold in
-          their head. There is what you <em>store</em>, which wants to be money, because money is
-          what a ledger is good at. And there is what you <em>show</em>, which has to match the
-          contract or the customer will not believe you.
+          Your contract says something like <em>10,000 AI operations per month</em>.
+          That is what sales sold and what the customer believes. The naive move is to
+          store exactly that: a counter at 10,000, decrement on each call. It works
+          for about a quarter.
+        </p>
+        <p>
+          It breaks the moment two calls stop costing the same. A cheap model and an
+          expensive model are both "one operation." A four-second voice clip and a
+          nine-minute call are both "one operation." Now your counter is measuring
+          something that has no stable relationship to your bill from the provider.
         </p>
 
-        <figure class="fig">
+        <div class="callout good">
+          <span class="tag">The decision</span>
+          <p>
+            <strong>Store money. Show operations.</strong> The ledger holds a currency
+            amount; the contract's operation count is a <em>presentation</em> of it,
+            computed at read time. Money is the only unit that stays true when models,
+            rates, modalities and exchange rates all move underneath you.
+          </p>
+        </div>
+
+        <p>
+          So the free allocation becomes an amount, derived once when the contract is
+          signed:
+        </p>
+
+        <pre><code>allocated_credit = contracted_operations &times; rate_at_signing</code></pre>
+
+        <p>
+          10,000 operations at $0.004 becomes a $40 pool. You deduct real cost from
+          that $40. If you later add a model that costs triple, it draws down the pool
+          three times faster — which is correct, and which a counter would have hidden
+          from you until the provider invoice arrived.
+        </p>
+
+        <div class="fig">
           <div class="fig-scroll">
             <div class="units">
-              <div class="unit-box solid">
-                <div class="u-role">Contract</div>
-                <div class="u-unit">operations</div>
-                <div class="u-sub">10,000 / month</div>
-              </div>
-              <div class="u-arrow"><div>×</div>rate</div>
-              <div class="unit-box solid">
-                <div class="u-role">Ledger</div>
-                <div class="u-unit">currency</div>
-                <div class="u-sub">balance in USD / INR</div>
-              </div>
-              <div class="u-arrow"><div>÷</div>rate</div>
               <div class="unit-box shaky">
-                <div class="u-role">Display</div>
+                <div class="u-role">what you sold</div>
                 <div class="u-unit">operations</div>
-                <div class="u-sub">balance ÷ rate</div>
+                <div class="u-sub">10,000 / mo</div>
+              </div>
+              <div class="u-arrow">
+                <div>&rarr;</div>
+                convert once
+              </div>
+              <div class="unit-box solid">
+                <div class="u-role">what you store</div>
+                <div class="u-unit">money</div>
+                <div class="u-sub">$40.00</div>
+              </div>
+              <div class="u-arrow">
+                <div>&rarr;</div>
+                convert on read
+              </div>
+              <div class="unit-box shaky">
+                <div class="u-role">what you show</div>
+                <div class="u-unit">operations</div>
+                <div class="u-sub">7,240 left</div>
               </div>
             </div>
           </div>
-          <figcaption class="cap">
-            <b>Money in the middle, counts on both ends.</b> The two conversions are where every
-            problem in this article lives. Both use a rate — and a rate is a number that changes.
-          </figcaption>
-        </figure>
-
-        <p>
-          Store money. A currency balance stays correct when rates change, when a model gets cheaper,
-          when you add a modality you had not planned for. A balance denominated in operations
-          silently re-prices itself every time you touch the rate card.
-        </p>
-        <p>
-          But be honest about the right-hand box. The moment you sell a count and store an amount,
-          you have committed to maintaining a conversion forever, and it is only as stable as the
-          rate underneath it.
-        </p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>02</b> — The system before ]</div>
-        <h2>What a free-text rate field costs you</h2>
-        <p>
-          The system I inherited stored two numbers per customer: a pool, which was just the
-          contracted operation count, and a per-operation rate typed in by whoever set the account
-          up. Available operations was one divided by the other.
-        </p>
-        <p>
-          The intended rate was always <code>1</code>. It was a free-text field on an internal form,
-          labelled like a price, and it behaved like a divisor.
-        </p>
-
-        <figure class="fig">
-          <div class="fig-scroll">
-            <div class="bars">
-              <div class="bar-row">
-                <div class="bar-key">rate = 1.0</div>
-                <div class="bar-track"><div class="bar-fill ok" style="width:10%"></div></div>
-                <div class="bar-val">10,000</div>
-              </div>
-              <div class="bar-row">
-                <div class="bar-key">rate = 0.5</div>
-                <div class="bar-track"><div class="bar-fill warn" style="width:20%"></div></div>
-                <div class="bar-val">20,000</div>
-              </div>
-              <div class="bar-row">
-                <div class="bar-key">rate = 0.1</div>
-                <div class="bar-track"><div class="bar-fill bad" style="width:100%"></div></div>
-                <div class="bar-val">100,000</div>
-              </div>
-            </div>
-          </div>
-          <figcaption class="cap">
-            <b>Operations actually available on a 10,000-operation contract.</b> Nobody typed a
-            number meaning "give this account ten times its allocation". They typed a price.
-          </figcaption>
-        </figure>
-
-        <p>
-          The same field failed the other way for customers billed in dollars. A rate of
-          <code>1</code> reads as "one unit per operation" — sensible-sounding — and in a pool
-          denominated in dollars it means <strong>one dollar per operation</strong>. Invisible while
-          free credits lasted, then orders of magnitude above cost the moment they ran out.
-        </p>
-        <p>
-          The lesson is not really about a rate field:
-        </p>
-        <blockquote>
-          <p>
-            Every screen showed the contracted number. The figure that governed consumption was
-            never rendered anywhere. It existed only inside a nightly job that printed nothing.
-          </p>
-        </blockquote>
-        <p>
-          Nobody ignored a warning — there was no warning. A derived value that decides what someone
-          is charged, and appears in no interface, is not a calculation. It is an unexploded
-          assumption. That single observation is why the rest of this design looks the way it does.
-        </p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>03</b> — The meter ]</div>
-        <h2>Make the usage event carry everything</h2>
-        <p>
-          One event per AI call, emitted by the feature that made it. The billing job never asks a
-          model what it did; it reads events. So the event has to be complete when it is written,
-          because nothing downstream can reconstruct what was never recorded.
-        </p>
-
-        <figure class="fig">
-          <div class="fig-scroll">
-            <div class="anat">
-              <div class="anat-head">Usage event · one per AI call</div>
-              <div class="anat-row req">
-                <div class="anat-f">tier</div>
-                <div class="anat-w">Which price band the model sits in. Missing → no rate resolves, and the event drops out of costing entirely.</div>
-              </div>
-              <div class="anat-row req">
-                <div class="anat-f">usageType</div>
-                <div class="anat-w">text · image · video · audio. Decides both the rate and the unit.</div>
-              </div>
-              <div class="anat-row req">
-                <div class="anat-f">billable</div>
-                <div class="anat-w">Explicitly true or false. <strong>Absent is not false</strong> — absent means the job cannot classify it, so it is skipped.</div>
-              </div>
-              <div class="anat-row">
-                <div class="anat-f">usageUnits</div>
-                <div class="anat-w">Seconds, for audio. The one modality not counted in operations.</div>
-              </div>
-              <div class="anat-row">
-                <div class="anat-f">weight</div>
-                <div class="anat-w">Lets one call count as several operations. Defaults to 1.</div>
-              </div>
-              <div class="anat-row">
-                <div class="anat-f">feature · channel</div>
-                <div class="anat-w">Not used in the arithmetic. Used in every question anyone asks afterwards.</div>
-              </div>
-            </div>
-          </div>
-          <figcaption class="cap">
-            <b>The three highlighted fields are load-bearing.</b> Anything missing one cannot be
-            priced — and usage that cannot be priced is revenue you never see again.
-          </figcaption>
-        </figure>
-
-        <p>
-          Voice is why <code>usageType</code> has to exist from day one. A voice vendor bills per
-          second; no amount of modelling makes a second an operation. Retrofitting a second unit into
-          a system that assumed one is far more expensive than carrying the field before you need it.
-        </p>
-        <div class="callout">
-          <span class="tag">Validate at emit</span>
-          <p>
-            Nothing downstream can stop a feature shipping events without the required fields. If you
-            take one thing from this section: enforce the schema where the event is written, not
-            where it is read. By the time the nightly job sees it, the only options are to guess or
-            to drop — and dropping is silent.
+          <p class="cap">
+            <b>Two conversions, one source of truth.</b> The middle box is the only
+            number in your database. Both outer boxes are derived, and both can be
+            recomputed if you got a rate wrong — which you will.
           </p>
         </div>
       </section>
 
-      <section>
-        <div class="label">[ <b>04</b> — Prices ]</div>
-        <h2>One rate card, versioned, resolved by fallback</h2>
+      <section id="ratecard">
+        <div class="label">[ <b>02</b> — Pricing ]</div>
+        <h2>One rate card, versioned, never hand-typed</h2>
         <p>
-          Rates live in exactly one place, keyed by <code>tier × country × usageType</code>, one
-          version active at a time and every previous version retained. Nobody outside that document
-          sets a price — there is no per-customer rate field, because that is the bug in section two.
+          Somewhere in your admin panel there is a temptation to put a "rate" field on
+          the customer record so the account manager can set it per deal. Do not do
+          this. A per-customer rate typed by a human is a divisor with no schema, no
+          validation and no audit trail, and it will quietly multiply someone's
+          entitlement by ten.
+        </p>
+        <p>
+          Instead: one document, versioned, resolved by a key. Mine looks like this:
         </p>
 
-        <figure class="fig">
+        <pre><code>rate_card[<span class="tok-s">tier</span>][<span class="tok-s">country</span>][<span class="tok-s">usage_type</span>] &rarr; cost_per_unit
+
+tier_2 / IN  / text  &rarr; 0.0041
+tier_2 / US  / text  &rarr; 0.0045
+tier_2 / ANY / text  &rarr; 0.0045   &larr; fallback</code></pre>
+
+        <p>
+          Three properties matter, and they are the difference between a rate card and
+          a config file you're afraid of:
+        </p>
+        <ul>
+          <li>
+            <strong>Versioned, with the old versions kept.</strong> Every card carries a
+            version and a creation timestamp, and only one is active. You need
+            <code>rate_card_active_at(date)</code> because in six months someone will
+            ask why an invoice from March looks like that, and "we changed the rates in
+            April" is only an answer if you can prove what March's were.
+          </li>
+          <li>
+            <strong>A country fallback.</strong> Never key strictly on the exact
+            country. One customer in a market you forgot to add and pricing throws
+            instead of falling back. Resolve exact, then <code>ANY</code>, then alert.
+          </li>
+          <li>
+            <strong>Margin is a separate number.</strong> The base rate is your cost.
+            Markup is a per-customer percentage in its own field with its own history.
+            <code>final = base × (1 + markup/100)</code>. Keep them apart and you can
+            answer "what is our margin on this account" without archaeology.
+          </li>
+        </ul>
+
+        <div class="callout">
+          <span class="tag">Fail loud</span>
+          <p>
+            If a rate lookup misses after the fallback, do not default to zero and do
+            not default to one. Skip the item, leave it unbilled, and alert. Zero
+            silently gives away product; one silently charges a dollar for something
+            that cost a third of a cent. Both are worse than a page in your Slack.
+          </p>
+        </div>
+      </section>
+
+      <section id="modalities">
+        <div class="label">[ <b>03</b> — Units ]</div>
+        <h2>Voice is seconds. Text is operations.</h2>
+        <p>
+          The instinct is to force one unit across everything so the ledger is tidy. It
+          isn't worth it. A text completion is naturally an <em>event</em>; a voice call
+          is naturally a <em>duration</em>. Providers already price them that way, and
+          flattening voice into "operations" means inventing a fictional average call
+          length and then being wrong about it forever.
+        </p>
+        <p>
+          So make <code>usage_type</code> a first-class dimension and let each one carry
+          its own unit:
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <div class="bars">
+              <div class="bar-row">
+                <div class="bar-key">text</div>
+                <div class="bar-track"><div class="bar-fill ok" style="width:100%"></div></div>
+                <div class="bar-val">operations</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">image</div>
+                <div class="bar-track"><div class="bar-fill ok" style="width:100%"></div></div>
+                <div class="bar-val">operations</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-key">audio</div>
+                <div class="bar-track"><div class="bar-fill warn" style="width:100%"></div></div>
+                <div class="bar-val">seconds</div>
+              </div>
+            </div>
+          </div>
+          <p class="cap">
+            <b>Different units, same ledger.</b> Both resolve to money before anything
+            is deducted, so the wallet never has to know the difference.
+          </p>
+        </div>
+
+        <p>
+          One extra field earns its keep: a weight on the event. Some features fire one
+          API call but genuinely represent several units of work — a summariser that
+          fans out to four completions, say. Let the emitting code declare
+          <code>weight: 4</code> rather than emitting four fake events. Default it to
+          <code>1</code> and sum the weight instead of counting documents.
+        </p>
+        <p>
+          The catch, and it is a real one: nothing validates that weight. A feature team
+          can set it to 40 and you will bill 40× with no error anywhere. Treat it as a
+          number that needs review in code review, not a number you trust.
+        </p>
+      </section>
+
+      <section id="event">
+        <div class="label">[ <b>04</b> — The event ]</div>
+        <h2>The usage event contract</h2>
+        <p>
+          Every AI call emits one event. That event is the only evidence the billing job
+          will ever have, and it is written by teams who are not thinking about billing.
+          So the contract has to be small enough to remember and strict enough to be
+          useless if violated.
+        </p>
+
+        <div class="fig">
           <div class="fig-scroll">
             <div class="chain">
               <div class="chain-step hit">
                 <div class="chain-n">1</div>
                 <div>
-                  <code>rate[tier][country][type]</code>
-                  <div class="chain-note">Exact match. The normal path.</div>
+                  <strong>Who</strong> — tenant id
+                  <div class="chain-note">Partition key for everything downstream.</div>
                 </div>
               </div>
               <div class="chain-step hit">
                 <div class="chain-n">2</div>
                 <div>
-                  <code>rate[tier]["OTHER"][type]</code>
-                  <div class="chain-note">Country fallback, so a new market bills correctly on day one instead of failing.</div>
+                  <strong>When</strong> — UTC timestamp
+                  <div class="chain-note">Store UTC. Bill on local-day boundaries. Never the reverse.</div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">3</div>
+                <div>
+                  <strong>What tier</strong> — the pricing class, not the model name
+                  <div class="chain-note">Log the model string too, but price off the tier. Model names change weekly; your rate card shouldn't.</div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">4</div>
+                <div>
+                  <strong>What type</strong> — text / image / audio / video
+                  <div class="chain-note">Selects the unit and the rate-card column.</div>
+                </div>
+              </div>
+              <div class="chain-step hit">
+                <div class="chain-n">5</div>
+                <div>
+                  <strong>How much</strong> — seconds for audio, weight for the rest
+                  <div class="chain-note">Defaults to 1 so a forgetful caller still bills something sane.</div>
                 </div>
               </div>
               <div class="chain-step miss">
-                <div class="chain-n">3</div>
+                <div class="chain-n">6</div>
                 <div>
-                  <code>not found</code>
-                  <div class="chain-note">Skip the item and alert loudly. Never invent a price and never default to zero — one bills the wrong number, the other bills nothing and looks like success.</div>
+                  <strong>Billable?</strong> — an explicit boolean
+                  <div class="chain-note">The one that will hurt you. See below.</div>
                 </div>
               </div>
             </div>
           </div>
-          <figcaption class="cap"><b>Resolution order.</b> Two fallbacks and a refusal.</figcaption>
-        </figure>
+          <p class="cap">
+            <b>Six fields.</b> Miss any of the first five and you can usually recover by
+            reprocessing. Miss the sixth and you never find out.
+          </p>
+        </div>
 
         <p>
-          Keep every version and the timestamp it became active. You will be asked what something
-          cost on a specific day last month — for a report, a dispute, a recalculation — and the only
-          honest answer comes from the card that was live that day, not the one live now.
+          That last field deserves the attention. You will have usage you deliberately
+          don't charge for — internal testing, a trial, a feature you're giving away to
+          land the account. The obvious implementation is to omit the field when it
+          isn't billable.
+        </p>
+        <p>
+          Don't. If <code>billable</code> is absent, your aggregation cannot tell
+          "we decided not to charge for this" from "someone forgot." Both look
+          identical, and the job skips both. That is revenue walking out of the
+          building with no log line.
         </p>
 
-        <h3>Margin is a separate number</h3>
-        <p>
-          Markup is stored per customer, apart from the base rate, so the rate card always reflects
-          what the thing actually costs you:
-        </p>
-        <pre><code>finalRate = baseRate[tier][country][type] × (1 + markup / 100)
-
-// non-USD contract
-finalRateLocal = finalRate × conversionRate</code></pre>
-        <p>
-          Fold margin into the base rate and you lose the ability to answer "are we making money on
-          this account" without archaeology.
-        </p>
+        <div class="callout good">
+          <span class="tag">Make absence loud</span>
+          <p>
+            Require the field explicitly. Treat a missing value as a
+            <strong>data-quality incident, not a free operation</strong> — count those
+            events, price them anyway, and put the number on a dashboard labelled
+            something you cannot ignore. "Unbilled — missing flags: $312 this week" gets
+            fixed. A silently skipped bucket does not.
+          </p>
+        </div>
       </section>
 
-      <section>
-        <div class="label">[ <b>05</b> — Spending ]</div>
+      <section id="credits">
+        <div class="label">[ <b>05</b> — Credits ]</div>
         <h2>Free credits are a balance, not a counter</h2>
         <p>
-          Allocate free credits as an amount — <code>contractedOps × finalRate</code> — and let the
-          job spend it like money. Each day's cost draws against free credits first; only the
-          remainder reaches the wallet.
+          Free credits, trial allowances and goodwill top-ups are all the same thing: a
+          pot of money you drain before you touch the customer's wallet. Once credits
+          are denominated in currency this gets pleasantly boring.
+        </p>
+        <p>
+          Deduction is a waterfall, per usage type, in one direction:
         </p>
 
-        <figure class="fig">
+        <div class="fig">
           <div class="fig-scroll">
             <div class="wf">
               <div class="wf-bar">
-                <div class="wf-seg free" style="width:62%">drawn from free credits</div>
-                <div class="wf-seg wallet" style="width:38%">charged to wallet</div>
+                <div class="wf-seg free" style="width:58%">free credit pool &mdash; $23.20</div>
+                <div class="wf-seg wallet" style="width:42%">wallet &mdash; $16.80</div>
               </div>
-              <div class="wf-scale"><span>0</span><span>free balance exhausted →</span><span>day's total cost</span></div>
+              <div class="wf-scale">
+                <span>day's cost: $40.00</span>
+                <span>free drained first, remainder billed</span>
+              </div>
             </div>
           </div>
-          <figcaption class="cap">
-            <b>One day, one customer, one category.</b> The split is computed, not chosen:
-            <code>fromFree = min(cost, balance)</code>. Voice and non-voice run separately, against
-            separate balances.
-          </figcaption>
-        </figure>
+          <p class="cap">
+            <b>One rule, applied per usage type.</b>
+            <code>free_used = min(cost, available)</code>, remainder to the wallet. Keep
+            voice and non-voice pools separate or a chatty week eats the voice
+            allowance.
+          </p>
+        </div>
 
         <p>
-          Run the waterfall independently per category. Voice and messages have different balances
-          and different units, and merging them means a chatty month silently eats a customer's voice
-          allowance.
+          Two things worth doing here that are easy to skip:
         </p>
-        <p>
-          Write both halves to the ledger even when one is zero. A free-credit draw is a real
-          economic event — it consumes something the customer was given — and a ledger that only
-          records money leaving the wallet cannot tell you how much of the allowance is left.
-        </p>
+        <ul>
+          <li>
+            <strong>Write a zero-amount ledger entry for the free portion.</strong> It
+            costs nothing and it means the ledger is a complete history of consumption
+            rather than a history of payments. When someone asks "did they use the free
+            credits or did we forget to apply them", you can answer.
+          </li>
+          <li>
+            <strong>Decrement atomically.</strong> Use a real atomic increment on the
+            balance, not read-modify-write. Two jobs overlapping on the same tenant is
+            not hypothetical once you add retries.
+          </li>
+        </ul>
       </section>
 
-      <section>
-        <div class="label">[ <b>06</b> — The run ]</div>
-        <h2>What the nightly job actually does</h2>
+      <section id="run">
+        <div class="label">[ <b>06</b> — The job ]</div>
+        <h2>The nightly run</h2>
         <p>
-          Bill in arrears, once a day, per customer. Not per call — per-call billing multiplies write
-          volume by traffic and buys you nothing a daily aggregate does not.
+          Bill in a batch, once a day, for yesterday. Not in the request path. The
+          request path should do exactly one billing-related thing — emit the event —
+          and then get on with serving the user. Pricing, currency conversion, wallet
+          writes and provider reconciliation have no business adding latency to a chat
+          response.
         </p>
 
-        <figure class="fig">
+        <div class="fig">
           <div class="fig-scroll">
             <div class="pipe">
-              <div class="pipe-step key">
-                <div class="pipe-when">Guard</div>
+              <div class="pipe-step">
+                <div class="pipe-when">all day</div>
                 <div class="pipe-body">
-                  <div class="pipe-title">Has this day already been billed?</div>
-                  <div class="pipe-desc">Query the ledger for entries matching this customer and date range. If any exist, skip and alert. This is the only thing standing between a retried cron and a double charge.</div>
+                  <div class="pipe-title">Features emit usage events</div>
+                  <div class="pipe-desc">
+                    Six fields, fire and forget, into whatever you already use for
+                    analytics. No wallet reads on the hot path.
+                  </div>
                 </div>
               </div>
               <div class="pipe-step">
-                <div class="pipe-when">Window</div>
+                <div class="pipe-when">~3am local</div>
                 <div class="pipe-body">
-                  <div class="pipe-title">Resolve the day to a UTC range</div>
-                  <div class="pipe-desc">A billing day is a local calendar day, not a UTC one. Convert once, at the boundary, and end just short of midnight so clock skew cannot drag in tomorrow.</div>
+                  <div class="pipe-title">Guard against a repeat run</div>
+                  <div class="pipe-desc">
+                    Query the ledger for entries already covering this tenant and this
+                    date. If any exist, skip and alert. Crons fire twice; this is the
+                    cheapest idempotency you will ever write.
+                  </div>
                 </div>
               </div>
               <div class="pipe-step">
-                <div class="pipe-when">Read</div>
+                <div class="pipe-when">then</div>
                 <div class="pipe-body">
-                  <div class="pipe-title">Aggregate usage by tier × type × billable</div>
-                  <div class="pipe-desc">Audio buckets sum seconds; the rest sum weighted operation counts. One query, one composite aggregation.</div>
-                </div>
-              </div>
-              <div class="pipe-step key">
-                <div class="pipe-when">Price</div>
-                <div class="pipe-body">
-                  <div class="pipe-title">Resolve rate, apply markup, convert currency</div>
-                  <div class="pipe-desc">Per bucket. Price the non-billable usage too — you want to know what you gave away, even though nothing is deducted for it.</div>
-                </div>
-              </div>
-              <div class="pipe-step key">
-                <div class="pipe-when">Deduct</div>
-                <div class="pipe-body">
-                  <div class="pipe-title">Free credits, then wallet</div>
-                  <div class="pipe-desc">Atomic decrement on the balance, a ledger entry for each half. Snapshot the wallet before and after, so a run is auditable without replaying it.</div>
+                  <div class="pipe-title">Aggregate the day</div>
+                  <div class="pipe-desc">
+                    Group by (tier, usage_type, billable). Sum seconds for audio, weight
+                    for everything else. One query per tenant, not one per event.
+                  </div>
                 </div>
               </div>
               <div class="pipe-step">
-                <div class="pipe-when">Write back</div>
+                <div class="pipe-when">then</div>
                 <div class="pipe-body">
-                  <div class="pipe-title">Emit an event per deduction</div>
-                  <div class="pipe-desc">Amount, currency, source of funds, and a per-tier and per-feature breakdown. This is what every dashboard downstream reads.</div>
+                  <div class="pipe-title">Price, then deduct</div>
+                  <div class="pipe-desc">
+                    Rate card + markup + FX &rarr; cost per bucket. Free pool first,
+                    wallet for the remainder, both as ledger entries.
+                  </div>
                 </div>
               </div>
               <div class="pipe-step">
-                <div class="pipe-when">Settle</div>
+                <div class="pipe-when">finally</div>
                 <div class="pipe-body">
-                  <div class="pipe-title">Push to the payment platform, record the job</div>
-                  <div class="pipe-desc">Only if there is something to charge. Record per-customer status so a partial failure shows up as a row, not as a gap.</div>
+                  <div class="pipe-title">Emit what you charged</div>
+                  <div class="pipe-desc">
+                    A second stream of events describing the deduction — amount,
+                    currency, which pool it came from, the per-tier breakdown. This is
+                    what your dashboards read. Never recompute charges for display.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <figcaption class="cap">
-            <b>Batch it.</b> Small groups with a pause between them — a nightly job that stampedes
-            your datastore is a nightly outage on a schedule.
-          </figcaption>
-        </figure>
+          <p class="cap">
+            <b>Batch the tenants too.</b> Fifteen at a time with a small delay between
+            batches keeps you inside provider rate limits and makes a failure affect
+            fifteen tenants instead of all of them.
+          </p>
+        </div>
+
+        <p>
+          Track the run itself as data: a parent record for the run, a child record per
+          tenant, each with a status and the wallet balance before and after. When
+          someone asks why a tenant wasn't billed on the 14th, you want to read a row,
+          not grep logs.
+        </p>
+      </section>
+
+      <section id="clocks">
+        <div class="label">[ <b>07</b> — Time ]</div>
+        <h2>Two clocks, one alignment key</h2>
+        <p>
+          There are two timestamps in this system and confusing them produces bugs that
+          survive for months because every individual number looks right.
+        </p>
+        <ul>
+          <li><strong>When the usage happened.</strong> Yesterday, 15:30.</li>
+          <li><strong>When you billed it.</strong> Today, 03:00.</li>
+        </ul>
+        <p>
+          Both views — "what did they use" and "what did we charge" — need to answer
+          questions about <em>yesterday</em>. If the billing event only carries its own
+          creation time, every join is off by one day and the off-by-one moves with the
+          time zone.
+        </p>
 
         <div class="callout good">
-          <span class="tag">Design for the retry</span>
+          <span class="tag">The fix is one field</span>
           <p>
-            Assume the job will run twice. The duplicate guard, the per-customer job rows and the
-            before/after balances all exist for the morning when it does — so "did we charge them
-            twice" takes a query, not an afternoon.
-          </p>
-        </div>
-      </section>
-
-      <section>
-        <div class="label">[ <b>07</b> — Two clocks ]</div>
-        <h2>The day it happened, and the day it was counted</h2>
-        <p>
-          Usage is stamped when the call happens. Billing records are stamped when the job runs,
-          about twelve hours later. Nearly every confusing question anyone asks about a system like
-          this comes from that gap.
-        </p>
-
-        <div class="tl">
-          <div class="tl-scroll"><div class="tl-inner">
-            <div class="tl-row">
-              <div class="tl-name">Usage<br />events</div>
-              <div class="tl-track">
-                <div class="tl-span accent" style="left:0%; width:79%">calls land all day · stamped when they happen</div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name">Billing<br />job</div>
-              <div class="tl-track">
-                <div class="tl-link" style="left:22%; right:11%"><span>tagged with the day it bills</span></div>
-                <div class="tl-point" style="left:89%"><span>writes billing records</span></div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name"></div>
-              <div class="tl-axis">
-                <span class="tl-t" style="left:0%">day D · 00:00</span>
-                <span class="tl-t" style="left:40%">12:00</span>
-                <span class="tl-t" style="left:79%">23:56</span>
-                <span class="tl-t" style="left:89%">D+1 · 03:00</span>
-              </div>
-            </div>
-          </div></div>
-          <p class="cap">
-            <b>Never join on the write timestamp.</b> Stamp every billing record with the day it is
-            <em>about</em> and join on that. One field, and it removes an entire category of
-            off-by-one reporting bug.
+            Stamp every billing event with the <strong>date it covers</strong>, not the
+            time it was written. A run at 03:00 on the 12th writes events tagged
+            <code>2026-08-11</code>. Now the two streams join on a single key and stay
+            joined regardless of when the job actually ran, or how many times you
+            re-ran it.
           </p>
         </div>
 
         <p>
-          The corollary: today can never be shown next to yesterday. Today's usage is real, but
-          nothing has priced it. Show it — separately, labelled as not yet billed — rather than
-          letting it quietly widen a total that is meant to reconcile.
+          Then pick one day boundary and use it everywhere. If you bill on local days,
+          normalise every range to a local-midnight-to-local-midnight window converted
+          to UTC, in one helper, used by both the job and every dashboard query. Two
+          places computing "yesterday" independently will eventually disagree.
+        </p>
+        <p>
+          One small trick worth stealing: end the window a few minutes short of
+          midnight. Clock skew between whatever emits your events and whatever stores
+          them will otherwise pull a handful of the next day's events into today's
+          invoice, and the resulting discrepancy is maddening to chase.
+        </p>
+        <p>
+          Last thing: today's usage exists in your event store but has not been billed
+          yet. Don't render it next to billed figures — the totals won't match and
+          you'll get a support ticket. Show it separately and label it as pending.
         </p>
       </section>
 
-      <section>
-        <div class="label">[ <b>08</b> — The seam ]</div>
-        <h2>Cycle rollover lands inside the offset</h2>
+      <section id="display">
+        <div class="label">[ <b>08</b> — Display ]</div>
+        <h2>Turning money back into what you sold</h2>
         <p>
-          Now put a billing cycle boundary in the middle of that gap. The cycle rolls at midnight;
-          the job runs at three. For those three hours the contract has moved on while the charge
-          being applied belongs to the month that just closed.
+          You store money. The customer bought operations. So the UI divides:
         </p>
 
-        <div class="tl">
-          <div class="tl-scroll"><div class="tl-inner">
-            <div class="tl-row">
-              <div class="tl-name">Contract<br />dates</div>
-              <div class="tl-track">
-                <div class="tl-band" style="left:66%; width:9%"></div>
-                <div class="tl-span" style="left:0%; width:65%">cycle: 1–31 May</div>
-                <div class="tl-span warn" style="left:66%; width:34%">cycle: 1–30 Jun</div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name">Usage</div>
-              <div class="tl-track">
-                <div class="tl-band" style="left:66%; width:9%"></div>
-                <div class="tl-span accent" style="left:0%; width:65%">31 May usage</div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name">Billing<br />job</div>
-              <div class="tl-track">
-                <div class="tl-band" style="left:66%; width:9%"></div>
-                <div class="tl-point" style="left:75%"><span>charges 31 May</span></div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name">Free credit<br />balance</div>
-              <div class="tl-track">
-                <div class="tl-band" style="left:66%; width:9%"></div>
-                <div class="tl-span ghost" style="left:0%; width:100%">last month's leftover · never reset</div>
-              </div>
-            </div>
-            <div class="tl-row">
-              <div class="tl-name"></div>
-              <div class="tl-axis">
-                <span class="tl-t" style="left:0%">31 May 00:00</span>
-                <span class="tl-t" style="left:66%">1 Jun 00:00</span>
-                <span class="tl-t" style="left:75%">03:00</span>
-                <span class="tl-t" style="left:100%">1 Jun 12:00</span>
-              </div>
-            </div>
-          </div></div>
-          <p class="cap">
-            <b>The shaded band is the seam.</b> Three lanes roll at midnight. The fourth does not,
-            and that is the actual bug.
-          </p>
-        </div>
+        <pre><code>operations_remaining = floor(balance / rate_per_operation)</code></pre>
 
         <p>
-          The charge itself is fine — the job bills the day it was told to bill, at that day's
-          prices, whatever the contract now says. Drawing it is still worth doing, because the fourth
-          lane is invisible in prose and unmistakable on an axis.
-        </p>
-        <p>
-          <strong>Rolling the dates does not refill the balance.</strong> If your cycle update
-          changes two dates and stops, the new month opens with whatever the old one left behind —
-          often nothing — and every operation bills straight to the wallet with no buffer in front of
-          it. Provision credits in the same transaction that rolls the cycle, or you have built a
-          monthly chore that somebody will eventually forget.
-        </p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>09</b> — The rate you don't control ]</div>
-        <h2>When the display unit floats</h2>
-        <p>
-          If you price in one currency and bill in another, the deduction is straightforward: charge
-          local currency at the day's rate. The conversion to watch is the one going back the other
-          way, when a balance has to be rendered as the count on the contract.
+          Floor, not round — a customer has only consumed an operation once they've
+          fully paid for one. That part is easy. The interesting part is that this
+          number is only stable if <code>rate_per_operation</code> is stable, and there
+          are two ways it isn't.
         </p>
 
-        <figure class="fig">
+        <p>
+          <strong>Currency.</strong> If your rate card is in USD and the wallet is in
+          another currency, the divisor moves with the exchange rate. The balance is
+          untouched; the displayed operation count drifts anyway:
+        </p>
+
+        <div class="fig">
           <div class="fig-scroll">
             <div class="bars">
               <div class="bar-row">
-                <div class="bar-key">at 85</div>
+                <div class="bar-key">at signing</div>
                 <div class="bar-track"><div class="bar-fill ok" style="width:100%"></div></div>
-                <div class="bar-val">50,000</div>
+                <div class="bar-val">50,000 ops</div>
               </div>
               <div class="bar-row">
-                <div class="bar-key">at 88</div>
+                <div class="bar-key">+3% FX</div>
                 <div class="bar-track"><div class="bar-fill warn" style="width:96.6%"></div></div>
-                <div class="bar-val">48,295</div>
+                <div class="bar-val">48,295 ops</div>
               </div>
               <div class="bar-row">
-                <div class="bar-key">at 90</div>
+                <div class="bar-key">+6% FX</div>
                 <div class="bar-track"><div class="bar-fill warn" style="width:94.4%"></div></div>
-                <div class="bar-val">47,222</div>
+                <div class="bar-val">47,222 ops</div>
               </div>
               <div class="bar-row">
-                <div class="bar-key">at 95</div>
+                <div class="bar-key">+12% FX</div>
                 <div class="bar-track"><div class="bar-fill bad" style="width:89.5%"></div></div>
-                <div class="bar-val">44,736</div>
+                <div class="bar-val">44,736 ops</div>
               </div>
             </div>
           </div>
-          <figcaption class="cap">
-            <b>The same untouched balance, four exchange rates.</b> Nothing was spent between these
-            rows. A customer sold 50,000 operations watches the number fall through the month.
-          </figcaption>
-        </figure>
+          <p class="cap">
+            <b>Same wallet balance, four different answers.</b> The money is correct at
+            every step. The number on the contract is the thing that stopped being
+            true.
+          </p>
+        </div>
 
         <p>
-          The billing stays correct throughout. The <em>display</em> cannot be, because the contract
-          is denominated in a unit the ledger does not store and the bridge between them is a number
-          neither party controls.
+          <strong>Tiers.</strong> The same trap, from a different direction. If you
+          price a cheap model and an expensive model differently — which is the entire
+          reason you built tiers — then "operations remaining" depends on which features
+          they use next. Two customers who bought the same 10,000 operations get
+          different counts, correctly, and neither can be reconciled against the
+          contract.
+        </p>
+
+        <div class="callout">
+          <span class="tag">Pick your poison deliberately</span>
+          <p>
+            There are only three honest ways out, and you should choose one on purpose
+            rather than discover it later:
+          </p>
+          <p>
+            <strong>1. Freeze the divisor.</strong> Store the rate that applied at
+            signing on the contract and display against that forever. The count matches
+            the contract exactly. You absorb the FX and model-mix risk.<br />
+            <strong>2. Sell money.</strong> Put credits in the contract instead of
+            operations, and show a balance. Honest, trivially correct, and a harder
+            sell.<br />
+            <strong>3. Sell operations properly.</strong> Charge a flat rate per
+            operation regardless of model and eat the variance across your customer
+            base, like an insurer.
+          </p>
+          <p>
+            What you cannot do is sell a fixed operation count, price per model, bill in
+            a second currency, and expect the displayed number to match the contract.
+            That is three variables and one equation.
+          </p>
+        </div>
+      </section>
+
+      <section id="warstories">
+        <div class="label">[ <b>09</b> — From production ]</div>
+        <h2>What actually broke</h2>
+        <p>
+          Everything above is the design I'd build now. It reads clean because it was
+          expensive. Four things went wrong on the way, and each one maps to a rule in
+          this guide.
+        </p>
+
+        <div class="callout">
+          <span class="tag">1 — A rate field that behaved like a divisor</span>
+          <p>
+            Entitlement was stored as a contracted operation count plus a per-account
+            rate, typed into a free-text field on an internal form. Available operations
+            were <code>count / rate</code>. The field was labelled like a price. Enter
+            <code>0.1</code> where <code>1</code> was intended and the account silently
+            gets ten times its allocation.
+          </p>
+          <p>
+            Nobody ever typed "give this customer 10×" — they typed a price. The UI
+            displayed the contracted number, never the derived one, so the two never
+            visibly disagreed. Some accounts drew 2–10× what they'd paid for.
+            <strong>No screen anywhere rendered the number that decided it.</strong>
+          </p>
+        </div>
+
+        <div class="callout">
+          <span class="tag">2 — The same field, in the other direction</span>
+          <p>
+            On accounts billed in USD the same field was sometimes set to
+            <code>1</code> — meaning one dollar per operation, orders of magnitude above
+            actual cost. It stayed invisible while the free pool lasted, because nothing
+            was drawn from the wallet. The moment a pool ran dry, the account started
+            paying a dollar for a fraction-of-a-cent call.
+          </p>
+          <p>
+            One badly-scoped field produced both failure modes at once. That is what
+            "never let a human type a rate" is really about.
+          </p>
+        </div>
+
+        <div class="callout">
+          <span class="tag">3 — A migration that inherited the bug</span>
+          <p>
+            Translating the old model into the money-denominated one meant computing
+            <code>ops × rate</code> per account — using the same wrong rates. Every
+            distortion carried straight across, now baked into a currency balance where
+            it was harder to spot.
+          </p>
+          <p>
+            The fix was a full audit: recompute every migrated pool from the central rate
+            card and normalise. Manual, slow, and entirely the cost of not having had a
+            rate card in the first place. <strong>Migrate from the corrected source, not
+            from the field you're replacing.</strong>
+          </p>
+        </div>
+
+        <div class="callout">
+          <span class="tag">4 — A time constant that was right in one country</span>
+          <p>
+            A credit job had the start of the billing day hardcoded to a fixed UTC
+            offset — exactly midnight in the market it was written for, and wrong
+            everywhere else. Non-local markets lost most of a billable day. Separately, a
+            daily cutoff a few hours short of the boundary was dropping around 12.5% of
+            one channel's billing revenue outright.
+          </p>
+          <p>
+            Both are the same mistake: a day boundary computed in more than one place,
+            by more than one person, from a constant instead of a helper.
+            <a href="/writing/hardcoded-midnight/">Longer version here</a>.
+          </p>
+        </div>
+
+        <p>
+          The pattern across all four: <strong>usage billing fails without erroring.</strong>
+          Nothing 500s. Credits get granted, invoices generate, and every number is
+          internally consistent with every other number. The system is confidently
+          wrong, which is the only kind of wrong that survives in a billing system for
+          long enough to matter.
         </p>
         <p>
-          There are three honest ways out, and all of them are somebody else's decision: fix the
-          conversion rate for the life of the contract, sell in the currency you bill in, or sell an
-          amount instead of a count. Engineering cannot repair this downstream — it can only display
-          it accurately and raise it early.
+          Which is why the most valuable thing we built wasn't the rate card or the
+          waterfall — it was the dashboard that put usage and charges side by side per
+          account. It didn't fix anything. It just made the disagreements visible, and
+          everything else followed from being able to see them.
         </p>
       </section>
 
-      <section>
-        <div class="label">[ <b>10</b> — Show everything ]</div>
-        <h2>More metrics means more questions, and that is the point</h2>
+      <section id="checklist">
+        <div class="label">[ <b>10</b> — Reference ]</div>
+        <h2>The checklist</h2>
         <p>
-          The change that mattered most was not the rate card. It was the dashboard.
+          If you're building this now, in order:
         </p>
-        <p>
-          Two views, deliberately fed from different sources. One reads billing records and answers
-          <em>what did we charge</em>. The other reads raw usage and answers <em>what did they
-          use</em>. Keeping them separate is what makes them useful: when they disagree, the
-          disagreement is the finding.
-        </p>
+        <ul>
+          <li>
+            <strong>Store money, present operations.</strong> One currency amount is the
+            source of truth. Both directions are derived and both are recomputable.
+          </li>
+          <li>
+            <strong>One versioned rate card</strong> keyed on
+            <code>(tier, country, usage_type)</code>, with a country fallback, old
+            versions retained, and a <code>rate_at(date)</code> lookup.
+          </li>
+          <li>
+            <strong>Markup is its own field</strong> with its own history. Base rate
+            stays equal to cost.
+          </li>
+          <li>
+            <strong>No per-account rate entry.</strong> Anywhere. If someone needs a
+            special price, that's a markup percentage with an audit row.
+          </li>
+          <li>
+            <strong>Six fields on every usage event</strong>, with the billable flag
+            required rather than optional.
+          </li>
+          <li>
+            <strong>Count what you couldn't price</strong> and put it on a dashboard in
+            money. Unpriceable usage is a bug with a price tag, not a rounding error.
+          </li>
+          <li>
+            <strong>Free credits are a balance.</strong> Waterfall into the wallet,
+            atomic decrements, ledger entries for the free portion too.
+          </li>
+          <li>
+            <strong>Bill nightly, never in the request path.</strong> Guard against
+            double runs by querying the ledger before writing to it.
+          </li>
+          <li>
+            <strong>Stamp billing events with the date they cover.</strong> One join key
+            between usage and charges.
+          </li>
+          <li>
+            <strong>One day-boundary helper</strong>, used by the job and every query.
+            No second implementation of "yesterday".
+          </li>
+          <li>
+            <strong>Decide how you'll display entitlement</strong> — frozen divisor,
+            money, or flat rate — before the first contract is signed.
+          </li>
+          <li>
+            <strong>Build the reconciliation view early.</strong> Usage and charges, per
+            account, side by side. It's how you find out you were wrong.
+          </li>
+        </ul>
 
-        <figure class="fig">
-          <div class="fig-scroll">
-            <div class="bars">
-              <div class="bar-row">
-                <div class="bar-key">billed</div>
-                <div class="bar-track"><div class="bar-fill ok" style="width:74%"></div></div>
-                <div class="bar-val">charged</div>
-              </div>
-              <div class="bar-row">
-                <div class="bar-key">given away</div>
-                <div class="bar-track"><div class="bar-fill warn" style="width:18%"></div></div>
-                <div class="bar-val">priced, free</div>
-              </div>
-              <div class="bar-row">
-                <div class="bar-key">dropped</div>
-                <div class="bar-track"><div class="bar-fill bad" style="width:8%"></div></div>
-                <div class="bar-val">unbillable</div>
-              </div>
-            </div>
-          </div>
-          <figcaption class="cap">
-            <b>Give the third bar a name and a column.</b> Usage that arrived without the fields
-            needed to price it is revenue leaving quietly. It should be as visible as the revenue
-            that arrived.
-          </figcaption>
-        </figure>
-
-        <p>
-          Every metric we exposed generated questions. Why is that account's voice spend triple last
-          month. Why does this feature cost more than the one beside it. Why is there a gap between
-          used and charged. Each question was answerable, and answering it hardened something — a
-          missing field, a wrong weight, an account on the wrong tier.
-        </p>
         <blockquote>
           <p>
-            "We can't show that easily" is never an acceptable answer about a number that decides
-            what someone pays. It means the number exists and nobody can check it — which is exactly
-            the condition the original bug needed in order to survive.
+            Metering is an events problem. Billing is a units problem wearing an events
+            problem's clothes.
           </p>
         </blockquote>
-        <p>
-          Instrumentation is not overhead you add once the system works. On a billing system it
-          <em>is</em> the system working. It is the only mechanism by which anyone finds out that the
-          arithmetic has quietly stopped being true.
-        </p>
-      </section>
-
-      <section>
-        <div class="label">[ <b>11</b> — Checklist ]</div>
-        <h2>What I'd insist on next time</h2>
-        <table>
-          <tr>
-            <th style="width:38%">Decision</th>
-            <th>Why</th>
-          </tr>
-          <tr>
-            <td><strong>Store money, not counts</strong></td>
-            <td>A currency balance survives rate changes. A count re-prices itself silently.</td>
-          </tr>
-          <tr>
-            <td><strong>Settle the contract unit first</strong></td>
-            <td>Selling a count and storing an amount commits you to a conversion forever. Fine — but decide it deliberately, not by accident.</td>
-          </tr>
-          <tr>
-            <td><strong>One rate card, versioned, no per-customer prices</strong></td>
-            <td>A price that can be typed per account will be typed wrong, and there will be nowhere single to look.</td>
-          </tr>
-          <tr>
-            <td><strong>Margin separate from cost</strong></td>
-            <td>Otherwise "are we profitable on this account" needs archaeology.</td>
-          </tr>
-          <tr>
-            <td><strong>Validate usage events at emit</strong></td>
-            <td>Downstream can only guess or drop, and dropping is silent.</td>
-          </tr>
-          <tr>
-            <td><strong>Tag billing records with the day they bill</strong></td>
-            <td>Never join reporting on the write timestamp. The clocks are twelve hours apart.</td>
-          </tr>
-          <tr>
-            <td><strong>Provision credits in the step that rolls the cycle</strong></td>
-            <td>Anything left as a manual monthly chore is a future outage with a date on it.</td>
-          </tr>
-          <tr>
-            <td><strong>Render every number that touches money</strong></td>
-            <td>Including the derived ones. Especially the derived ones.</td>
-          </tr>
-        </table>
-        <p>
-          None of this is exotic. It is a rate table, a nightly aggregate, a waterfall and two
-          dashboards. What makes it reliable is not sophistication — it is that every number in it
-          can be seen by somebody who is allowed to ask why.
-        </p>
       </section>
 
       <footer>

@@ -117,11 +117,6 @@
             class="hidden md:flex items-center gap-7 text-[13px] tracking-wide"
           >
             <a
-              href="/#work"
-              class="nav-link"
-              >Work</a
-            >
-            <a
               href="/#experience"
               class="nav-link"
               >CV</a
@@ -184,7 +179,6 @@
       </div>
       <div class="nav-panel" id="nav-panel" hidden>
         <div class="shell">
-          <a href="/#work">Work</a>
           <a href="/#experience">CV</a>
           <a href="/#projects">Open source</a>
           <a href="/writing/">Writing</a>
@@ -238,6 +232,32 @@
 
         <div class="shell">
           <div class="flex flex-col gap-6">
+            <!-- Article: high-throughput-analytics -->
+            <a
+              href="/writing/high-throughput-analytics/"
+              class="article-card reveal-item fade-up"
+            >
+              <div class="flex items-center gap-3 mb-3 flex-wrap">
+                <span class="article-meta">Guide</span>
+                <span class="article-meta">·</span>
+                <span class="article-meta">Analytics</span>
+                <span class="article-meta">·</span>
+                <span class="article-meta">11 min read</span>
+                <span class="article-meta">·</span>
+                <time class="article-meta" datetime="2026-08">August 2026</time>
+              </div>
+              <h2
+                class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
+              >
+                How to show analytics for a high-throughput system
+              </h2>
+              <p class="text-neutral-400 text-sm leading-relaxed">
+                Instant and fresh at the same time. Materialise the numbers, serve the
+                saved copy first, refresh only what's stale, and tier the recompute by
+                what each screen needs. 20s to 200ms at double the page size.
+              </p>
+            </a>
+
             <!-- Article: one-pipeline-not-four -->
             <a
               href="/writing/one-pipeline-not-four/"
@@ -279,11 +299,13 @@
               <h2
                 class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
               >
-                Running Pub/Sub in a microservice system
+                How to create a consumer for all your queues
               </h2>
               <p class="text-neutral-400 text-sm leading-relaxed">
-                The lease model, flow control, backpressure, idempotency and dead-letter
-                policy — and why adding consumers sometimes makes a backlog worse.
+                Throughput is workers × batch ÷ cycle — and the three factors cost
+                wildly different amounts. When to raise batch size, when to add workers,
+                and why a webhook forwarder and a fan-out writer must never share a
+                config.
               </p>
             </a>
 
@@ -302,12 +324,12 @@
               <h2
                 class="font-display text-2xl md:text-3xl font-bold text-white mb-3 leading-tight"
               >
-                How to bill AI usage
+                How to bill AI usage without making a loss
               </h2>
               <p class="text-neutral-400 text-sm leading-relaxed">
-                Metering AI is easy. Billing it correctly is a unit problem, a
-                clock problem and a visibility problem — a working design, and
-                the failure modes that shaped it.
+                Store money, show operations, and never let anyone type a rate into a
+                form. The design I'd build again — rate cards, credit waterfalls, the
+                two clocks — plus the four things that broke on the way.
               </p>
             </a>
 

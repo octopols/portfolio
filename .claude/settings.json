@@ -4,7 +4,8 @@
       "Bash(python3 -c ' *)",
       "Bash(python3 -c \"import shutil; print\\('chrome:', shutil.which\\('google-chrome'\\) or shutil.which\\('chromium'\\) or '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'\\)\")",
       "Bash(curl -s https://hirnaymay.com/)",
-      "Bash(curl -s -o /dev/null -w \"http %{http_code}\\\\n\" https://hirnaymay.com/track/)"
+      "Bash(curl -s -o /dev/null -w \"http %{http_code}\\\\n\" https://hirnaymay.com/track/)",
+      "Bash(npm run *)"
     ]
   }
 }

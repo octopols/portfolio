@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Running Pub/Sub in a microservice system — Hirnaymay Bhaskar</title>
+    <title>How to create a consumer for all your queues — Hirnaymay Bhaskar</title>
     <meta
       name="description"
-      content="A working guide to Google Cloud Pub/Sub between services: the lease model, flow control, backpressure, idempotency, dead-letter policy, and which metric to autoscale on. The defaults are tuned for a fast handler, and yours probably isn't one."
+      content="Sizing a pull consumer per queue: throughput is workers x batch / cycle, and the three factors cost wildly different amounts. When to raise batch size, when to add workers, why a webhook forwarder and a fan-out writer must never share a config."
     />
     <link rel="canonical" href="https://hirnaymay.com/writing/pubsub-backpressure/" />
 
@@ -17,10 +17,10 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Hirnaymay Bhaskar — backend engineer, Bengaluru. Messaging, billing and event infrastructure at BIK.AI." />
     <meta property="og:url" content="https://hirnaymay.com/writing/pubsub-backpressure/" />
-    <meta property="og:title" content="Running Pub/Sub in a microservice system" />
+    <meta property="og:title" content="How to create a consumer for all your queues" />
     <meta
       property="og:description"
-      content="The lease model, flow control, backpressure, idempotency and dead-letter policy — and why adding consumers sometimes makes a backlog worse."
+      content="Throughput is workers x batch / cycle. The three factors are interchangeable for throughput and wildly different in cost — which decides every consumer you size."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://hirnaymay.com/assets/images/og-image.png" />
@@ -198,7 +198,6 @@
       <nav>
         <a href="/" class="mark">Hirnaymay Bhaskar</a>
         <div class="navlinks">
-          <a href="/#work">Work</a>
           <a href="/#experience">CV</a>
           <a href="/#projects">Open source</a>
           <a href="/writing/">Writing</a>
@@ -208,85 +207,285 @@
 
       <header class="hero">
         <div class="kicker">Distributed systems · Guide · <time datetime="2026-08">August 2026</time></div>
-        <h1>Running Pub/Sub in a microservice system</h1>
+        <h1>How to create a consumer for all your queues</h1>
         <p class="standfirst">
-          Publishing is the easy half. Everything difficult about Pub/Sub lives on the
-          subscriber side, in a lease model most teams never configure — and the
-          defaults assume a handler far faster than yours.
+          You split work across queues so the slow stuff can't block the fast stuff.
+          Then you point one consumer service at all of them with identical settings
+          and quietly undo the entire point. Here's how to size each one, and which
+          knob to actually turn.
         </p>
 
         <nav class="toc" aria-label="Contents">
           <h2>Contents</h2>
           <ol>
-            <li><a href="#semantics">What at-least-once actually costs you</a></li>
-            <li><a href="#lease">The lease model</a></li>
-            <li><a href="#flow-control">Flow control: sizing what you hold</a></li>
-            <li><a href="#backpressure">Backpressure: who sets the pace</a></li>
-            <li><a href="#amplification">Why adding consumers can make it worse</a></li>
-            <li><a href="#autoscaling">Autoscaling on a signal that isn't lying</a></li>
-            <li><a href="#idempotency">Idempotency, ordering and dead letters</a></li>
+            <li><a href="#why">Separate queues exist to have separate rates</a></li>
+            <li><a href="#identity">The one equation</a></li>
+            <li><a href="#knobs">Three knobs, three very different prices</a></li>
+            <li><a href="#classify">Sizing by what processing costs</a></li>
+            <li><a href="#lease">The ack deadline is a lease, not a timeout</a></li>
+            <li><a href="#backoff">Back off when idle, floor when busy</a></li>
+            <li><a href="#ceiling">The downstream ceiling</a></li>
+            <li><a href="#autoscaling">What to autoscale on</a></li>
+            <li><a href="#warstory">What we ran into</a></li>
             <li><a href="#defaults">A starting configuration</a></li>
           </ol>
         </nav>
       </header>
 
-      <section id="semantics">
-        <div class="label">[ <b>01</b> — Delivery semantics ]</div>
-        <h2>What at-least-once actually costs you</h2>
+      <section id="why">
+        <div class="label">[ <b>01</b> — Premise ]</div>
+        <h2>Separate queues exist to have separate rates</h2>
         <p>
-          Pub/Sub is at-least-once by default. Not sometimes, not only under failure —
-          by design. A message you have already processed can arrive again, at any time,
-          on any consumer, and the system considers that correct behaviour.
+          Say you have four kinds of background work. Forwarding webhooks to customer
+          endpoints. Updating user properties across a search index. Sending campaign
+          messages. Reindexing search documents. Somebody sensibly gives each one its
+          own queue, because a slow reindex shouldn't stall a webhook.
         </p>
         <p>
-          Exactly-once delivery is available as a subscription setting, and it is
-          genuinely useful, but it is narrower than the name suggests: it applies within
-          an acknowledgement window on a single subscription, it constrains where your
-          subscribers can run, and it costs throughput. It also does not make your side
-          effects safe. If your handler charges a card or sends an email, an
-          exactly-once subscription does not save you — the crash between "sent" and
-          "acked" still happens.
+          Then one service consumes all four, and because it's the same code path, they
+          all get the same worker count, the same batch size, the same pacing. Congratulations
+          — you've built one queue wearing four hats. The isolation is real at the
+          broker and imaginary in the consumer.
         </p>
 
-        <blockquote>
+        <div class="callout good">
+          <span class="tag">The whole idea</span>
           <p>
-            The first design decision is not which flags to set. It is accepting that
-            every consumer you write must be safe to run twice on the same message.
+            <strong>A queue's consumer config should be a function of what processing
+            one message costs.</strong> Not of what the other queues are doing, and
+            definitely not of a shared default. Two queues with genuinely different
+            per-message cost that share a config means one of them is wrong — usually
+            both.
           </p>
-        </blockquote>
+        </div>
 
         <p>
-          Everything else in this guide assumes that. Section 07 covers how to get it.
-          If you take one thing away, take that one — it is the difference between a
-          queue that degrades gracefully under load and one that corrupts data whenever
-          it is busy.
+          A webhook forwarder does one outbound HTTP call and acks. It's almost pure
+          I/O wait, the work is trivially parallel, and the sink is somebody else's
+          server. That queue wants big batches and a fast cadence.
+        </p>
+        <p>
+          A property updater that writes to a search cluster, invalidates a cache and
+          touches a relational row does three round trips and some CPU, into
+          infrastructure you own and can overwhelm. That queue wants to go slowly on
+          purpose.
+        </p>
+        <p>
+          Same broker, same service, same library. Configurations that should differ by
+          more than an order of magnitude.
         </p>
       </section>
 
-      <section id="lease">
-        <div class="label">[ <b>02</b> — The lease model ]</div>
-        <h2>The ack deadline is a lease, not a timeout</h2>
+      <section id="identity">
+        <div class="label">[ <b>02</b> — The maths ]</div>
+        <h2>The one equation</h2>
         <p>
-          When a subscriber receives a message it takes out a lease on it. The
-          <em>ack deadline</em> is how long that lease lasts: acknowledge within it and
-          the message is done; miss it and Pub/Sub assumes your consumer died and hands
-          the message to someone else.
-        </p>
-        <p>
-          The default is 10 seconds, and the configurable range is 10 to 600. Almost
-          nobody's handler finishes in 10 seconds, which is why the client libraries
-          paper over it: a lease-management thread calls
-          <code>modifyAckDeadline</code> in the background, extending the lease while
-          your handler runs, up to a maximum total extension you can also configure.
-        </p>
-        <p>
-          That works well, and it hides the failure mode. Lease extension renews the
-          messages your process is <em>holding</em> — including the ones sitting in the
-          client's internal buffer waiting for a worker slot that isn't free. A message
-          can burn its entire lease without your code ever seeing it.
+          Every pull-based consumer I've built reduces to the same identity. Write it
+          on the wall before you tune anything:
         </p>
 
-        <figure class="fig">
+        <pre><code>throughput  =  workers &times; batch_size &divide; cycle_time</code></pre>
+
+        <p>
+          Where a <strong>worker</strong> is one independent pull&rarr;process&rarr;ack
+          loop with its own connection, <strong>batch size</strong> is how many
+          messages a single pull asks for, and <strong>cycle time</strong> is how long
+          one loop takes — your deliberate pacing delay plus however long processing
+          actually took.
+        </p>
+        <p>
+          Five workers pulling 50 messages with a one-second cycle is 250/s. So is one
+          worker pulling 250 with the same cycle. So is ten workers pulling 25. The
+          equation does not care which factor you change.
+        </p>
+        <p>
+          <strong>Your infrastructure bill cares enormously.</strong> That's the part
+          nobody tells you, and it's the rest of this article.
+        </p>
+      </section>
+
+      <section id="knobs">
+        <div class="label">[ <b>03</b> — Cost ]</div>
+        <h2>Three knobs, three very different prices</h2>
+        <p>
+          The three factors are interchangeable for throughput and wildly different in
+          what they cost you. In rough order of cheapness:
+        </p>
+
+        <h3>Batch size is nearly free</h3>
+        <p>
+          One pull that returns 250 messages costs about the same as one that returns
+          50. Same round trip, same connection, marginally more bytes. If your work is
+          cheap per message, raising batch size is the highest-leverage change
+          available and it is almost always the one people reach for last.
+        </p>
+
+        <h3>Cycle time is linear — in workers</h3>
+        <p>
+          Halving the delay doubles how many pull requests you issue. The catch is the
+          rate of those requests is <code>workers &divide; delay</code>, so the cost of
+          going faster is multiplied by however many workers you have. Cheap with two
+          workers. Expensive with thirty.
+        </p>
+
+        <h3>Workers are the expensive one</h3>
+        <p>
+          Each worker is a connection, and a connection is not free while it's idle.
+          Keepalives, TLS state, load-balancer bookkeeping, a slot in the client's
+          internal machinery — all charged per worker, all the time, whether messages
+          are arriving or not.
+        </p>
+
+        <div class="callout good">
+          <span class="tag">The result worth remembering</span>
+          <p>
+            Hold throughput constant and rearrange. Total pull rate is
+            <code>workers &divide; delay</code>, so the <em>variable</em> cost — the
+            requests, the decoding, the actual processing — is identical either way.
+            The only thing that changes is fixed per-worker overhead.
+          </p>
+          <p>
+            <strong>Fewer workers pulling faster beats more workers pulling slower, at
+            the same throughput.</strong> Every time.
+          </p>
+        </div>
+
+        <div class="callout">
+          <span class="tag">The trap</span>
+          <p>
+            That result implies a tuning order, and getting it backwards is how you make
+            things worse while "optimising". <strong>Lowering the delay on its own
+            raises CPU.</strong> You've increased <code>workers &divide; delay</code>
+            without reducing the worker count, so you're paying for more pulls and the
+            same overhead.
+          </p>
+          <p>
+            The saving only materialises when you lower the delay <em>and</em> cut
+            workers together. Do the first half alone and you'll watch the service
+            scale out and conclude, wrongly, that it needed more capacity.
+          </p>
+        </div>
+
+        <h3>So when do you actually add workers?</h3>
+        <p>
+          One reason, and it isn't throughput: <strong>when processing blocks and you
+          need overlap.</strong> A single worker is a serial loop — while it's waiting
+          on an HTTP call it isn't pulling. A second worker can be pulling during the
+          first one's dead time.
+        </p>
+        <p>
+          Which gives a rule you can apply without a profiler:
+        </p>
+        <ul>
+          <li>
+            <strong>Need more messages moved, and processing is cheap?</strong> Raise
+            batch size. Then shorten the cycle. Add workers last.
+          </li>
+          <li>
+            <strong>Need more things happening at once because each message waits on
+            something?</strong> That's what workers are for. Two is usually plenty —
+            one pulls while one processes.
+          </li>
+          <li>
+            <strong>Barely any traffic?</strong> One worker. A queue that gets forty
+            messages an hour does not need five connections standing by.
+          </li>
+        </ul>
+      </section>
+
+      <section id="classify">
+        <div class="label">[ <b>04</b> — Sizing ]</div>
+        <h2>Sizing by what processing costs</h2>
+        <p>
+          Before you set a single number, sort every queue into one of three shapes.
+          What matters is the cost of handling <em>one</em> message and who absorbs it.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Shape</th>
+                  <th>What one message does</th>
+                  <th>Batch</th>
+                  <th>Workers</th>
+                  <th>Cycle</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Forwarder</strong></td>
+                  <td class="mono">one outbound call, ack</td>
+                  <td class="mono">large — 250+</td>
+                  <td class="mono">2</td>
+                  <td class="mono">fast — ~1s</td>
+                </tr>
+                <tr>
+                  <td><strong>Writer</strong></td>
+                  <td class="mono">1–2 writes you own</td>
+                  <td class="mono">medium — ~50</td>
+                  <td class="mono">2</td>
+                  <td class="mono">moderate</td>
+                </tr>
+                <tr>
+                  <td><strong>Fan-out</strong></td>
+                  <td class="mono">several systems, CPU</td>
+                  <td class="mono">small — 10–50</td>
+                  <td class="mono">1–2</td>
+                  <td class="mono">slow, deliberately</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption class="cap">
+            <b>Three shapes, not four queues.</b> Two queues doing the same shape of
+            work can share a config. Two doing different shapes cannot, however similar
+            the messages look.
+          </figcaption>
+        </div>
+
+        <p>
+          <strong>Forwarders</strong> are the ones people under-configure. Processing is
+          a single HTTP call — mostly waiting, no CPU worth mentioning, and the thing
+          you might overwhelm belongs to someone else and has its own limits and its own
+          retry policy. Pull 250 at a time and keep the cadence tight. A forwarder
+          throttled to 50 messages a second is just a queue that grows.
+        </p>
+        <p>
+          <strong>Fan-outs</strong> are the ones people over-configure. Each message
+          means a search write, a cache invalidation, a row update. Ten workers pulling
+          200 apiece will find the write ceiling of your own cluster in about four
+          seconds, and then everything you're doing turns into timeouts and
+          redeliveries. Go slowly here <em>on purpose</em>. It is not underperformance,
+          it is the queue doing its job.
+        </p>
+
+        <div class="callout">
+          <span class="tag">Size to measured peak, not to a ceiling</span>
+          <p>
+            Work out what each queue's real busy-hour rate looks like and size for that
+            with headroom. Not for the theoretical maximum your current config could
+            sustain — that number is an artefact of settings you're about to change, and
+            treating it as a requirement is how you end up permanently over-provisioned.
+          </p>
+        </div>
+      </section>
+
+      <section id="lease">
+        <div class="label">[ <b>05</b> — Semantics ]</div>
+        <h2>The ack deadline is a lease, not a timeout</h2>
+        <p>
+          One piece of background before the tuning makes sense, because every capacity
+          mistake eventually shows up here.
+        </p>
+        <p>
+          When a message is handed to you, the broker starts a clock. Ack before it
+          expires and the message is done. Miss it and the broker assumes you died and
+          gives the message to somebody else — while you are still working on it. It is
+          a <strong>lease on exclusive ownership</strong>, not a request timeout.
+        </p>
+<figure class="fig">
           <div class="fig-scroll">
             <div class="lease">
               <div class="lease-row">
@@ -312,144 +511,105 @@
             consumer has already started the same work.
           </figcaption>
         </figure>
+        <p>
+          This is why holding more messages than you can process is actively harmful
+          rather than merely wasteful. The clock is running on every message you're
+          holding, not just the one you're working on. Pull 250 messages into a worker
+          that handles two per second and the tail of that batch is guaranteed to be
+          redelivered before you reach it.
+        </p>
+        <p>
+          Which gives the real constraint on batch size:
+        </p>
+
+        <pre><code>batch_size  &times;  time_per_message  &lt;  ack_deadline</code></pre>
 
         <p>
-          So derive the deadline from measurement, not taste. Take the p99 of your
-          handler, add headroom, set that. Too short and you manufacture redeliveries
-          for work that was going to succeed. Too long and a genuinely dead consumer
-          holds its messages hostage for the full deadline before anyone retries them.
+          A forwarder at 20ms per message can safely hold hundreds. A fan-out at 400ms
+          per message cannot hold more than a couple of dozen. Same broker, same
+          deadline — and the answer differs by 10×. That inequality is the actual reason
+          the config table above looks the way it does.
+        </p>
+        <p>
+          If you genuinely need longer, extend the lease while you work rather than
+          setting a huge global deadline. A long deadline is the wrong fix: it also
+          means a message from a worker that really did crash sits undelivered for that
+          entire window.
         </p>
       </section>
 
-      <section id="flow-control">
-        <div class="label">[ <b>03</b> — Flow control ]</div>
-        <h2>Size what you hold, not what you can receive</h2>
+      <section id="backoff">
+        <div class="label">[ <b>06</b> — Pacing ]</div>
+        <h2>Back off when idle, floor when busy</h2>
         <p>
-          Flow control caps how much a single subscriber client leases at once:
-          <code>maxOutstandingMessages</code> and <code>maxOutstandingBytes</code>. These
-          are the most consequential settings on the subscriber and the ones most often
-          left alone. The defaults are generous — the Node client will hold a thousand
-          messages — because they are tuned for a handler that returns in milliseconds.
+          A fixed delay is wrong in both directions. Tight enough for a backlog, and
+          you're hammering an empty queue all night. Relaxed enough to be polite when
+          idle, and you're crawling when it matters.
         </p>
         <p>
-          A third setting matters as much and gets noticed less.
-          <code>allowExcessMessages</code> lets the client accept a delivery that pushes
-          it past your limit rather than deferring it. Left on, it quietly reintroduces
-          the problem you just configured away. Turn it off.
+          So make it adaptive, with two rules:
         </p>
+        <ul>
+          <li>
+            <strong>Returned far fewer messages than you asked for?</strong> The queue is
+            quiet. Add to the delay, up to a ceiling of a few seconds.
+          </li>
+          <li>
+            <strong>Filling your batches?</strong> There's a backlog. Walk the delay back
+            down toward a floor.
+          </li>
+        </ul>
 
-        <h3>Sizing it</h3>
-        <p>
-          Little's Law gives you the number. What a process can have in flight is its
-          concurrency multiplied by how long each item takes:
-        </p>
-
-        <pre><code><span class="tok-c">// What one process can actually be working on at once.</span>
-in_flight = worker_concurrency × p99_handler_seconds
-
-<span class="tok-c">// Lease a little more than that, so workers never starve —</span>
-<span class="tok-c">// but not so much that the surplus ages out of its lease.</span>
-maxOutstandingMessages ≈ in_flight × 1.5</code></pre>
-
-        <p>
-          The multiplier is a buffer, not an ambition. Much above 2× you are holding
-          messages whose leases will expire before a worker reaches them, and you have
-          rebuilt the failure from section 02 with extra steps.
-        </p>
-
-        <div class="callout good">
-          <span class="tag">Rule of thumb</span>
+        <div class="callout">
+          <span class="tag">Make the floor a real number</span>
           <p>
-            <strong>Never lease what you cannot finish inside the deadline.</strong> A
-            message left in the broker is a message another consumer can take. A message
-            buffered in your client is a message nobody can take — and it is ageing.
+            The floor is the part to be careful with, because it's easy to write a
+            ramp-down that silently does nothing — clamping against the current value
+            instead of a constant, so the delay can only ever go up. Everything looks
+            correct in code review and in tests, because the ramp-<em>up</em> works fine.
+          </p>
+          <p>
+            The failure mode is nasty: after one quiet spell the consumer pins at its
+            maximum delay and <strong>stays there through the next backlog</strong>. The
+            queue is full, the consumer is idling on purpose, and there's no error
+            anywhere. A quick sanity check — log the delay per subscription and confirm
+            it comes back down under load — costs nothing and catches it.
           </p>
         </div>
       </section>
 
-      <section id="backpressure">
-        <div class="label">[ <b>04</b> — Backpressure ]</div>
-        <h2>The slowest dependency should set the pace</h2>
+      <section id="ceiling">
+        <div class="label">[ <b>07</b> — Limits ]</div>
+        <h2>The downstream ceiling</h2>
         <p>
-          Flow control bounds what the client holds. It says nothing about what your
-          handler does with it. If the handler spawns unbounded concurrent work — a
-          database write, an HTTP call to a service with its own limits — the puller
-          happily accepts messages the downstream cannot absorb, and the lease clock
-          starts on all of them at once.
+          There is a point past which pull capacity buys you nothing, and it isn't in
+          your consumer. It's in whatever the consumer writes to.
         </p>
         <p>
-          In a microservice system this is the normal case, not the exception. The
-          consumer is rarely the bottleneck. It is a thin thing in front of a database,
-          a third-party API, or another service with its own capacity and its own
-          opinion about how fast you may go.
-        </p>
-
-        <pre><code><span class="tok-c">// Bound in-flight handler work so the downstream sets the rate.</span>
-<span class="tok-k">const</span> limit = pLimit(DOWNSTREAM_CONCURRENCY);
-
-subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt;
-  limit(() =&gt; <span class="tok-f">handle</span>(msg)),
-);</code></pre>
-
-        <p>
-          With both bounds in place, the queue is finally allowed to do the job a queue
-          exists for: hold work. Backlog depth becomes a signal about arrival rate rather
-          than a symptom of your own consumers misbehaving — which is what makes section
-          06 possible at all.
-        </p>
-      </section>
-
-      <section id="amplification">
-        <div class="label">[ <b>05</b> — Redelivery amplification ]</div>
-        <h2>Why adding consumers can make a backlog worse</h2>
-        <p>This is the part that surprises people, so it is worth doing carefully.</p>
-        <p>
-          Redelivered work is indistinguishable from new work. It takes a pull slot, a
-          worker, a database round-trip, and at the end of it the result may be
-          redundant. So the throughput that actually clears the backlog is not the
-          throughput you are paying for:
-        </p>
-
-        <pre><code>useful_throughput = completed_work / (1 + redelivery_rate)</code></pre>
-
-        <p>
-          Be precise about what this does and does not explain, because the obvious
-          reading of that formula is wrong. Read <code>completed_work</code> as
-          <code>n · k</code> — nodes times per-node rate — and the whole argument
-          collapses. Even with a redelivery rate <code>r</code> that climbs with
-          <code>n</code>, <code>n · k / (1 + r)</code> keeps rising as long as
-          <code>n</code> rises faster than <code>1 + r</code>. <strong>That is
-          diminishing returns, not regression.</strong> Scale-out would be wasteful and
-          it would still drain the queue. Nobody should call that "worse."
+          If a queue's handler writes to a search cluster, that cluster's sustainable
+          write rate is the ceiling on the whole pipeline. Configure the consumer to pull
+          three times that and you have not tripled throughput — you've tripled
+          concurrency against a saturated sink. Latency rises, handler time rises with
+          it, and handler time is exactly what the ack deadline is racing.
         </p>
         <p>
-          The reason it genuinely gets worse is the premise from the previous section:
-          <strong>your consumer is a thin thing in front of a shared downstream, and
-          that downstream has a finite capacity <code>C</code></strong>. Once the fleet
-          is big enough to saturate it, <code>C</code> — not <code>n · k</code> — is
-          what completes work. The numerator stops growing. Adding nodes cannot move it.
-        </p>
-        <p>
-          What adding nodes <em>can</em> still do is raise concurrency against that
-          dependency. Latency rises, handler time rises with it, and handler time is
-          exactly what the ack deadline is racing. Messages start crossing it, the
-          broker redelivers, and those redeliveries are served out of the same fixed
-          <code>C</code>. So the ceiling holds still while a larger and larger share of
-          it is spent doing work that has already been done:
+          Now the thing worth internalising, because it is the opposite of the intuition
+          that got you here. Past saturation the numerator in our equation stops being
+          <code>workers &times; batch</code> and becomes the sink's fixed capacity. Extra
+          workers cannot raise it. What they <em>can</em> do is push messages past their
+          deadline, so the broker redelivers them, and those redeliveries are served out
+          of the same fixed capacity:
         </p>
 
-        <pre><code>useful_throughput = C / (1 + r(n))     — C fixed, r rising</code></pre>
+        <pre><code>useful_throughput  =  C &divide; (1 + redelivery_rate)     &mdash; C fixed, r rising</code></pre>
 
         <p>
-          <strong>That expression falls monotonically in <code>n</code>.</strong> Every
-          node you add past saturation buys nothing and costs first-pass throughput. Add
-          enough of them and useful throughput drops below the arrival rate, at which
-          point the backlog is growing on more hardware than it was draining on. That is
-          the version of this that deserves the word "worse", and it is the version we
-          hit.
+          <strong>That falls as you add workers.</strong> Not diminishing returns —
+          actual regression. Every worker past saturation costs you first-pass
+          throughput, and add enough and useful throughput drops below the arrival rate.
+          The backlog is now growing on more hardware than it was draining on.
         </p>
-
-        <figure class="fig">
+<figure class="fig">
           <div class="fig-scroll">
             <div class="amp">
               <div class="amp-row">
@@ -498,203 +658,198 @@ subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt;
             hardware. <em>Illustrative shape, not measured data.</em>
           </figcaption>
         </figure>
-
-        <h3>The diagnostic</h3>
         <p>
-          One ratio separates the two cases, and the dashboard everyone watches hides it
-          completely. Messages processed per minute keeps climbing as you add nodes —
-          the fleet really is pulling and handling more — because that number counts
-          the repeats too:
+          This is why "the queue is backed up, add consumers" is a coin flip rather than
+          a fix. If you are genuinely under-provisioned it works. If you are at a
+          downstream ceiling it makes things worse, and the dashboard everyone watches —
+          messages processed per minute — <em>goes up</em> either way, because it counts
+          the repeats.
         </p>
 
         <div class="callout good">
-          <span class="tag">Plot this before you provision</span>
+          <span class="tag">The ratio that tells you which situation you're in</span>
           <p>
-            <strong>Acked messages per node per minute, against fleet size.</strong> Flat
-            means you are genuinely under-provisioned and scale-out is the right answer.
-            Sloping down means the nodes are interfering through something they share —
-            stop adding them and go find it.
-          </p>
-        </div>
-
-        <div class="callout case">
-          <span class="tag">Where I hit this</span>
-          <p>
-            Two subscriptions on a delivery path at work, carrying 1.26M messages of
-            combined backlog, with worst-case delivery delay at 2.4 hours. The standing
-            response had been consumers — 38 of them, on an autoscaler that rarely scaled
-            back down. Fixing flow control, ack deadlines and backpressure took the
-            backlog under 4K and worst-case delay to 94 seconds, and the whole scale-out
-            was retired. No capacity was added. The capacity had been there, being spent
-            twice.
+            <strong>Acked messages per worker per minute, plotted against worker
+            count.</strong> Flat means you're genuinely short of capacity and scaling out
+            will work. Sloping down means your workers are interfering through something
+            they share — stop adding them and go find it.
           </p>
         </div>
       </section>
 
       <section id="autoscaling">
-        <div class="label">[ <b>06</b> — Autoscaling ]</div>
-        <h2>Pick a signal that isn't polluted by your own output</h2>
+        <div class="label">[ <b>08</b> — Autoscaling ]</div>
+        <h2>What to autoscale on</h2>
         <p>
-          The obvious metric to scale a subscriber fleet on is
-          <code>num_undelivered_messages</code> — backlog depth. It is the standard
-          choice and it is fine when the backlog is exogenous.
+          Queue depth is the obvious signal and the wrong one. Redeliveries inflate
+          depth, so a consumer that's failing to ack in time produces exactly the signal
+          that provokes the autoscaler into adding more consumers — which produces more
+          redeliveries. The feedback loop runs in the wrong direction and it does so
+          confidently.
         </p>
         <p>
-          It is a trap when it isn't. <strong>A redelivered message is undelivered
-          again</strong>, so every duplicate your fleet generates is counted straight
-          back to the autoscaler as fresh demand. If your consumers are missing
-          deadlines, the number on the dashboard is not queue depth — it is queue depth
-          plus your fleet's own churn. Scaling up raises the churn, which raises the
-          metric, which authorises scaling up.
+          Better signals, in order of preference:
         </p>
+        <ul>
+          <li>
+            <strong>Oldest unacked message age.</strong> The closest thing to "are we
+            falling behind" that redeliveries can't fake. This is what your alerts should
+            watch too.
+          </li>
+          <li>
+            <strong>Acked-per-worker throughput.</strong> Scales on useful work rather
+            than on total attempts.
+          </li>
+          <li>
+            <strong>Downstream saturation</strong> — the write queue depth of whatever
+            you're writing into. If that's the ceiling, that's the thing to scale.
+          </li>
+        </ul>
         <p>
-          It also explains a symptom that otherwise looks like a bug in the autoscaler:
-          a fleet in this state can never scale <em>down</em>. Shrinking would reduce the
-          churn inflating the metric, but the metric has to fall first for shrinking to
-          be permitted.
-        </p>
-
-        <table>
-          <thead>
-            <tr><th>Signal</th><th>What it tells you</th><th>Use it when</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="mono">oldest_unacked<br />_message_age</td>
-              <td>Whether you are actually falling behind, in time.</td>
-              <td><strong>Default choice.</strong> Immune to redelivery inflation.</td>
-            </tr>
-            <tr>
-              <td class="mono">num_undelivered<br />_messages</td>
-              <td>How much is queued, plus everything circulating.</td>
-              <td>Only once you trust your consumers to hold their leases.</td>
-            </tr>
-            <tr>
-              <td class="mono">downstream<br />saturation</td>
-              <td>Whether more consumers could help at all.</td>
-              <td>When the bottleneck is a database or a third-party limit.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p>
-          The last row is the one people skip. If the constraint is a rate-limited
-          third-party API, no number of consumers changes your throughput. Scaling on
-          backlog will happily spend money proving that.
+          And cap the ceiling deliberately. An unbounded maximum on a consumer that
+          hits a downstream limit is a bill with no upper bound and no matching increase
+          in work completed.
         </p>
       </section>
 
-      <section id="idempotency">
-        <div class="label">[ <b>07</b> — Correctness ]</div>
-        <h2>Idempotency, ordering and dead letters</h2>
-
-        <h3>Idempotency</h3>
+      <section id="warstory">
+        <div class="label">[ <b>09</b> — From production ]</div>
+        <h2>What we ran into</h2>
         <p>
-          The cheapest version: give every message a stable business key, record the keys
-          you have completed, and check before acting. Not the Pub/Sub
-          <code>messageId</code> — a redelivery of the same logical event after a
-          publisher retry gets a new one. Use something from the payload that identifies
-          the work: an order id, an invoice period, a state transition.
-        </p>
-        <p>
-          Some handlers are naturally idempotent —
-          <code>SET status = 'shipped'</code> can run all day. Most are not, and the ones
-          that aren't tend to be the ones that spend money. Write the dedup table.
+          One service, seven subscriptions plus a handful of staging ones, all
+          configured the same because they'd been added one at a time and nobody had
+          revisited the shape.
         </p>
 
-        <h3>Ordering keys, and what they cost</h3>
-        <p>
-          Ordering keys guarantee that messages sharing a key are delivered in order.
-          They also serialise them: one key is processed by one subscriber at a time, so
-          your parallelism is bounded by your number of distinct keys, and one slow
-          message blocks everything behind it on that key.
-        </p>
-        <p>
-          Use them where order is genuinely part of correctness, key as narrowly as you
-          can — per entity, never per tenant — and expect throughput to look nothing like
-          the unordered case.
-        </p>
-
-        <h3>Dead letters</h3>
-        <p>
-          Configure a dead-letter topic with <code>maxDeliveryAttempts</code>. Without
-          one, a message your handler cannot process is immortal: it fails, it is
-          redelivered, it fails again, forever, consuming a lease and a worker each time.
-          A single poison message with a large payload can hold a meaningful fraction of
-          a subscriber's capacity indefinitely.
-        </p>
-
-        <div class="callout">
-          <span class="tag">Also worth doing</span>
+        <div class="callout case">
+          <span class="tag">36 connections on 0.6 of a core</span>
           <p>
-            Alert on the dead-letter topic having anything in it at all. A dead-letter
-            queue nobody reads is a folder where you keep your outages.
+            Five workers per subscription, nine subscriptions, one pod:
+            <strong>36 independent connections</strong> on a container sized at 616
+            millicores. The per-connection overhead alone was starving the networking
+            layer, and almost none of those workers were busy — several of those queues
+            handled a few dozen messages an hour.
           </p>
         </div>
+
+        <div class="callout case">
+          <span class="tag">A ramp-down that did nothing</span>
+          <p>
+            The adaptive delay clamped against its own current value rather than a
+            constant, so the ramp-down was a no-op. The ramp-<em>up</em> worked
+            perfectly. Any subscription that saw one quiet spell climbed to the 10-second
+            ceiling and stayed there — <strong>including through backlogs</strong>. Two
+            subscriptions had been fixed at some point; the other seven hadn't, which is
+            why they were the ones falling behind.
+          </p>
+        </div>
+
+        <div class="callout case">
+          <span class="tag">Fixing the delay made CPU worse</span>
+          <p>
+            Correcting the floor took those subscriptions from a 10-second cycle to one
+            second — a 10× increase in pull rate across 36 connections, with no reduction
+            in connections. CPU went up and the deployment scaled out. The fix was
+            right and incomplete: it was the first half of a change that only pays off
+            when you also cut workers.
+          </p>
+        </div>
+
+        <p>
+          So we sized each subscription to its actual shape instead of a shared default.
+          The webhook forwarder and the property updater — both cheap-per-message, both
+          already on a real one-second floor — went to large batches and two workers
+          each. The busy message paths kept two workers for pull/process overlap. The
+          genuinely quiet ones went to one.
+        </p>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr><th>Subscription shape</th><th>Workers before</th><th>Workers after</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>busy message paths (×3)</td><td class="mono">5 each</td><td class="mono">2 each</td></tr>
+                <tr><td>forwarder + property writer</td><td class="mono">4 each</td><td class="mono">2 each</td></tr>
+                <tr><td>low-volume (×2)</td><td class="mono">4–5 each</td><td class="mono">1 each</td></tr>
+                <tr><td>staging (×4)</td><td class="mono">1 each</td><td class="mono">1 each</td></tr>
+                <tr><td><strong>total connections</strong></td><td class="mono">36</td><td class="mono">~16</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption class="cap">
+            <b>Less than half the connections, same or better throughput.</b> Each worker
+            now does roughly ten times the work it did while pinned at a 10-second cycle,
+            so fewer of them clear more — and it fits in one pod, which is what keeps the
+            autoscaler at rest and the cost flat.
+          </figcaption>
+        </div>
+
+        <p>
+          The measured outcome on the two worst subscriptions: combined backlog from
+          1.26M messages to under 4K, average delivery delay from 2.4 hours to 94
+          seconds, peaks from 8 hours. <strong>No capacity was added.</strong> The
+          capacity had been there the whole time — it was being spent on redelivering
+          work we'd already done, from connections that were mostly asleep.
+        </p>
       </section>
 
       <section id="defaults">
-        <div class="label">[ <b>08</b> — Reference ]</div>
+        <div class="label">[ <b>10</b> — Reference ]</div>
         <h2>A starting configuration</h2>
         <p>
-          Not universal values — nothing here is. This is the set of decisions worth
-          making deliberately, with the reasoning attached, so you can derive your own.
+          Not universal values — there are none. A starting point that is wrong in
+          defensible directions, to be replaced by measurement.
         </p>
 
-        <pre><code><span class="tok-k">const</span> subscription = pubsub.subscription(name, {
-  flowControl: {
-    <span class="tok-c">// concurrency × p99 handler seconds × 1.5</span>
-    maxOutstandingMessages: <span class="tok-s">120</span>,
-    <span class="tok-c">// from your payload profile, not the default</span>
-    maxOutstandingBytes: <span class="tok-s">64</span> * <span class="tok-s">1024</span> * <span class="tok-s">1024</span>,
-    <span class="tok-c">// defer rather than over-accept</span>
-    allowExcessMessages: <span class="tok-s">false</span>,
-  },
-  <span class="tok-c">// measured p99 + headroom, not the 10s default</span>
-  ackDeadline: <span class="tok-s">60</span>,
-});
+        <div class="fig">
+          <div class="fig-scroll">
+            <table>
+              <thead>
+                <tr><th>Setting</th><th>Forwarder</th><th>Writer</th><th>Fan-out</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Workers</td><td class="mono">2</td><td class="mono">2</td><td class="mono">1–2</td></tr>
+                <tr><td>Batch size</td><td class="mono">250</td><td class="mono">50</td><td class="mono">10–25</td></tr>
+                <tr><td>Idle delay ceiling</td><td class="mono">5–10s</td><td class="mono">5–10s</td><td class="mono">5–10s</td></tr>
+                <tr><td>Busy delay floor</td><td class="mono">~1s</td><td class="mono">~1s</td><td class="mono">1–2s</td></tr>
+                <tr><td>In-flight cap</td><td class="mono">≈ batch</td><td class="mono">≈ batch</td><td class="mono">&lt; batch</td></tr>
+                <tr><td>Handler concurrency</td><td class="mono">bounded</td><td class="mono">bounded</td><td class="mono">bounded, low</td></tr>
+                <tr><td>Autoscale on</td><td class="mono">oldest unacked age</td><td class="mono">oldest unacked age</td><td class="mono">downstream saturation</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figcaption class="cap">
+            <b>Two workers is the default, not five.</b> Two gives you pull/process
+            overlap and survives one worker dying. Beyond that you're buying connections,
+            not throughput — unless you've measured a reason.
+          </figcaption>
+        </div>
 
-<span class="tok-c">// The downstream sets the pace, not the puller.</span>
-<span class="tok-k">const</span> limit = pLimit(DOWNSTREAM_CONCURRENCY);
-subscription.on(<span class="tok-s">"message"</span>, (msg) =&gt; limit(() =&gt; <span class="tok-f">handle</span>(msg)));</code></pre>
-
-        <table>
-          <thead>
-            <tr><th>Decision</th><th>Set it from</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><strong>Ack deadline</strong></td><td>Measured p99 handler latency, plus headroom.</td></tr>
-            <tr><td><strong>Outstanding messages</strong></td><td>Little's Law, then a 1.5× buffer. Not the default.</td></tr>
-            <tr><td><strong>Excess messages</strong></td><td>Off, always.</td></tr>
-            <tr><td><strong>Handler concurrency</strong></td><td>What the slowest downstream sustains.</td></tr>
-            <tr><td><strong>Autoscaling signal</strong></td><td>Oldest unacked age, or downstream saturation.</td></tr>
-            <tr><td><strong>Dead letter</strong></td><td>Always configured. Always alerted on.</td></tr>
-            <tr><td><strong>Idempotency</strong></td><td>A business key, not the message id.</td></tr>
-            <tr><td><strong>Ordering keys</strong></td><td>Only where order is correctness. Key per entity.</td></tr>
-          </tbody>
-        </table>
-
+        <h3>The order to tune in</h3>
+        <ol>
+          <li>Bound handler concurrency so the slowest dependency sets the pace.</li>
+          <li>Set batch size from <code>batch × time_per_message &lt; ack_deadline</code>.</li>
+          <li>Make the adaptive delay work in both directions, and verify the floor.</li>
+          <li>
+            <em>Then</em> set worker count — from measured concurrency need, not from
+            desired throughput.
+          </li>
+          <li>Autoscale on oldest unacked age, with a deliberate ceiling.</li>
+        </ol>
         <p>
-          The thread running through all of it: <strong>every one of these settings
-          limits how much work the system admits at once.</strong> None of them make it
-          faster. That is usually the point — throughput problems in a queue are more
-          often about work being done twice than about there being too little capacity to
-          do it once.
+          Doing these out of order is what produces the classic outcome: a fleet that
+          costs four times as much and moves twice the work, with everyone convinced the
+          queue is the bottleneck.
         </p>
 
         <blockquote>
           <p>
-            A queue that grows while you add consumers is not telling you about capacity.
-            It is telling you that some of your capacity is being spent twice.
+            If every queue in your system has the same consumer config, you don't have
+            multiple queues. You have one queue and four names for it.
           </p>
         </blockquote>
-
-        <p>
-          Related, and the same disease in a different organ:
-          <a href="/writing/billing-unit-mismatch/" style="color: var(--accent)">how to bill AI usage</a>,
-          where the number that governed every invoice existed only inside a nightly job
-          that printed nothing.
-        </p>
       </section>
 
       <footer>
