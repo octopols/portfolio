@@ -650,20 +650,19 @@
             <div class="case-side">
               <figure class="case-viz">
                 <svg viewBox="0 0 240 64" role="img" aria-labelledby="viz3t viz3d">
-                  <title id="viz3t">Four delivery pipelines becoming one</title>
-                  <desc id="viz3d">WhatsApp, email, RCS and SMS each ran their own scheduling, retry and status logic; they now converge on one shared orchestration with a thin adapter per channel.</desc>
-                  <path d="M2,8 C60,8 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,24 C60,24 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,40 C60,40 70,32 104,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <path d="M2,56 C60,56 70,32 104,32" fill="none" stroke="#68d391" stroke-width="1.6"/>
-                  <circle cx="2" cy="8" r="2.5" fill="#8b9199"/><circle cx="2" cy="24" r="2.5" fill="#8b9199"/>
-                  <circle cx="2" cy="40" r="2.5" fill="#8b9199"/><circle cx="2" cy="56" r="2.5" fill="#68d391"/>
-                  <rect x="104" y="20" width="66" height="24" rx="6" fill="#68d391" fill-opacity=".12" stroke="#68d391" stroke-opacity=".5"/>
-                  <text x="137" y="35" fill="#68d391" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="middle">ONE</text>
-                  <path d="M170,32 L204,32" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.6"/>
-                  <text x="240" y="35" fill="#8b9199" font-size="8" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">adapter</text>
+                  <title id="viz3t">Page load, before and after</title>
+                  <desc id="viz3d">Aggregating on every request took twenty seconds. Serving a materialised copy paints in about two hundred milliseconds, with a second request quietly refreshing anything stale.</desc>
+                  <text x="0" y="12" fill="#8b9199" font-size="7.5" font-family="ui-monospace, monospace" letter-spacing="1">BEFORE</text>
+                  <rect x="0" y="17" width="240" height="9" rx="2" fill="#fc8181" fill-opacity=".22" stroke="#fc8181" stroke-opacity=".35"/>
+                  <text x="240" y="12" fill="#fc8181" font-size="7.5" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">20s — aggregate every load</text>
+                  <text x="0" y="45" fill="#8b9199" font-size="7.5" font-family="ui-monospace, monospace" letter-spacing="1">AFTER</text>
+                  <rect x="0" y="50" width="2.4" height="9" rx="1.2" fill="#68d391"/>
+                  <text x="7" y="58" fill="#68d391" font-size="7.5" font-family="ui-monospace, monospace" letter-spacing="1">200ms</text>
+                  <line x1="42" y1="54.5" x2="150" y2="54.5" stroke="#68d391" stroke-opacity=".45" stroke-width="1" stroke-dasharray="2 3"/>
+                  <circle cx="150" cy="54.5" r="2.4" fill="none" stroke="#68d391" stroke-opacity=".7" stroke-width="1"/>
+                  <text x="240" y="58" fill="#8b9199" font-size="7.5" font-family="ui-monospace, monospace" letter-spacing="1" text-anchor="end">then refreshes what's stale</text>
                 </svg>
-                <figcaption>RCS, in green, needed only the adapter.</figcaption>
+                <figcaption>Same query budget. The page stopped waiting for it.</figcaption>
               </figure>
               <dl class="rail stagger">
               <div>

@@ -140,6 +140,7 @@
 
       .fig { margin: 0 0 30px; }
       .fig-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .seq { display: block; width: 100%; min-width: 660px; height: auto; overflow: visible; }
       .cap { font-size: 13px; color: var(--dim); margin: 12px 0 0; line-height: 1.5; }
       .cap b { color: var(--muted); font-weight: 500; }
 
@@ -389,47 +390,77 @@
 
         <div class="fig">
           <div class="fig-scroll">
-            <div class="pipe">
-              <div class="pipe-step">
-                <div class="pipe-when">call 1</div>
-                <div class="pipe-body">
-                  <div class="pipe-title">Saved copy, no questions asked</div>
-                  <div class="pipe-desc">
-                    Read the materialised numbers and return them. No freshness check, no
-                    event-store query. The page paints in milliseconds with numbers that
-                    are probably right.
-                  </div>
-                </div>
-              </div>
-              <div class="pipe-step">
-                <div class="pipe-when">call 2</div>
-                <div class="pipe-body">
-                  <div class="pipe-title">Same read, then check each row</div>
-                  <div class="pipe-desc">
-                    Read again, and for every row ask whether its saved copy is too old.
-                    Most aren't. The ones that are get recomputed from the event store,
-                    written back, and re-read.
-                  </div>
-                </div>
-              </div>
-              <div class="pipe-step">
-                <div class="pipe-when">then</div>
-                <div class="pipe-body">
-                  <div class="pipe-title">The screen corrects itself</div>
-                  <div class="pipe-desc">
-                    Second response replaces the first. Usually identical, so the user
-                    sees nothing. Occasionally a number ticks up, which is exactly the
-                    behaviour you want on a live campaign.
-                  </div>
-                </div>
-              </div>
-            </div>
+            <svg class="seq" viewBox="0 0 700 372" role="img" aria-labelledby="s1t s1d">
+              <title id="s1t">The two-call sequence</title>
+              <desc id="s1d">The page requests the saved copy and paints immediately. It then repeats the request in refresh mode; the service reads the saved copy, checks each row's freshness, recomputes only the stale rows from the event store, writes them back, and returns fresh numbers, which silently replace what is on screen.</desc>
+              <defs>
+                <marker id="sa" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 z" fill="rgba(255,255,255,.45)" />
+                </marker>
+                <marker id="sag" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 z" fill="rgba(104,211,145,.8)" />
+                </marker>
+              </defs>
+
+              <!-- lifelines -->
+              <g font-family="ui-sans-serif, system-ui" font-size="11">
+                <rect x="10" y="0" width="96" height="24" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>
+                <text x="58" y="16" fill="#e6e8eb" text-anchor="middle">Page</text>
+                <rect x="196" y="0" width="106" height="24" rx="5" fill="rgba(104,211,145,.09)" stroke="rgba(104,211,145,.4)"/>
+                <text x="249" y="16" fill="#68d391" text-anchor="middle">Service</text>
+                <rect x="400" y="0" width="106" height="24" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>
+                <text x="453" y="16" fill="#e6e8eb" text-anchor="middle">Saved copy</text>
+                <rect x="592" y="0" width="98" height="24" rx="5" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.1)"/>
+                <text x="641" y="16" fill="#8b9199" text-anchor="middle">Event store</text>
+              </g>
+              <g stroke="rgba(255,255,255,.1)" stroke-dasharray="3 4">
+                <line x1="58" y1="26" x2="58" y2="360"/>
+                <line x1="249" y1="26" x2="249" y2="360"/>
+                <line x1="453" y1="26" x2="453" y2="360"/>
+                <line x1="641" y1="26" x2="641" y2="360"/>
+              </g>
+
+              <g font-family="ui-monospace, monospace" font-size="9.5" letter-spacing=".3">
+                <!-- call 1 -->
+                <text x="10" y="48" fill="#68d391" font-size="9">CALL 1 — fast path</text>
+                <line x1="58" y1="62" x2="243" y2="62" stroke="rgba(104,211,145,.8)" marker-end="url(#sag)"/>
+                <text x="150" y="58" fill="#b9e6cb" text-anchor="middle">cached: true</text>
+                <line x1="249" y1="84" x2="447" y2="84" stroke="rgba(255,255,255,.45)" marker-end="url(#sa)"/>
+                <text x="348" y="80" fill="#c8cdd4" text-anchor="middle">read</text>
+                <line x1="453" y1="104" x2="255" y2="104" stroke="rgba(255,255,255,.3)" stroke-dasharray="4 3" marker-end="url(#sa)"/>
+                <text x="354" y="100" fill="#8b9199" text-anchor="middle">rows</text>
+                <line x1="249" y1="126" x2="64" y2="126" stroke="rgba(104,211,145,.7)" stroke-dasharray="4 3" marker-end="url(#sag)"/>
+                <text x="156" y="122" fill="#b9e6cb" text-anchor="middle">response</text>
+                <rect x="10" y="136" width="128" height="18" rx="4" fill="rgba(104,211,145,.12)" stroke="rgba(104,211,145,.35)"/>
+                <text x="74" y="149" fill="#b9e6cb" text-anchor="middle" font-size="9">painted · ~200ms</text>
+
+                <!-- call 2 -->
+                <text x="10" y="188" fill="#f6e05e" font-size="9">CALL 2 — refresh</text>
+                <line x1="58" y1="202" x2="243" y2="202" stroke="rgba(255,255,255,.45)" marker-end="url(#sa)"/>
+                <text x="150" y="198" fill="#c8cdd4" text-anchor="middle">cached: false</text>
+                <line x1="249" y1="222" x2="447" y2="222" stroke="rgba(255,255,255,.45)" marker-end="url(#sa)"/>
+                <text x="348" y="218" fill="#c8cdd4" text-anchor="middle">read</text>
+                <rect x="243" y="238" width="13" height="18" rx="3" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.32)"/>
+                <text x="266" y="251" fill="#c8cdd4" font-size="9">check freshness, per row</text>
+
+                <!-- alt block -->
+                <rect x="228" y="266" width="452" height="66" rx="5" fill="rgba(246,224,94,.04)" stroke="rgba(246,224,94,.28)" stroke-dasharray="4 3"/>
+                <text x="236" y="279" fill="#ecdf9a" font-size="8.5" letter-spacing="1">ONLY IF STALE</text>
+                <line x1="249" y1="296" x2="635" y2="296" stroke="rgba(246,224,94,.7)" marker-end="url(#sa)"/>
+                <text x="442" y="292" fill="#ecdf9a" text-anchor="middle">recompute stale rows</text>
+                <line x1="641" y1="316" x2="255" y2="316" stroke="rgba(246,224,94,.5)" stroke-dasharray="4 3" marker-end="url(#sa)"/>
+                <text x="448" y="312" fill="#ecdf9a" text-anchor="middle">fresh metrics &rarr; write back</text>
+
+                <line x1="249" y1="350" x2="64" y2="350" stroke="rgba(104,211,145,.7)" stroke-dasharray="4 3" marker-end="url(#sag)"/>
+                <text x="156" y="346" fill="#b9e6cb" text-anchor="middle">fresh response</text>
+              </g>
+            </svg>
           </div>
-          <figcaption class="cap">
-            <b>Cheap in the common case.</b> Call 2 only touches the event store for rows
-            that are actually stale — on a page of fifty campaigns that is usually one or
-            two, often none.
-          </figcaption>
+          <p class="cap">
+            <b>Two requests, one endpoint, one flag.</b> The dashed block is the only part
+            that touches the event store, and on most page loads it doesn't run at all —
+            everything on screen is older than the freeze threshold.
+          </p>
         </div>
 
         <p>
@@ -718,6 +749,69 @@
             controller, catch both calls, and ship a dashboard that is fast and
             permanently a few minutes behind.
           </figcaption>
+        </div>
+
+        <div class="fig">
+          <div class="fig-scroll">
+            <svg class="seq" viewBox="0 0 700 300" role="img" aria-labelledby="s2t s2d">
+              <defs>
+                <marker id="sa2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 z" fill="rgba(255,255,255,.45)" />
+                </marker>
+                <marker id="sag2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L7,3 L0,6 z" fill="rgba(104,211,145,.8)" />
+                </marker>
+              </defs>
+              <title id="s2t">The same sequence with a cache in front</title>
+              <desc id="s2d">The fast call is served from cache on a hit. The refresh call always bypasses the cache, recomputes stale rows, writes them back and drops the affected cache keys, so the next fast call is both instant and correct.</desc>
+              <g font-family="ui-sans-serif, system-ui" font-size="11">
+                <rect x="10" y="0" width="88" height="24" rx="5" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>
+                <text x="54" y="16" fill="#e6e8eb" text-anchor="middle">Page</text>
+                <rect x="176" y="0" width="88" height="24" rx="5" fill="rgba(144,205,244,.1)" stroke="rgba(144,205,244,.45)"/>
+                <text x="220" y="16" fill="#90cdf4" text-anchor="middle">Cache</text>
+                <rect x="356" y="0" width="98" height="24" rx="5" fill="rgba(104,211,145,.09)" stroke="rgba(104,211,145,.4)"/>
+                <text x="405" y="16" fill="#68d391" text-anchor="middle">Service</text>
+                <rect x="556" y="0" width="134" height="24" rx="5" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)"/>
+                <text x="623" y="16" fill="#8b9199" text-anchor="middle">Saved copy + events</text>
+              </g>
+              <g stroke="rgba(255,255,255,.1)" stroke-dasharray="3 4">
+                <line x1="54" y1="26" x2="54" y2="288"/>
+                <line x1="220" y1="26" x2="220" y2="288"/>
+                <line x1="405" y1="26" x2="405" y2="288"/>
+                <line x1="623" y1="26" x2="623" y2="288"/>
+              </g>
+
+              <g font-family="ui-monospace, monospace" font-size="9.5" letter-spacing=".3">
+                <text x="10" y="48" fill="#90cdf4" font-size="9">CALL 1 — may never reach the service</text>
+                <line x1="54" y1="64" x2="214" y2="64" stroke="rgba(144,205,244,.8)" marker-end="url(#sa2)"/>
+                <text x="134" y="60" fill="#bfe3ff" text-anchor="middle">cached: true</text>
+                <line x1="220" y1="84" x2="60" y2="84" stroke="rgba(144,205,244,.6)" stroke-dasharray="4 3" marker-end="url(#sa2)"/>
+                <text x="140" y="80" fill="#bfe3ff" text-anchor="middle">HIT &rarr; painted</text>
+                <line x1="220" y1="106" x2="399" y2="106" stroke="rgba(255,255,255,.28)" stroke-dasharray="4 3" marker-end="url(#sa2)"/>
+                <text x="310" y="102" fill="#8b9199" text-anchor="middle">on miss only</text>
+
+                <text x="10" y="150" fill="#f6e05e" font-size="9">CALL 2 — must bypass the cache</text>
+                <path d="M54,166 C120,166 150,166 399,166" fill="none" stroke="rgba(246,224,94,.75)" marker-end="url(#sa2)"/>
+                <text x="126" y="160" fill="#ecdf9a" text-anchor="middle">cached: false</text>
+                <text x="318" y="160" fill="#ecdf9a" text-anchor="middle">straight past the cache</text>
+                <circle cx="220" cy="166" r="6" fill="none" stroke="rgba(246,224,94,.6)"/>
+                <path d="M216,162 l8,8 M224,162 l-8,8" stroke="rgba(246,224,94,.8)" stroke-width="1.1"/>
+                <line x1="405" y1="196" x2="617" y2="196" stroke="rgba(246,224,94,.7)" marker-end="url(#sa2)"/>
+                <text x="511" y="192" fill="#ecdf9a" text-anchor="middle">recompute stale &rarr; write back</text>
+                <line x1="405" y1="226" x2="226" y2="226" stroke="rgba(144,205,244,.7)" marker-end="url(#sa2)"/>
+                <text x="316" y="222" fill="#bfe3ff" text-anchor="middle">drop affected keys</text>
+                <line x1="405" y1="256" x2="60" y2="256" stroke="rgba(104,211,145,.7)" stroke-dasharray="4 3" marker-end="url(#sag2)"/>
+                <text x="232" y="252" fill="#b9e6cb" text-anchor="middle">fresh response</text>
+                <rect x="10" y="266" width="176" height="18" rx="4" fill="rgba(104,211,145,.1)" stroke="rgba(104,211,145,.3)"/>
+                <text x="98" y="279" fill="#b9e6cb" text-anchor="middle" font-size="9">next visitor gets a warm hit</text>
+              </g>
+            </svg>
+          </div>
+          <p class="cap">
+            <b>The crossed circle is the whole point.</b> If the refresh call is allowed to
+            hit the cache, it returns a cached answer, nothing is ever recomputed, and you
+            ship a dashboard that is fast and permanently behind.
+          </p>
         </div>
 
         <p>
