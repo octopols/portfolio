@@ -134,6 +134,81 @@ body {
 }
 
 /* ===================================
+   GLASS SURFACE
+
+   For the outlined controls — the résumé pills and the hero credit chips.
+
+   Apple's Liquid Glass *refracts* its backdrop, and CSS cannot do that.
+   backdrop-filter accepts blur/saturate/brightness but not a displacement
+   map, and `backdrop-filter: url(#f)` has no meaningful browser support.
+   Doing it properly means sampling the backdrop into a WebGL texture and
+   displacing UVs in a shader — which on this site would cost more than the
+   entire page weighs, break the no-third-party-runtime rule, and mostly not
+   be visible: refraction bends whatever is behind the surface, and behind
+   nearly all of this page is flat #050505. There is nothing to bend.
+
+   So this reproduces the cues that actually survive on a dark background:
+     - blur plus a saturation lift on the backdrop, which is the lensing tell
+     - a directional specular sweep, brightest at the top-left corner
+     - an asymmetric rim: bright along the top edge, almost nothing at the
+       bottom, which is what makes it read as a curved surface catching light
+     - a soft drop shadow, so it sits above the page rather than in it
+=================================== */
+.glass {
+  position: relative;
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04), 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: background 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease, transform 0.25s var(--ease-out);
+}
+
+/* The specular sweep. Inherits the radius so it works on a pill or a rect,
+   and never eats a click. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.03) 38%,
+    transparent 62%
+  );
+}
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--accent-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07), 0 8px 26px rgba(0, 0, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Nothing to blur behind it, so fall back to a plain translucent fill rather
+   than an invisible border. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass {
+    transition: none;
+  }
+  .glass:hover {
+    transform: none;
+  }
+}
+
+/* ===================================
    HERO CREDIT CHIPS
 
    Three affiliations as one wrapping row of pills. This was two rows of prose
@@ -147,22 +222,13 @@ body {
   margin-top: 2.25rem;
 }
 
+/* Layout only — the surface comes from .glass */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.4rem 0.95rem 0.4rem 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  transition: border-color 0.2s ease, background 0.2s ease,
-    transform 0.2s var(--ease-out);
-}
-
-.chip:hover {
-  border-color: var(--accent-line);
-  background: var(--accent-wash);
-  transform: translateY(-2px);
 }
 
 .chip img {
